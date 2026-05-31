@@ -5534,4 +5534,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Recados Sprint ───────────────────────────────────────────
 function spRenderRecados() {
-  const el = docu
+  const el = document.getElementById('sp-recados-lista'); if (!el) return;
+  if (!spRecados.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Nenhum recado ainda.</div>'; return; }
+  el.innerHTML = spRecados.map(r => `<div class="recado-item">
+    <div class="recado-dot-${r.tipo}"></div>
+    <span class="recado-text">${r.texto}</span>
+    <button class="recado-del" onclick="spDelRecado(${r.id})">✕</button>
+  </div>`).join('');
+}
+function spAddRecado() {
+  const inp = document.getElementById('sp-recado-input');
+  const tipo = document.getElementById('sp-recado-tipo').value;
+  if (!inp.value.trim()) return;
+  spRecados.unshift({ id: spNextRecadoId++, texto: inp.value.trim(), tipo });
+  inp.value = ''; spSaveLocal(); spRenderRecados();
+}
+function spDelRecado(id) { spRecados = spRecados.filter(r => r.id !== id); spSaveLocal(); spRenderRecados(); }
+window.spAddRecado = spAddRecado; window.spDelRecado = spDelRecado;
+window.spEncerrarSprint=spEncerrarSprint; window.spUpdateField=spUpdateField;
+window.spToggleEl=spToggleEl; window.spCopyAta=spCopyAta;
+window.spOpenModal=spOpenModal; window.spCloseModal=spCloseModal;
+window.spSaveTask=spSaveTask; window.spSaveTaskApply=spSaveTaskApply;
+window.spRenderTasks=spRenderTasks;
+window.kbRender=kbRender; window.blRenderEpics=blRenderEpics;
+window.blToggleItem=blToggleItem; window.blAddItem=blAddItem; window.blPuxarSprint=blPuxarSprint;
+window.blOpenForm=blOpenForm; window.blCloseForm=blCloseForm; window.blSaveEpic=blSaveEpic;
+window.blEditEpic=blEditEpic; window.blDeleteEpic=blDeleteEpic;
+window.inicioSetSem=inicioSetSem; window.inicioAddRecado=inicioAddRecado;
+window.inicioDelRecado=inicioDelRecado; window.inicioAtualizarMeta=inicioAtualizarMeta;
+window.spRenderTasks=spRenderTasks;
+
+})();
+</script>
+
+</body></html>
