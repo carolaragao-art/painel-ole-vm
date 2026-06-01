@@ -4136,9 +4136,10 @@ function spRenderHistorico() {
     // Sprints novas (com _ataFormat='detalhada') ganham campos completos por tarefa;
     // sprints antigas (Sprint 22 e anteriores) mantêm o formato original.
     const ata = spBuildAta(h);
+    const bodyId = 'shbody-'+idx;
     return`<div class="sp-hist-card">
-      <div class="sp-hist-hd"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sp-hist-badge">Sprint ${h.spNum}</span><span style="font-size:13px;font-weight:600">${h.spWeek||h.date}</span><span style="font-size:12px;color:rgba(255,255,255,0.65)">Encerrada ${h.date}</span></div><div style="display:flex;gap:10px"><span class="sp-hist-stat">${h.tasks.length} tarefas</span><span class="sp-hist-stat">${h.conc} concluídas</span><span class="sp-hist-stat" style="font-weight:700">${h.pct}%</span></div></div>
-      <div class="sp-hist-body">
+      <div class="sp-hist-hd" onclick="spToggleHistBody('${bodyId}',this)" style="cursor:pointer;user-select:none"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sp-hist-caret" style="font-size:13px;display:inline-block;transition:transform .15s;color:rgba(255,255,255,0.7)">▶</span><span class="sp-hist-badge">Sprint ${h.spNum}</span><span style="font-size:13px;font-weight:600">${h.spWeek||h.date}</span><span style="font-size:12px;color:rgba(255,255,255,0.65)">Encerrada ${h.date}</span></div><div style="display:flex;gap:10px"><span class="sp-hist-stat">${h.tasks.length} tarefas</span><span class="sp-hist-stat">${h.conc} concluídas</span><span class="sp-hist-stat" style="font-weight:700">${h.pct}%</span></div></div>
+      <div class="sp-hist-body sp-collapsed" id="${bodyId}">
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Meta geral</div>
         <div style="font-size:13px;color:var(--text);background:var(--surface2);border-radius:8px;padding:10px 12px;line-height:1.5;margin-bottom:10px">${h.metaGeral}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -4153,6 +4154,9 @@ function spRenderHistorico() {
 }
 
 function spToggleEl(id,btn,l1,l2){const el=document.getElementById(id);const was=el.classList.contains('sp-collapsed');el.classList.toggle('sp-collapsed');btn.textContent=was?l2:l1;}
+// [ajuste] Recolhe/expande o corpo de uma sprint encerrada (mostra só o cabeçalho)
+function spToggleHistBody(id, hd){const el=document.getElementById(id);if(!el)return;el.classList.toggle('sp-collapsed');const caret=hd.querySelector('.sp-hist-caret');if(caret)caret.style.transform=el.classList.contains('sp-collapsed')?'':'rotate(90deg)';}
+window.spToggleHistBody = spToggleHistBody;
 function spCopyAta(txt,btn){if(navigator.clipboard)navigator.clipboard.writeText(txt);const orig=btn.textContent;btn.textContent='✅ Copiado!';setTimeout(()=>btn.textContent=orig,2000);}
 
 // ════════════════════════════════════════════════════════════
@@ -4448,6 +4452,7 @@ function blRenderEpicContent(e, idx, totalGroup) {
     <div class="backlog-item">
       <div class="backlog-chk ${b.done ? 'done' : ''}" onclick="blToggleItem(${e.id},'${b.id}')" title="Marcar como ${b.done ? 'pendente' : 'concluído'}">${b.done ? '<span style="color:#fff;font-size:9px">✓</span>' : ''}</div>
       <span class="backlog-item-text ${b.done ? 'done' : ''}">${b.texto}</span>
+      ${b.resp ? `<span class="av-mini ${SP_AV_CLS[b.resp]||''}" title="Responsável: ${b.resp}" style="width:22px;height:22px;font-size:10px;flex:0 0 auto">${SP_AV_INIT[b.resp]||'?'}</span>` : ''}
       ${b.prazoPrev ? `<span style="font-size:10px;color:var(--text-muted);background:var(--surface2);padding:2px 7px;border-radius:6px;white-space:nowrap" title="Prazo previsto">📅 ${spFmtDate(b.prazoPrev)}</span>` : ''}
       <button class="backlog-epic-btn" onclick="blEditItem(${e.id},'${b.id}')" title="Editar tarefa" style="padding:2px 7px;color:var(--text-muted)">✏️</button>
       <button class="backlog-epic-btn" onclick="blRemoveItem(${e.id},'${b.id}')" title="Remover item" style="padding:2px 7px;color:var(--text-muted)">✕</button>
@@ -4474,8 +4479,12 @@ function blRenderEpicContent(e, idx, totalGroup) {
       ${e.desc ? `<div class="backlog-desc">${e.desc}</div>` : ''}
       <div class="backlog-section-label">Backlog de tarefas</div>
       <div id="bl-items-${e.id}">${backlogHTML}</div>
-      <div class="backlog-add-row" style="align-items:flex-start">
-        <input type="text" id="bl-input-${e.id}" placeholder="Nova tarefa do backlog..." onkeydown="if(event.key==='Enter')blAddItem(${e.id})" style="flex:2"/>
+      <div class="backlog-add-row" style="align-items:flex-start;flex-wrap:wrap">
+        <input type="text" id="bl-input-${e.id}" placeholder="Nova tarefa do backlog..." onkeydown="if(event.key==='Enter')blAddItem(${e.id})" style="flex:2;min-width:180px"/>
+        <select id="bl-input-resp-${e.id}" title="Responsável" style="flex:0 0 130px;font-size:12px;font-family:'Poppins',sans-serif;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none">
+          <option value="">👤 Responsável</option>
+          ${SP_ANALISTAS.map(a=>`<option value="${a}">${a}</option>`).join('')}
+        </select>
         <input type="date" id="bl-input-prazo-${e.id}" title="Prazo previsto (opcional)" style="flex:0 0 130px;font-size:12px;font-family:'Poppins',sans-serif;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none"/>
         <button onclick="blAddItem(${e.id})" style="flex:0 0 auto">+ Adicionar</button>
       </div>
@@ -4649,6 +4658,14 @@ function blAddItem(epicId) {
   }
   const prazoPrev = (prazoInp && prazoInp.value) ? prazoInp.value : '';
 
+  // [ajuste] Captura responsável (opcional) com fallback
+  let respInp = document.getElementById('bl-input-resp-' + numId);
+  if (!respInp) {
+    const card = document.querySelector('[data-epic-id="' + numId + '"]');
+    if (card) respInp = card.querySelector('select[id^="bl-input-resp-"]');
+  }
+  const respSel = (respInp && respInp.value) ? respInp.value : '';
+
   // [v10] Recalcula spNextBId baseado no maior bID em uso
   let maxBId = 0;
   spEpics.forEach(ep => {
@@ -4667,12 +4684,14 @@ function blAddItem(epicId) {
     texto: texto,
     done: false,
     prazoPrev: prazoPrev,
+    resp: respSel,
     criadoEm: new Date().toISOString()
   });
   console.log('[blAddItem] criado item', novoBId, '"' + texto + '" no projeto', e.nome);
 
   inp.value = '';
   if (prazoInp) prazoInp.value = '';
+  if (respInp) respInp.value = '';
   spSaveLocal();
   blRenderEpics();
   toast('✅ Tarefa adicionada ao backlog!');
@@ -4694,7 +4713,7 @@ function blPuxarSprint(epicId, bId) {
   spTasks.push({
     _numId: spNextTaskId++,
     titulo: b.texto,
-    resp: 'Carol',
+    resp: b.resp || 'Carol',
     setor: e.setor,
     epicId: e.id,
     orgao: '',
@@ -4743,6 +4762,13 @@ function blEditItem(epicId, bId) {
           <input type="text" id="bl-edit-texto" value="${b.texto.replace(/"/g, '&quot;')}" style="width:100%">
         </div>
         <div class="form-group full">
+          <label>Responsável (opcional)</label>
+          <select id="bl-edit-resp" style="width:100%">
+            <option value="">👤 Sem responsável</option>
+            ${SP_ANALISTAS.map(a=>`<option value="${a}"${b.resp===a?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group full">
           <label>Prazo previsto (opcional)</label>
           <input type="date" id="bl-edit-prazo" value="${b.prazoPrev || ''}" style="width:100%">
         </div>
@@ -4779,6 +4805,8 @@ function blSaveEditItem(epicId, bId) {
 
   b.texto = novoTexto;
   b.prazoPrev = prazoEl ? prazoEl.value : '';
+  const respEl = document.getElementById('bl-edit-resp');
+  b.resp = respEl ? respEl.value : (b.resp || '');
   blCloseEditItem();
   spSaveLocal();
   blRenderEpics();
@@ -5530,7 +5558,62 @@ document.addEventListener('DOMContentLoaded', () => {
   if(weekEl && !weekEl.value) weekEl.value=y+'-W'+String(wk).padStart(2,'0');
   // Ativa aba Sprint por padrão
   showTab('sprint');
+  // [ajuste] Atualiza o mês exibido conforme a data de hoje
+  atualizarMesAtual();
+  // [ajuste] Garante exibição do número do sprint
+  spRestaurarNumeroSprint();
 });
+
+// [ajuste] Mês corrente nos rótulos do cabeçalho e do Painel Executivo
+function atualizarMesAtual() {
+  const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const mesesLongo = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const d = new Date();
+  const m = d.getMonth();
+  const yy = String(d.getFullYear()).slice(2);
+  const yyyy = d.getFullYear();
+  const badge = document.getElementById('mesBadge');
+  if (badge) badge.textContent = meses[m] + '/' + yy;
+  // Subtítulo do Painel Executivo ("... · Mai/2026")
+  document.querySelectorAll('.kpi-strip, main, body').forEach(()=>{});
+  const subs = document.evaluate("//*[contains(text(),'viana e moura construções')]", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+  for (let i=0;i<subs.snapshotLength;i++){
+    const el = subs.snapshotItem(i);
+    el.innerHTML = el.innerHTML.replace(/(·&nbsp;|·\s*)[A-Za-zçÇ]{3}\/20\d{2}/, '$1' + mesesLongo[m] + '/' + yyyy);
+  }
+  // "Avanço por Área <span>MAI/2026 ...</span>"
+  document.querySelectorAll('.section-title span').forEach(sp => {
+    if (/\b[A-Z]{3}\/20\d{2}\b/.test(sp.textContent)) {
+      sp.textContent = sp.textContent.replace(/\b[A-Z]{3}\/20\d{2}\b/, meses[m] + '/' + yyyy);
+    }
+  });
+}
+
+// [ajuste] Número do sprint sempre visível (deriva da semana ISO se faltar)
+function spRestaurarNumeroSprint() {
+  const numEl = document.getElementById('sp-num-input');
+  const weekEl = document.getElementById('sp-week-input');
+  if (!numEl) return;
+  let saved = '';
+  try { saved = localStorage.getItem('ole_sp_num') || ''; } catch(e) {}
+  if (saved) { numEl.value = saved; }
+  if (!numEl.value || numEl.value === '—' || numEl.value === '') {
+    // Deriva da semana selecionada (ex.: 2026-W23 -> 23)
+    let wkNum = '';
+    if (weekEl && weekEl.value) {
+      const m = weekEl.value.match(/W(\d{1,2})/);
+      if (m) wkNum = String(parseInt(m[1], 10));
+    }
+    if (!wkNum) {
+      const today = new Date(), y = today.getFullYear(), start = new Date(y, 0, 1);
+      wkNum = String(Math.ceil(((today - start) / 86400000 + start.getDay() + 1) / 7));
+    }
+    numEl.value = wkNum;
+  }
+  // Persiste edições manuais do número e da semana
+  numEl.addEventListener('change', () => { try { localStorage.setItem('ole_sp_num', numEl.value); } catch(e) {} });
+  if (weekEl) weekEl.addEventListener('change', () => { try { localStorage.setItem('ole_sp_week', weekEl.value); } catch(e) {} });
+}
 
 // ── Recados Sprint ───────────────────────────────────────────
 function spRenderRecados() {
