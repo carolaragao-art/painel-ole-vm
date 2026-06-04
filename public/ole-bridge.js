@@ -139,4 +139,84 @@
       document.body.appendChild(bar);
     } catch (e) {}
   });
+
+  // ════════════════════════════════════════════════════════════
+  // SINCRONIZAÇÃO AUTOMÁTICA (a cada 15s)
+  // - Verifica de forma leve se alguém alterou os dados no banco.
+  // - Atualiza a tela sozinho QUANDO é seguro (ninguém digitando).
+  // - Se você estiver editando, mostra um botão discreto "Atualizar".
+  // ════════════════════════════════════════════════════════════
+  var POLL_MS = 15000;
+  var knownVersion = null;
+  var reloadBanner = null;
+
+  function fetchVersion() {
+    return fetch('/api/state/version', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { return j ? j.version : null; })
+      .catch(function () { return null; });
+  }
+
+  // Estabelece a versão base ao abrir a página.
+  fetchVersion().then(function (v) { knownVersion = v; });
+
+  // Após cada gravação nossa, atualiza a versão base (evita auto-recarregar
+  // por causa da própria edição).
+  var origFlush = flush;
+  flush = function () {
+    origFlush();
+    setTimeout(function () { fetchVersion().then(function (v) { if (v) knownVersion = v; }); }, 1200);
+  };
+
+  // Detecta se o usuário está no meio de uma edição (não interromper).
+  function estaEditando() {
+    var el = document.activeElement;
+    if (el) {
+      var tag = (el.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable) return true;
+    }
+    // Algum modal aberto?
+    var modais = document.querySelectorAll('.modal-overlay, #bl-edit-item-modal, #apModal, #ffModal');
+    for (var i = 0; i < modais.length; i++) {
+      var m = modais[i];
+      if (m && m.style && m.style.display !== 'none' && m.offsetParent !== null) return true;
+    }
+    // Há gravações pendentes nossas?
+    if (Object.keys(dirty).length > 0) return true;
+    return false;
+  }
+
+  function mostrarBannerAtualizar() {
+    if (reloadBanner) return;
+    reloadBanner = document.createElement('div');
+    reloadBanner.style.cssText = 'position:fixed;bottom:58px;right:14px;z-index:10000;display:flex;align-items:center;gap:10px;background:#E8A020;color:#1D3461;padding:9px 14px;border-radius:12px;font-family:Poppins,sans-serif;font-size:12.5px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.28)';
+    reloadBanner.innerHTML = '<span>🔄 Novos dados da equipe</span>';
+    var b = document.createElement('button');
+    b.textContent = 'Atualizar';
+    b.style.cssText = 'background:#1D3461;color:#fff;border:none;border-radius:9px;padding:5px 12px;font:inherit;font-weight:700;cursor:pointer';
+    b.onclick = function () { window.location.reload(); };
+    reloadBanner.appendChild(b);
+    document.body.appendChild(reloadBanner);
+  }
+
+  function checarAtualizacoes() {
+    if (document.visibilityState === 'hidden') return; // não gasta em aba oculta
+    fetchVersion().then(function (v) {
+      if (!v || knownVersion === null) { if (v) knownVersion = v; return; }
+      if (v === knownVersion) return;          // nada mudou
+      // Mudou no banco (outra pessoa editou)
+      if (estaEditando()) {
+        mostrarBannerAtualizar();              // não interrompe: oferece o botão
+      } else {
+        window.location.reload();              // seguro: atualiza sozinho
+      }
+    });
+  }
+
+  setInterval(checarAtualizacoes, POLL_MS);
+  // Verifica também ao voltar o foco para a aba.
+  window.addEventListener('focus', checarAtualizacoes);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checarAtualizacoes();
+  });
 })();
