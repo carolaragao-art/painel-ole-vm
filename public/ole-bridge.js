@@ -16,7 +16,8 @@
   var KEYS = [
     'ole_ap_cellstate', 'ole_ap_projetos', 'ole_ff_fichas', 'ole_projetos',
     'ole_sp_epics', 'ole_sp_hist', 'ole_sp_meta', 'ole_sp_rec', 'ole_sp_sem',
-    'ole_sp_tasks', 'ole_tasks', 'ole_updates'
+    'ole_sp_tasks', 'ole_tasks', 'ole_updates', 'ole_pipeline_cells',
+    'ole_sp_num', 'ole_sp_week'
   ];
 
   var server = window.__OLE_STATE__ || {};
