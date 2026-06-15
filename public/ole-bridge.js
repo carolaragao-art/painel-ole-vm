@@ -94,11 +94,27 @@
   window.addEventListener('pagehide', flushBeacon);
   window.addEventListener('beforeunload', flushBeacon);
 
+  // Chaves PURAMENTE LOCAIS deste navegador (não vão para o banco nem são
+  // compartilhadas entre usuários). Ex.: a última aba aberta é preferência de cada um.
+  var LOCAL_ONLY = { 'ole_ultima_aba': 1 };
+  var realLSget = function (k) { try { return realLS ? realLS.getItem(k) : null; } catch (e) { return null; } };
+  var realLSset = function (k, v) { try { if (realLS) realLS.setItem(k, v); } catch (e) {} };
+  var realLSdel = function (k) { try { if (realLS) realLS.removeItem(k); } catch (e) {} };
+
   // ── localStorage sob medida ──
   var shim = {
-    getItem: function (k) { return Object.prototype.hasOwnProperty.call(cache, k) ? cache[k] : null; },
-    setItem: function (k, v) { cache[k] = String(v); queueSave(k, cache[k]); },
-    removeItem: function (k) { delete cache[k]; queueSave(k, null); },
+    getItem: function (k) {
+      if (LOCAL_ONLY[k]) return realLSget(k);
+      return Object.prototype.hasOwnProperty.call(cache, k) ? cache[k] : null;
+    },
+    setItem: function (k, v) {
+      if (LOCAL_ONLY[k]) { realLSset(k, String(v)); return; }
+      cache[k] = String(v); queueSave(k, cache[k]);
+    },
+    removeItem: function (k) {
+      if (LOCAL_ONLY[k]) { realLSdel(k); return; }
+      delete cache[k]; queueSave(k, null);
+    },
     clear: function () { Object.keys(cache).forEach(function (k) { delete cache[k]; queueSave(k, null); }); },
     key: function (i) { return Object.keys(cache)[i] || null; }
   };
