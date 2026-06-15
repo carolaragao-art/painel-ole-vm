@@ -3321,7 +3321,6 @@ function buildLineDataFromUpdates() {
 // TABS + UTILS
 // ════════════════════════════════════════════════════════════
 function showTab(name) {
-  // [ajuste] Lembra a última aba aberta (por navegador), para não voltar sempre à Sprint ao recarregar
   try { localStorage.setItem('ole_ultima_aba', name); } catch (e) {}
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -3591,7 +3590,6 @@ function spRenderCarga() {
   document.getElementById('sp-carga-grid').innerHTML = SP_ANALISTAS.map(a => {
     const total=spTasks.filter(t=>t.resp===a).length;
     const conc=spTasks.filter(t=>t.resp===a&&t.status==='conc').length;
-    // [ajuste] Barra agora reflete o PROGRESSO (conclusão), não a carga.
     const pct = total ? Math.round(conc/total*100) : 0;
     return `<div class="sprint-carga-card">
       <div class="sprint-carga-top">
@@ -5591,11 +5589,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Só usa data atual se não tiver número salvo
   if(numEl && (!numEl.value || numEl.value === '—' || numEl.value === '')) numEl.value=wk;
   if(weekEl && !weekEl.value) weekEl.value=y+'-W'+String(wk).padStart(2,'0');
-  // [ajuste] Abre a última aba que a pessoa estava usando (padrão: sprint)
+  // [ajuste] Abre a última aba usada (padrão sprint)
   var _ultimaAba = 'sprint';
   try { _ultimaAba = localStorage.getItem('ole_ultima_aba') || 'sprint'; } catch (e) {}
-  var _abasValidas = ['executivo','graficos','areas','atualizacao','sprint','kanban','backlog'];
-  if (_abasValidas.indexOf(_ultimaAba) === -1) _ultimaAba = 'sprint';
+  if (['executivo','graficos','areas','atualizacao','sprint','kanban','backlog'].indexOf(_ultimaAba) === -1) _ultimaAba = 'sprint';
   showTab(_ultimaAba);
   // [ajuste] Atualiza o mês exibido conforme a data de hoje
   atualizarMesAtual();
@@ -5655,32 +5652,58 @@ function spRestaurarNumeroSprint() {
 }
 
 // ── Recados Sprint ───────────────────────────────────────────
-// [ajuste] Formata data ISO (YYYY-MM-DD) para DD/MM
-function spFmtRecadoData(d) {
-  if (!d) return '';
-  var p = String(d).split('-');
-  if (p.length !== 3) return d;
-  return p[2] + '/' + p[1];
-}
-// [ajuste] Ordena recados: os COM data primeiro (cronológico), depois os sem data
-function spRecadosOrdenados() {
-  return spRecados.slice().sort(function (a, b) {
-    var da = a.data || '', db = b.data || '';
-    if (da && db) return da < db ? -1 : (da > db ? 1 : 0);  // ambos com data: mais próximo primeiro
-    if (da && !db) return -1;                                // com data vem antes
-    if (!da && db) return 1;
-    return (b.id || 0) - (a.id || 0);                        // sem data: mais recentes primeiro
+function spFmtRecadoData(d){ if(!d) return ''; var p=String(d).split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; }
+function spRecadosOrdenados(){
+  return spRecados.slice().sort(function(a,b){
+    var da=a.data||'', db=b.data||'';
+    if(da&&db) return da<db?-1:(da>db?1:0);
+    if(da&&!db) return -1;
+    if(!da&&db) return 1;
+    return (b.id||0)-(a.id||0);
   });
 }
 function spRenderRecados() {
   const el = document.getElementById('sp-recados-lista'); if (!el) return;
   if (!spRecados.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Nenhum recado ainda.</div>'; return; }
   const hoje = new Date(); hoje.setHours(0,0,0,0);
-  el.innerHTML = spRecadosOrdenados().map(r => {
-    let dataBadge = '';
+  el.innerHTML = spRecadosOrdenados().map(function(r){
+    var dataBadge = '';
     if (r.data) {
-      const dt = new Date(r.data + 'T00:00:00');
-      const passou = dt < hoje;
-      const cor = passou ? 'var(--text-muted)' : '#1e3a6e';
-      const bg = passou ? 'var(--surface2)' : '#eef2ff';
-      dataBadge = `<span style="font-size:10px;font-weight:600;color:${cor};background:${bg};padding:2px 7px;border-radius:6px;white-space:nowrap;margin-left:auto" title="${r.data}">📅 ${spFm
+      var dt = new Date(r.data + 'T00:00:00');
+      var passou = dt < hoje;
+      var cor = passou ? 'var(--text-muted)' : '#1e3a6e';
+      var bg = passou ? 'var(--surface2)' : '#eef2ff';
+      dataBadge = '<span style="font-size:10px;font-weight:600;color:'+cor+';background:'+bg+';padding:2px 7px;border-radius:6px;white-space:nowrap;margin-left:auto" title="'+r.data+'">📅 '+spFmtRecadoData(r.data)+'</span>';
+    }
+    return '<div class="recado-item"><div class="recado-dot-'+r.tipo+'"></div><span class="recado-text">'+r.texto+'</span>'+dataBadge+'<button class="recado-del" onclick="spDelRecado('+r.id+')">✕</button></div>';
+  }).join('');
+}
+function spAddRecado() {
+  const inp = document.getElementById('sp-recado-input');
+  const tipo = document.getElementById('sp-recado-tipo').value;
+  const dataEl = document.getElementById('sp-recado-data');
+  const data = dataEl ? dataEl.value : '';
+  if (!inp.value.trim()) return;
+  spRecados.unshift({ id: spNextRecadoId++, texto: inp.value.trim(), tipo, data });
+  inp.value = ''; if (dataEl) dataEl.value = '';
+  spSaveLocal(); spRenderRecados();
+}
+function spDelRecado(id) { spRecados = spRecados.filter(r => r.id !== id); spSaveLocal(); spRenderRecados(); }
+window.spAddRecado = spAddRecado; window.spDelRecado = spDelRecado;
+window.spEncerrarSprint=spEncerrarSprint; window.spUpdateField=spUpdateField;
+window.spToggleEl=spToggleEl; window.spCopyAta=spCopyAta;
+window.spOpenModal=spOpenModal; window.spCloseModal=spCloseModal;
+window.spSaveTask=spSaveTask; window.spSaveTaskApply=spSaveTaskApply;
+window.spRenderTasks=spRenderTasks;
+window.kbRender=kbRender; window.blRenderEpics=blRenderEpics;
+window.blToggleItem=blToggleItem; window.blAddItem=blAddItem; window.blPuxarSprint=blPuxarSprint;
+window.blOpenForm=blOpenForm; window.blCloseForm=blCloseForm; window.blSaveEpic=blSaveEpic;
+window.blEditEpic=blEditEpic; window.blDeleteEpic=blDeleteEpic;
+window.inicioSetSem=inicioSetSem; window.inicioAddRecado=inicioAddRecado;
+window.inicioDelRecado=inicioDelRecado; window.inicioAtualizarMeta=inicioAtualizarMeta;
+window.spRenderTasks=spRenderTasks;
+
+})();
+</script>
+
+</body></html>
