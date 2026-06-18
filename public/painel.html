@@ -796,6 +796,7 @@
   }
   .etapa-edit:hover { background: var(--surface2); }
   .etapa-edit:focus { background: var(--surface2); outline: 2px solid #e8600a; cursor: text; }
+  .etapa-cell { font-family:'Poppins',sans-serif; font-size:13px; color:var(--text); min-width:220px; max-width:320px; white-space:normal; word-break:break-word; line-height:1.4; padding:8px 6px; vertical-align:top; }
   .resp-edit {
     border: 1.5px solid transparent; background: transparent; font-family: 'Poppins', sans-serif;
     font-size: 12.5px; color: var(--text); width: 100%; min-width: 90px;
@@ -1243,7 +1244,7 @@
         </div>
         <div class="form-group">
           <label>Projeto</label>
-          <select id="uProjeto">
+          <select id="uProjeto" onchange="preencherPctAnterior()">
             <option>PS3</option><option>Riamburgo</option><option>Preá-Carnaúba</option>
             <option>Caucaia I</option><option>Caucaia II</option><option>T. Padres</option><option>PS4</option>
             <option>PS4 T+1</option><option>PS3 T+1</option>
@@ -1251,13 +1252,13 @@
         </div>
         <div class="form-group">
           <label>Área</label>
-          <select id="uArea">
+          <select id="uArea" onchange="preencherPctAnterior()">
             <option>PROSPECÇÃO</option><option>LEGALIZAÇÃO</option><option>NOVOS PRODUTOS</option>
           </select>
         </div>
         <div class="form-group">
-          <label>% Anterior</label>
-          <input type="number" id="uPctAnt" min="0" max="100" placeholder="ex: 65">
+          <label>% Anterior <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">(auto)</span></label>
+          <input type="number" id="uPctAnt" min="0" max="100" placeholder="preenchido do mês anterior" title="Preenchido automaticamente com o % do último registro. Pode ajustar se precisar.">
         </div>
         <div class="form-group">
           <label>% Novo</label>
@@ -2431,7 +2432,7 @@ function renderPipelineTable() {
     return `<tr>
       <td class="proj-name">${p.id}</td>
       <td><span class="badge-area ${badge}">${p.area}</span></td>
-      <td><input class="etapa-edit" value="${p.etapa}" onblur="saveEtapa(${idx}, this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>
+      <td class="etapa-cell" title="${String((typeof ultimaEtapaRegistrada==='function'&&ultimaEtapaRegistrada(p.id))||p.etapa||'—').replace(/"/g,'&quot;')}">${(typeof ultimaEtapaRegistrada==='function'&&ultimaEtapaRegistrada(p.id))||p.etapa||'—'}</td>
       <td>${prosp_pct}</td>
       <td>${leg_pct}</td>
       <td>${np_pct}</td>
@@ -2600,6 +2601,89 @@ function pcLoadAndApply() {
   });
 }
 window.pcLoadAndApply = pcLoadAndApply;
+
+// [melhoria 3] Remove a COLUNA de um projeto de uma tabela de área (aba Áreas)
+// e atualiza gráficos/percentuais. Funciona para qualquer projeto, inclusive os
+// originais (PS3, PS4, etc.). O estado salvo das células é reindexado.
+function removerProjetoDaArea(tableId, projNome){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  if(!confirm('Remover a coluna "'+projNome+'" desta área?\n\nIsso recalcula os percentuais e gráficos. Pode ser desfeito recarregando antes de salvar? Não — a remoção é salva. Confirme se deseja prosseguir.'))return;
+  // descobre o índice da coluna pelo cabeçalho
+  const headRow=table.querySelector('thead tr');
+  const ths=Array.from(headRow.children);
+  let colIdx=-1;
+  ths.forEach(function(th,i){
+    const wrap=th.querySelector('.proj-pct-wrap');
+    const nome=wrap?wrap.childNodes[0].textContent.trim():'';
+    if(nome===projNome) colIdx=i;
+  });
+  if(colIdx<0)return;
+  // remove th e a célula correspondente de cada linha
+  headRow.removeChild(ths[colIdx]);
+  Array.from(table.querySelectorAll('tbody tr')).forEach(function(tr){
+    if(tr.children[colIdx]) tr.removeChild(tr.children[colIdx]);
+  });
+  // limpa estado salvo dessa coluna e reindexa as colunas seguintes
+  try{
+    const novo={};
+    Object.keys(pcState).forEach(function(k){
+      const parts=k.split('|'); // tableId|row|col
+      if(parts[0]!==tableId){ novo[k]=pcState[k]; return; }
+      const c=parseInt(parts[2],10);
+      if(c===colIdx) return;            // descarta a coluna removida
+      const nc = c>colIdx ? c-1 : c;    // reindexa as posteriores
+      novo[parts[0]+'|'+parts[1]+'|'+nc]=pcState[k];
+    });
+    pcState=novo;
+    localStorage.setItem('ole_pipeline_cells',JSON.stringify(pcState));
+    localStorage.setItem('ole_pipeline_removidos', JSON.stringify((function(){
+      let r={}; try{r=JSON.parse(localStorage.getItem('ole_pipeline_removidos')||'{}');}catch(e){}
+      r[tableId]=r[tableId]||[]; if(r[tableId].indexOf(projNome)<0) r[tableId].push(projNome); return r;
+    })()));
+  }catch(e){}
+  computePipeline();
+  if(typeof renderPipelineTable==='function') renderPipelineTable();
+  if(typeof initCharts==='function'){ chartsInited=false; }
+  toast('🗑 Coluna "'+projNome+'" removida e gráficos atualizados');
+}
+window.removerProjetoDaArea=removerProjetoDaArea;
+
+// [melhoria 3] Reaplica remoções salvas (após reload) escondendo as colunas
+function aplicarRemocoesPipeline(){
+  let r={}; try{r=JSON.parse(localStorage.getItem('ole_pipeline_removidos')||'{}');}catch(e){return;}
+  Object.keys(r).forEach(function(tableId){
+    const table=document.getElementById(tableId); if(!table)return;
+    (r[tableId]||[]).forEach(function(projNome){
+      const headRow=table.querySelector('thead tr'); if(!headRow)return;
+      const ths=Array.from(headRow.children); let colIdx=-1;
+      ths.forEach(function(th,i){ const w=th.querySelector('.proj-pct-wrap'); const n=w?w.childNodes[0].textContent.trim():''; if(n===projNome) colIdx=i; });
+      if(colIdx<0)return;
+      headRow.removeChild(ths[colIdx]);
+      Array.from(table.querySelectorAll('tbody tr')).forEach(function(tr){ if(tr.children[colIdx]) tr.removeChild(tr.children[colIdx]); });
+    });
+  });
+}
+window.aplicarRemocoesPipeline=aplicarRemocoesPipeline;
+
+function injetarBotoesRemover(){
+  ['ptable-prosp','ptable-leg','ptable-np'].forEach(function(tableId){
+    const table=document.getElementById(tableId); if(!table)return;
+    Array.from(table.querySelectorAll('thead th.th-proj')).forEach(function(th){
+      const wrap=th.querySelector('.proj-pct-wrap'); if(!wrap)return;
+      if(wrap.querySelector('.col-del-btn'))return; // já tem
+      const nome=wrap.childNodes[0].textContent.trim();
+      const btn=document.createElement('button');
+      btn.className='col-del-btn';
+      btn.textContent='✕';
+      btn.title='Remover '+nome+' desta área';
+      btn.setAttribute('onclick','removerProjetoDaArea(\''+tableId+'\',\''+nome.replace(/'/g,"\\'")+'\')');
+      btn.style.cssText='display:block;margin:4px auto 0;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;line-height:1';
+      wrap.appendChild(btn);
+    });
+  });
+}
+window.injetarBotoesRemover=injetarBotoesRemover;
 
 // ════════════════════════════════════════════════════════════
 // AUTO-CALCULATE ALL INDICES FROM PIPELINE TABLES
@@ -2959,6 +3043,24 @@ function renderUpdateTable() {
   }).join('');
 }
 
+function ultimoRegistroUpdate(projeto, area){
+  const O=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  function val(s){const p=String(s||'').match(/([A-Za-z]{3})\/([0-9]+)/);if(!p)return 0;return parseInt(p[2])*100+O.indexOf(p[1].toLowerCase());}
+  const c=updates.filter(u=>u['Projeto']===projeto&&(!area||u['Área']===area));
+  if(!c.length)return null;
+  return c.slice().sort((a,b)=>val(b['Mês'])-val(a['Mês']))[0];
+}
+function ultimaEtapaRegistrada(projeto){const r=ultimoRegistroUpdate(projeto,null);return r?r['Etapa/Avanço']:'';}
+function preencherPctAnterior(){
+  const proj=document.getElementById('uProjeto').value;
+  const area=document.getElementById('uArea').value;
+  const campo=document.getElementById('uPctAnt');
+  if(!campo)return;
+  const r=ultimoRegistroUpdate(proj,area);
+  campo.value=(r&&r['% Novo'])?String(r['% Novo']).replace('%','').trim():'';
+}
+window.preencherPctAnterior=preencherPctAnterior;
+
 async function addUpdate() {
   const mesRaw  = document.getElementById('uMes').value;
   const proj    = document.getElementById('uProjeto').value;
@@ -2983,9 +3085,10 @@ async function addUpdate() {
   toast('✅ Atualização de ' + proj + ' salva!');
   document.getElementById('uEtapa').value   = '';
   document.getElementById('uObs').value     = '';
-  document.getElementById('uPctAnt').value  = '';
   document.getElementById('uPctNovo').value = '';
   renderUpdateTable();
+  if (typeof renderPipelineTable === 'function') renderPipelineTable();
+  if (typeof preencherPctAnterior === 'function') preencherPctAnterior();
   if (_lineChart) renderLineChart();
 }
 
@@ -3345,7 +3448,7 @@ function showTab(name) {
       if (typeof ffRender === 'function') ffRender();
     }
     computePipeline();
-    if (name === 'atualizacao') renderUpdateTable();
+    if (name === 'atualizacao') { renderUpdateTable(); if (typeof preencherPctAnterior === 'function') preencherPctAnterior(); }
   }
   if (name === 'delegacao') { renderDelegCards(); showEmail('Beatriz', document.querySelector('.email-tab')); }
   if (name === 'sprint')  { if(typeof spSyncEpicsFromProjetos==='function'){spSyncEpicsFromProjetos();spPopulateEpicFilters();spRenderTasks();spRenderHistorico();spRenderRecados();spPopulateMeta();} }
@@ -5569,6 +5672,8 @@ window.ffDeleteFicha = ffDeleteFicha;
 // ── INIT ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   renderPipelineTable();
+  aplicarRemocoesPipeline();   // [melhoria 3] reaplica colunas removidas
+  injetarBotoesRemover();      // [melhoria 3] adiciona ✕ nos cabeçalhos de projeto
   pcLoadAndApply();       // [fix] restaura status salvos das celulas do pipeline
   apLoadLocal();          // [v12] carrega projetos da área criados
   apRenderColumns();      // [v12] injeta colunas ANTES de computar pipeline
