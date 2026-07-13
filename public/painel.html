@@ -544,23 +544,37 @@
     font-size:12.5px; color:var(--text); line-height:1.5; white-space:pre-wrap;
   }
 
-  /* Processos — Órgãos */
-  .proc-table { width:100%; border-collapse:collapse; min-width:1100px; }
-  .proc-table thead tr { background:var(--surface2); }
-  .proc-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); text-align:left; padding:8px 6px; border-bottom:2px solid var(--border); white-space:nowrap; }
+  /* Processos — Órgãos (v13.1, cores da marca) */
+  .proc-table { width:100%; border-collapse:collapse; min-width:1180px; }
+  .proc-table thead tr { background:var(--navy); }
+  .proc-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:nowrap; font-weight:600; }
   .proc-table td { padding:4px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .proc-input { width:100%; font-size:11.5px; font-family:'Poppins',sans-serif; padding:5px 7px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--text); outline:none; transition:border-color .15s, background .15s; }
   .proc-input:hover { border-color:var(--border); background:var(--surface2); }
-  .proc-input:focus { border-color:var(--navy); background:var(--surface); }
+  .proc-input:focus { border-color:var(--ole-orange); background:var(--surface); }
   select.proc-input { cursor:pointer; }
-  .proc-group-hd { display:flex; align-items:center; gap:10px; padding:10px 16px; background:var(--navy); color:#fff; font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; }
-  .proc-add-btn { margin-left:auto; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); color:#fff; font-family:'Poppins',sans-serif; font-size:11px; font-weight:600; padding:4px 12px; border-radius:99px; cursor:pointer; transition:background .15s; }
-  .proc-add-btn:hover { background:rgba(255,255,255,.28); }
+  tr.proc-done { background:var(--surface2); }
+  tr.proc-done .proc-input { color:var(--text-muted); }
+  tr.proc-done td { opacity:.72; }
+  .proc-group-hd { display:flex; align-items:center; gap:10px; padding:11px 16px; background:var(--navy); color:#fff; font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; border-bottom:3px solid var(--ole-orange); }
+  .proc-count-chip { background:var(--ole-orange); color:#fff; font-size:11px; font-weight:700; padding:2px 10px; border-radius:99px; }
+  .proc-add-btn { margin-left:auto; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.35); color:#fff; font-family:'Poppins',sans-serif; font-size:11px; font-weight:600; padding:4px 12px; border-radius:99px; cursor:pointer; transition:background .15s; }
+  .proc-add-btn:hover { background:var(--ole-orange); border-color:var(--ole-orange); }
+  .proc-novo-btn { background:var(--ole-orange); color:#fff; border:none; padding:8px 18px; border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .proc-novo-btn:hover { background:#d4531d; }
   .proc-del-btn { background:transparent; border:none; cursor:pointer; color:var(--text-muted); font-size:13px; padding:2px 6px; border-radius:6px; }
   .proc-del-btn:hover { color:var(--red); background:var(--surface2); }
-  .proc-stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; }
-  .proc-stat-num { font-family:'Poppins',sans-serif; font-size:22px; font-weight:700; }
+  .proc-stat-card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--navy); border-radius:var(--radius); padding:12px 16px; box-shadow:var(--shadow); }
+  .proc-stat-num { font-family:'Poppins',sans-serif; font-size:22px; font-weight:700; color:var(--navy); }
   .proc-stat-lbl { font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px; }
+  .proc-dias-badge { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; white-space:nowrap; }
+  .proc-dias-done { background:var(--navy); color:#fff; }
+  .proc-dias-open { background:#fdf1e7; color:var(--ole-orange); border:1px solid var(--ole-orange); }
+  .proc-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .proc-bar-label { font-size:11.5px; color:var(--text); width:230px; text-align:right; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .proc-bar-track { flex:1; height:18px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .proc-bar-fill { height:100%; border-radius:99px; display:flex; align-items:center; padding-left:8px; font-size:10.5px; font-weight:600; color:#fff; background:linear-gradient(90deg, var(--navy), var(--blue-light)); }
+  .proc-bar-meta { font-size:11px; font-weight:600; color:var(--text-muted); width:110px; flex-shrink:0; }
 
   /* Backlog / Projetos */
   .backlog-epic { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
@@ -2334,7 +2348,7 @@
         <div class="sprint-modal-title">🏛 Novo processo</div>
         <div class="sp-form-row triple">
           <div class="sp-form-field"><label>Órgão</label><select id="proc-f-orgao"></select></div>
-          <div class="sp-form-field"><label>Tipo</label><input id="proc-f-tipo" type="text" placeholder="ex: Alvará, Licença..."/></div>
+          <div class="sp-form-field"><label>Tipo</label><input id="proc-f-tipo" type="text" list="proc-tipos-list" placeholder="ex: Alvará, Licença..."/></div>
           <div class="sp-form-field"><label>Protocolo</label><input id="proc-f-protocolo" type="text"/></div>
         </div>
         <div class="sp-form-row single"><div class="sp-form-field"><label>Descrição</label><input id="proc-f-descricao" type="text" placeholder="O que está sendo tratado..."/></div></div>
@@ -2344,8 +2358,8 @@
           <div class="sp-form-field"><label>Analista</label><input id="proc-f-analista" type="text" list="proc-analistas-list"/></div>
         </div>
         <div class="sp-form-row triple">
-          <div class="sp-form-field"><label>Entrada</label><input id="proc-f-entrada" type="text" placeholder="dd/mm"/></div>
-          <div class="sp-form-field"><label>Previsão</label><input id="proc-f-previsao" type="text" placeholder="dd/mm"/></div>
+          <div class="sp-form-field"><label>Entrada</label><input id="proc-f-entrada" type="date"/></div>
+          <div class="sp-form-field"><label>Previsão</label><input id="proc-f-previsao" type="date"/></div>
           <div class="sp-form-field"><label>Status</label><select id="proc-f-status"></select></div>
         </div>
         <div class="sp-form-actions"><button class="btn-cancel" onclick="procCloseModal()">Cancelar</button><button class="btn-save" onclick="procSaveNew()">Adicionar processo</button></div>
@@ -2353,6 +2367,7 @@
     </div>
     <datalist id="proc-projetos-list"></datalist>
     <datalist id="proc-analistas-list"></datalist>
+    <datalist id="proc-tipos-list"></datalist>
 
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
@@ -2360,11 +2375,17 @@
         <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:var(--navy)">🏛 Processos — Órgãos</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Controle de processos em andamento nos órgãos · Atualizado em: <span id="proc-upd" style="font-weight:600;color:var(--navy)">—</span></div>
       </div>
-      <button class="sprint-add-btn" onclick="procOpenModal()">➕ Novo processo</button>
+      <button class="proc-novo-btn" onclick="procOpenModal()">➕ Novo processo</button>
     </div>
 
     <!-- Stats -->
-    <div id="proc-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px"></div>
+    <div id="proc-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:16px"></div>
+
+    <!-- Indicador: dias por tipo -->
+    <div class="table-wrap" style="padding:16px 20px;margin-bottom:16px">
+      <div class="section-title" style="border-bottom-color:var(--ole-orange)">⏱ Dias de processo por tipo <span style="font-size:10.5px;font-weight:500;color:var(--text-muted);text-transform:none;letter-spacing:0">(média entre entrada e retirada — só processos concluídos)</span></div>
+      <div id="proc-indicador"></div>
+    </div>
 
     <!-- Filtros -->
     <div class="sprint-filters">
@@ -5936,8 +5957,11 @@ window.inicioDelRecado=inicioDelRecado; window.inicioAtualizarMeta=inicioAtualiz
 window.spRenderTasks=spRenderTasks;
 
 // ════════════════════════════════════════════════════════════
-// PROCESSOS — ÓRGÃOS  [v13]
+// PROCESSOS — ÓRGÃOS  [v13.1]
 // Planilha "Controle de Processos em Andamento" online e editável.
+// v13.1: cores da marca, ordenação por entrada, coluna ⏱ Dias
+// (dataReal − entrada), indicador de dias por tipo, RETIRADO em
+// cinza no fim da tabela. Datas armazenadas em ISO (yyyy-mm-dd).
 // Persistência: chave 'ole_procs' (a ponte sincroniza com o banco).
 // ════════════════════════════════════════════════════════════
 const PROC_ORGAOS = ['Prefeitura SEMAM','Cartório','CAGECE','ENEL','Ambiental','CAIXA','SEFIN','Junta Comercial','Jurídico','Outro'];
@@ -5945,50 +5969,51 @@ const PROC_STATUS = [
   {key:'',             fg:'var(--text-muted)', bg:'transparent'},
   {key:'EM ANDAMENTO', fg:'#1d4ed8', bg:'#dbeafe'},
   {key:'RETIRAR',      fg:'#0e7490', bg:'#cffafe'},
-  {key:'RETIRADO',     fg:'#166534', bg:'#dcfce7'},
   {key:'PENDENCIAS',   fg:'#92400e', bg:'#fef3c7'},
   {key:'ATRASADO',     fg:'#991b1b', bg:'#fee2e2'},
+  {key:'RETIRADO',     fg:'#475569', bg:'#e2e8f0'},
   {key:'CONCLUÍDO',    fg:'#166534', bg:'#dcfce7'}
 ];
+const PROC_DONE_STATUS = ['RETIRADO','CONCLUÍDO'];
 const PROC_SEED = [
-{"orgao":"Prefeitura SEMAM","tipo":"Licença Prévia","protocolo":"1290","entrada":"27/05","descricao":"Condomínio 01-364un","matricula":"","projeto":"Morada dos Sabiás","previsao":"10/06","analista":"MÁRCIO","status":"RETIRAR","dataReal":"18/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Licença Prévia","protocolo":"1295","entrada":"27/05","descricao":"Condomínio 02-324un","matricula":"","projeto":"Morada dos Sabiás","previsao":"10/06","analista":"MÁRCIO","status":"RETIRAR","dataReal":"18/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Alvara- retificação","protocolo":"1291","entrada":"27/05","descricao":"Q20B, Q20C, Q12, Q08","matricula":"","projeto":"PS3","previsao":"05/06","analista":"RAFAELA","status":"RETIRADO","dataReal":"16/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Retificação","protocolo":"1296","entrada":"27/05","descricao":"Riamburgo","matricula":"","projeto":"Morada dos Sabiás","previsao":"10/06","analista":"INGRID","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Autorização Ambiental","protocolo":"1325","entrada":"28/05","descricao":"Aterro Dr Marcelo","matricula":"","projeto":"PS4","previsao":"11/06","analista":"JACIARA","status":"RETIRAR","dataReal":"18/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Autorização desmemb.","protocolo":"1468","entrada":"15/06","descricao":"ret. da autorização de desmemb.","matricula":"","projeto":"PS3- quadra 04","previsao":"03/07","analista":"MARCIO","status":"RETIRADO","dataReal":"16/06"},
-{"orgao":"Prefeitura SEMAM","tipo":"Licença de supressão","protocolo":"1512","entrada":"19/06","descricao":"Supressão Condomínio 02","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"10/07","analista":"MARCIO","status":"RETIRADO","dataReal":"02/07"},
-{"orgao":"Prefeitura SEMAM","tipo":"Licença de supressão","protocolo":"1513","entrada":"19/06","descricao":"Supressão Condomínio 01","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"10/07","analista":"MARCIO","status":"RETIRADO","dataReal":"02/07"},
-{"orgao":"Prefeitura SEMAM","tipo":"Alvará","protocolo":"1323","entrada":"28/05","descricao":"Q05","matricula":"","projeto":"PS3","previsao":"11/06","analista":"APARECIDA","status":"RETIRADO","dataReal":"07/07"},
-{"orgao":"Prefeitura SEMAM","tipo":"recarimbamento Plantas PS3","protocolo":"1445","entrada":"12/06","descricao":"PLANTAS Q03, Q04, Q05, Q09","matricula":"","projeto":"PS3","previsao":"03/07","analista":"","status":"PENDENCIAS","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Alvará","protocolo":"1324","entrada":"28/05","descricao":"Quadras 02, 03, 04 e 07","matricula":"","projeto":"PS3","previsao":"11/06","analista":"APARECIDA","status":"ATRASADO","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Alvarás","protocolo":"1627","entrada":"26/06","descricao":"correção alvarás 09,10 e 11","matricula":"","projeto":"PS3","previsao":"10/07","analista":"APARECIDA","status":"","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Ofício pleito 7m²","protocolo":"1628","entrada":"26/06","descricao":"pleito para quartos de 7m²-","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"10/07","analista":"DANI- Subsecretária","status":"","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Declaração de viabilidade1658","protocolo":"1658","entrada":"01/07","descricao":"viabilidade para eletricidade","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"22/07","analista":"","status":"","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Retificação Alvarás","protocolo":"1657","entrada":"01/07","descricao":"Pedido de matricula- Alv GRUP02","matricula":"","projeto":"PS3","previsao":"22/07","analista":"APARECIDA","status":"","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Ofício Espaço Pipa","protocolo":"1672","entrada":"02/07","descricao":"Cessão de uso p/ Espaço Pipa","matricula":"","projeto":"PS4","previsao":"03/08","analista":"BRUNA","status":"","dataReal":""},
-{"orgao":"Prefeitura SEMAM","tipo":"Licença de Instalação","protocolo":"2930","entrada":"19/05","descricao":"PS3 - 180 unidades","matricula":"REFAZER","projeto":"PS3","previsao":"","analista":"NETTO","status":"ATRASADO","dataReal":""},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182800","entrada":"19/05","descricao":"Quadra 10","matricula":"MAT 27933","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182798","entrada":"19/05","descricao":"Quadra 09","matricula":"MAT 27932","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"1822789","entrada":"19/05","descricao":"Quadra 03","matricula":"MAT 27927","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182792","entrada":"19/05","descricao":"Quadra 04","matricula":"MAT 27928","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182793","entrada":"19/05","descricao":"Quadra 05","matricula":"MAT 27929","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182789","entrada":"19/05","descricao":"Quadra 07","matricula":"MAT 27930","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182788","entrada":"19/05","descricao":"Quadra 02","matricula":"MAT 27926","projeto":"PS3","previsao":"05/06","analista":"THIAGO","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Retificação de Registro INC Q16","protocolo":"127/2026","entrada":"01/06","descricao":"correção areas -Quadra 16","matricula":"MAT 27935","projeto":"PS3","previsao":"17/06","analista":"","status":"RETIRADO","dataReal":""},
-{"orgao":"Cartório","tipo":"Atualização das matrículas Quadra 11","protocolo":"207948","entrada":"01/06","descricao":"Quadra 11","matricula":"MAt 17502, 17503 17504,17501,28499,28500, 28501,28502","projeto":"PS3","previsao":"09/06","analista":"","status":"RETIRADO","dataReal":"09/06"},
-{"orgao":"Cartório","tipo":"Procuração publicada em RTD","protocolo":"207966","entrada":"09/06","descricao":"Procuração Riamburgo- Olé","matricula":"MAT 1040","projeto":"RIAMBURGO","previsao":"16/06","analista":"","status":"RETIRADO","dataReal":"10/06"},
-{"orgao":"Cartório","tipo":"Atualização MAT 1040","protocolo":"","entrada":"12/06","descricao":"Matrícula para Riamburgo","matricula":"MAT 1040","projeto":"RIAMBURGO","previsao":"16/06","analista":"","status":"RETIRADO","dataReal":"12/06"},
-{"orgao":"Cartório","tipo":"SPE Q16","protocolo":"208752","entrada":"15/06","descricao":"correção razão social SPE","matricula":"MAT 27935","projeto":"PS3","previsao":"03/07","analista":"","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"SPE Q20","protocolo":"209304","entrada":"15/06","descricao":"correção razão social SPE","matricula":"MAT 27936","projeto":"PS3","previsao":"03/07","analista":"","status":"RETIRADO","dataReal":"24/06"},
-{"orgao":"Cartório","tipo":"Procuração publicada em RTD","protocolo":"209351","entrada":"19/06","descricao":"procuração Filipe","matricula":"","projeto":"TODOS","previsao":"19/06","analista":"","status":"RETIRADO","dataReal":"19/06"},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206471","entrada":"25/05","descricao":"Quadra 20B","matricula":"MAT 27937","projeto":"PS3","previsao":"12/06","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206472","entrada":"25/05","descricao":"Quadra 08","matricula":"MAT 27931","projeto":"PS3","previsao":"12/06","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206476","entrada":"25/05","descricao":"Quadra 20B","matricula":"MAT 27938","projeto":"PS3","previsao":"12/06","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206489","entrada":"25/05","descricao":"Quadra 12","matricula":"MAT 27934","projeto":"PS3","previsao":"12/06","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"210858","entrada":"02/07","descricao":"Quadra 05","matricula":"MAT 27929","projeto":"PS3","previsao":"16/07","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Incorporação","protocolo":"210856","entrada":"02/07","descricao":"Quadra 03","matricula":"MAT 27927","projeto":"PS3","previsao":"16/07","analista":"","status":"","dataReal":""},
-{"orgao":"Cartório","tipo":"Cert. Onus e Vintenária","protocolo":"210572","entrada":"01/07","descricao":"Quadra 05 e 09","matricula":"27929, 27932","projeto":"PS3","previsao":"08/07","analista":"","status":"","dataReal":""}
+{"orgao":"Prefeitura SEMAM","tipo":"Licença Prévia","protocolo":"1290","entrada":"2026-05-27","descricao":"Condomínio 01-364un","matricula":"","projeto":"Morada dos Sabiás","previsao":"2026-06-10","analista":"MÁRCIO","status":"RETIRAR","dataReal":"2026-06-18"},
+{"orgao":"Prefeitura SEMAM","tipo":"Licença Prévia","protocolo":"1295","entrada":"2026-05-27","descricao":"Condomínio 02-324un","matricula":"","projeto":"Morada dos Sabiás","previsao":"2026-06-10","analista":"MÁRCIO","status":"RETIRAR","dataReal":"2026-06-18"},
+{"orgao":"Prefeitura SEMAM","tipo":"Alvara- retificação","protocolo":"1291","entrada":"2026-05-27","descricao":"Q20B, Q20C, Q12, Q08","matricula":"","projeto":"PS3","previsao":"2026-06-05","analista":"RAFAELA","status":"RETIRADO","dataReal":"2026-06-16"},
+{"orgao":"Prefeitura SEMAM","tipo":"Retificação","protocolo":"1296","entrada":"2026-05-27","descricao":"Riamburgo","matricula":"","projeto":"Morada dos Sabiás","previsao":"2026-06-10","analista":"INGRID","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Prefeitura SEMAM","tipo":"Autorização Ambiental","protocolo":"1325","entrada":"2026-05-28","descricao":"Aterro Dr Marcelo","matricula":"","projeto":"PS4","previsao":"2026-06-11","analista":"JACIARA","status":"RETIRAR","dataReal":"2026-06-18"},
+{"orgao":"Prefeitura SEMAM","tipo":"Autorização desmemb.","protocolo":"1468","entrada":"2026-06-15","descricao":"ret. da autorização de desmemb.","matricula":"","projeto":"PS3- quadra 04","previsao":"2026-07-03","analista":"MARCIO","status":"RETIRADO","dataReal":"2026-06-16"},
+{"orgao":"Prefeitura SEMAM","tipo":"Licença de supressão","protocolo":"1512","entrada":"2026-06-19","descricao":"Supressão Condomínio 02","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"2026-07-10","analista":"MARCIO","status":"RETIRADO","dataReal":"2026-07-02"},
+{"orgao":"Prefeitura SEMAM","tipo":"Licença de supressão","protocolo":"1513","entrada":"2026-06-19","descricao":"Supressão Condomínio 01","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"2026-07-10","analista":"MARCIO","status":"RETIRADO","dataReal":"2026-07-02"},
+{"orgao":"Prefeitura SEMAM","tipo":"Alvará","protocolo":"1323","entrada":"2026-05-28","descricao":"Q05","matricula":"","projeto":"PS3","previsao":"2026-06-11","analista":"APARECIDA","status":"RETIRADO","dataReal":"2026-07-07"},
+{"orgao":"Prefeitura SEMAM","tipo":"recarimbamento Plantas PS3","protocolo":"1445","entrada":"2026-06-12","descricao":"PLANTAS Q03, Q04, Q05, Q09","matricula":"","projeto":"PS3","previsao":"2026-07-03","analista":"","status":"PENDENCIAS","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Alvará","protocolo":"1324","entrada":"2026-05-28","descricao":"Quadras 02, 03, 04 e 07","matricula":"","projeto":"PS3","previsao":"2026-06-11","analista":"APARECIDA","status":"ATRASADO","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Alvarás","protocolo":"1627","entrada":"2026-06-26","descricao":"correção alvarás 09,10 e 11","matricula":"","projeto":"PS3","previsao":"2026-07-10","analista":"APARECIDA","status":"","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Ofício pleito 7m²","protocolo":"1628","entrada":"2026-06-26","descricao":"pleito para quartos de 7m²-","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"2026-07-10","analista":"DANI- Subsecretária","status":"","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Declaração de viabilidade1658","protocolo":"1658","entrada":"2026-07-01","descricao":"viabilidade para eletricidade","matricula":"1040","projeto":"Morada dos Sabiás","previsao":"2026-07-22","analista":"","status":"","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Retificação Alvarás","protocolo":"1657","entrada":"2026-07-01","descricao":"Pedido de matricula- Alv GRUP02","matricula":"","projeto":"PS3","previsao":"2026-07-22","analista":"APARECIDA","status":"","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Ofício Espaço Pipa","protocolo":"1672","entrada":"2026-07-02","descricao":"Cessão de uso p/ Espaço Pipa","matricula":"","projeto":"PS4","previsao":"2026-08-03","analista":"BRUNA","status":"","dataReal":""},
+{"orgao":"Prefeitura SEMAM","tipo":"Licença de Instalação","protocolo":"2930","entrada":"2026-05-19","descricao":"PS3 - 180 unidades","matricula":"REFAZER","projeto":"PS3","previsao":"","analista":"NETTO","status":"ATRASADO","dataReal":""},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182800","entrada":"2026-05-19","descricao":"Quadra 10","matricula":"MAT 27933","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182798","entrada":"2026-05-19","descricao":"Quadra 09","matricula":"MAT 27932","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"1822789","entrada":"2026-05-19","descricao":"Quadra 03","matricula":"MAT 27927","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182792","entrada":"2026-05-19","descricao":"Quadra 04","matricula":"MAT 27928","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182793","entrada":"2026-05-19","descricao":"Quadra 05","matricula":"MAT 27929","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182789","entrada":"2026-05-19","descricao":"Quadra 07","matricula":"MAT 27930","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Desmembramento","protocolo":"182788","entrada":"2026-05-19","descricao":"Quadra 02","matricula":"MAT 27926","projeto":"PS3","previsao":"2026-06-05","analista":"THIAGO","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Retificação de Registro INC Q16","protocolo":"127/2026","entrada":"2026-06-01","descricao":"correção areas -Quadra 16","matricula":"MAT 27935","projeto":"PS3","previsao":"2026-06-17","analista":"","status":"RETIRADO","dataReal":""},
+{"orgao":"Cartório","tipo":"Atualização das matrículas Quadra 11","protocolo":"207948","entrada":"2026-06-01","descricao":"Quadra 11","matricula":"MAt 17502, 17503 17504,17501,28499,28500, 28501,28502","projeto":"PS3","previsao":"2026-06-09","analista":"","status":"RETIRADO","dataReal":"2026-06-09"},
+{"orgao":"Cartório","tipo":"Procuração publicada em RTD","protocolo":"207966","entrada":"2026-06-09","descricao":"Procuração Riamburgo- Olé","matricula":"MAT 1040","projeto":"RIAMBURGO","previsao":"2026-06-16","analista":"","status":"RETIRADO","dataReal":"2026-06-10"},
+{"orgao":"Cartório","tipo":"Atualização MAT 1040","protocolo":"","entrada":"2026-06-12","descricao":"Matrícula para Riamburgo","matricula":"MAT 1040","projeto":"RIAMBURGO","previsao":"2026-06-16","analista":"","status":"RETIRADO","dataReal":"2026-06-12"},
+{"orgao":"Cartório","tipo":"SPE Q16","protocolo":"208752","entrada":"2026-06-15","descricao":"correção razão social SPE","matricula":"MAT 27935","projeto":"PS3","previsao":"2026-07-03","analista":"","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"SPE Q20","protocolo":"209304","entrada":"2026-06-15","descricao":"correção razão social SPE","matricula":"MAT 27936","projeto":"PS3","previsao":"2026-07-03","analista":"","status":"RETIRADO","dataReal":"2026-06-24"},
+{"orgao":"Cartório","tipo":"Procuração publicada em RTD","protocolo":"209351","entrada":"2026-06-19","descricao":"procuração Filipe","matricula":"","projeto":"TODOS","previsao":"2026-06-19","analista":"","status":"RETIRADO","dataReal":"2026-06-19"},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206471","entrada":"2026-05-25","descricao":"Quadra 20B","matricula":"MAT 27937","projeto":"PS3","previsao":"2026-06-12","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206472","entrada":"2026-05-25","descricao":"Quadra 08","matricula":"MAT 27931","projeto":"PS3","previsao":"2026-06-12","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206476","entrada":"2026-05-25","descricao":"Quadra 20B","matricula":"MAT 27938","projeto":"PS3","previsao":"2026-06-12","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"206489","entrada":"2026-05-25","descricao":"Quadra 12","matricula":"MAT 27934","projeto":"PS3","previsao":"2026-06-12","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"210858","entrada":"2026-07-02","descricao":"Quadra 05","matricula":"MAT 27929","projeto":"PS3","previsao":"2026-07-16","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Incorporação","protocolo":"210856","entrada":"2026-07-02","descricao":"Quadra 03","matricula":"MAT 27927","projeto":"PS3","previsao":"2026-07-16","analista":"","status":"","dataReal":""},
+{"orgao":"Cartório","tipo":"Cert. Onus e Vintenária","protocolo":"210572","entrada":"2026-07-01","descricao":"Quadra 05 e 09","matricula":"27929, 27932","projeto":"PS3","previsao":"2026-07-08","analista":"","status":"","dataReal":""}
 ];
 
 let procData = { atualizadoEm:'', itens:[] };
@@ -6019,6 +6044,18 @@ function procSave() {
   const el = document.getElementById('proc-upd'); if (el) el.textContent = procData.atualizadoEm;
 }
 
+function procIsDone(p) { return PROC_DONE_STATUS.indexOf((p.status||'').toUpperCase()) !== -1; }
+
+// Dias de processo: dataReal − entrada (concluído) ou hoje − entrada (em aberto)
+function procDias(p) {
+  if (!p.entrada) return null;
+  const ini = new Date(p.entrada + 'T00:00:00');
+  const fim = p.dataReal ? new Date(p.dataReal + 'T00:00:00') : new Date();
+  const n = Math.round((fim - ini) / 86400000);
+  if (isNaN(n)) return null;
+  return { n: n, fechado: !!p.dataReal };
+}
+
 // União dos órgãos fixos com os que existirem nos dados (mantém a ordem)
 function procOrgaosAll() {
   const set = PROC_ORGAOS.slice();
@@ -6040,6 +6077,36 @@ function procFillSelect(id, values, labels, keepFirst) {
   if (el.value !== cur) el.value = keepFirst ? '' : (values[0]||'');
 }
 
+// Indicador: média de dias (entrada → retirada) por tipo, só concluídos
+function procRenderIndicador() {
+  const cont = document.getElementById('proc-indicador'); if (!cont) return;
+  const porTipo = {};
+  procData.itens.forEach(p => {
+    if (!p.entrada || !p.dataReal) return;
+    const d = Math.round((new Date(p.dataReal+'T00:00:00') - new Date(p.entrada+'T00:00:00')) / 86400000);
+    if (isNaN(d) || d < 0) return;
+    const t = (p.tipo||'').trim() || '(sem tipo)';
+    (porTipo[t] = porTipo[t] || []).push(d);
+  });
+  const tipos = Object.keys(porTipo).map(t => ({
+    tipo: t,
+    n: porTipo[t].length,
+    media: Math.round(porTipo[t].reduce((a,b)=>a+b,0) / porTipo[t].length)
+  })).sort((a,b) => b.media - a.media);
+  if (!tipos.length) {
+    cont.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Ainda não há processos concluídos com data de entrada e data real preenchidas.</div>';
+    return;
+  }
+  const todas = tipos.flatMap(t => porTipo[t.tipo]);
+  const mediaGeral = Math.round(todas.reduce((a,b)=>a+b,0) / todas.length);
+  const max = Math.max(...tipos.map(t=>t.media), 1);
+  cont.innerHTML =
+    `<div class="proc-bar-row" style="margin-bottom:12px"><span class="proc-bar-label" style="font-weight:700;color:var(--ole-orange)">MÉDIA GERAL</span><div class="proc-bar-track"><div class="proc-bar-fill" style="width:${Math.max(8, Math.round(mediaGeral/max*100))}%;background:linear-gradient(90deg, var(--ole-orange), var(--gold))">${mediaGeral} dias</div></div><span class="proc-bar-meta">${todas.length} processos</span></div>` +
+    tipos.map(t =>
+      `<div class="proc-bar-row"><span class="proc-bar-label" title="${procEsc(t.tipo)}">${procEsc(t.tipo)}</span><div class="proc-bar-track"><div class="proc-bar-fill" style="width:${Math.max(8, Math.round(t.media/max*100))}%">${t.media} ${t.media===1?'dia':'dias'}</div></div><span class="proc-bar-meta">${t.n} concluído${t.n>1?'s':''}</span></div>`
+    ).join('');
+}
+
 function procRender() {
   const cont = document.getElementById('proc-groups'); if (!cont) return;
   const itens = procData.itens;
@@ -6047,6 +6114,7 @@ function procRender() {
   // Filtros: popula opções dinâmicas preservando seleção
   const projetos = Array.from(new Set(itens.map(p=>p.projeto).filter(Boolean))).sort();
   const analistas = Array.from(new Set(itens.map(p=>p.analista).filter(Boolean))).sort();
+  const tipos = Array.from(new Set(itens.map(p=>p.tipo).filter(Boolean))).sort();
   procFillSelect('proc-fil-orgao', procOrgaosAll(), null, true);
   procFillSelect('proc-fil-projeto', projetos, null, true);
   procFillSelect('proc-fil-analista', analistas, null, true);
@@ -6055,6 +6123,8 @@ function procRender() {
   if (dlP) dlP.innerHTML = projetos.map(p=>`<option value="${procEsc(p)}">`).join('');
   const dlA = document.getElementById('proc-analistas-list');
   if (dlA) dlA.innerHTML = analistas.map(a=>`<option value="${procEsc(a)}">`).join('');
+  const dlT = document.getElementById('proc-tipos-list');
+  if (dlT) dlT.innerHTML = tipos.map(t=>`<option value="${procEsc(t)}">`).join('');
 
   const fO = document.getElementById('proc-fil-orgao').value;
   const fP = document.getElementById('proc-fil-projeto').value;
@@ -6069,17 +6139,24 @@ function procRender() {
   );
 
   // Cards de resumo (sobre TODOS os itens, não filtrados)
-  const nAndamento = itens.filter(p=>['','EM ANDAMENTO','PENDENCIAS'].indexOf(p.status||'')!==-1).length;
+  const nAndamento = itens.filter(p=>!procIsDone(p) && (p.status||'')!=='ATRASADO' && (p.status||'')!=='RETIRAR').length;
   const nRetirar   = itens.filter(p=>(p.status||'')==='RETIRAR').length;
-  const nConc      = itens.filter(p=>['RETIRADO','CONCLUÍDO'].indexOf(p.status||'')!==-1).length;
+  const nConc      = itens.filter(p=>procIsDone(p)).length;
   const nAtras     = itens.filter(p=>(p.status||'')==='ATRASADO').length;
+  const concluidosComDatas = itens.filter(p=>p.entrada && p.dataReal);
+  const mediaDias = concluidosComDatas.length
+    ? Math.round(concluidosComDatas.reduce((a,p)=>{const d=Math.round((new Date(p.dataReal+'T00:00:00')-new Date(p.entrada+'T00:00:00'))/86400000);return a+(d>0?d:0);},0)/concluidosComDatas.length)
+    : null;
   const stats = document.getElementById('proc-stats');
   if (stats) stats.innerHTML =
-    `<div class="proc-stat-card"><div class="proc-stat-num" style="color:var(--navy)">${itens.length}</div><div class="proc-stat-lbl">Total de processos</div></div>`+
-    `<div class="proc-stat-card"><div class="proc-stat-num" style="color:#1d4ed8">${nAndamento}</div><div class="proc-stat-lbl">Em andamento</div></div>`+
-    `<div class="proc-stat-card"><div class="proc-stat-num" style="color:#0e7490">${nRetirar}</div><div class="proc-stat-lbl">Prontos p/ retirar</div></div>`+
-    `<div class="proc-stat-card"><div class="proc-stat-num" style="color:#16a34a">${nConc}</div><div class="proc-stat-lbl">Retirados / concluídos</div></div>`+
-    `<div class="proc-stat-card"><div class="proc-stat-num" style="color:#dc2626">${nAtras}</div><div class="proc-stat-lbl">Atrasados</div></div>`;
+    `<div class="proc-stat-card" style="border-left-color:var(--navy)"><div class="proc-stat-num">${itens.length}</div><div class="proc-stat-lbl">Total de processos</div></div>`+
+    `<div class="proc-stat-card" style="border-left-color:var(--gold)"><div class="proc-stat-num" style="color:var(--gold)">${nAndamento}</div><div class="proc-stat-lbl">Em andamento</div></div>`+
+    `<div class="proc-stat-card" style="border-left-color:var(--ole-orange)"><div class="proc-stat-num" style="color:var(--ole-orange)">${nRetirar}</div><div class="proc-stat-lbl">Prontos p/ retirar</div></div>`+
+    `<div class="proc-stat-card" style="border-left-color:var(--green)"><div class="proc-stat-num" style="color:var(--green)">${nConc}</div><div class="proc-stat-lbl">Retirados / concluídos</div></div>`+
+    `<div class="proc-stat-card" style="border-left-color:var(--red)"><div class="proc-stat-num" style="color:var(--red)">${nAtras}</div><div class="proc-stat-lbl">Atrasados</div></div>`+
+    `<div class="proc-stat-card" style="border-left-color:var(--blue-light,#2a4a8a)"><div class="proc-stat-num">${mediaDias===null?'—':mediaDias+'d'}</div><div class="proc-stat-lbl">⏱ Média de conclusão</div></div>`;
+
+  procRenderIndicador();
 
   // Agrupa por órgão (ordem fixa + extras)
   const ordem = procOrgaosAll();
@@ -6095,35 +6172,48 @@ function procRender() {
     return;
   }
 
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
   const orgaosSel = procOrgaosAll();
   cont.innerHTML = nomes.map(orgao => {
-    const rows = grupos[orgao];
+    const rows = grupos[orgao].slice().sort((a,b) => {
+      const da = procIsDone(a)?1:0, db = procIsDone(b)?1:0;   // retirados vão para o fim
+      if (da !== db) return da - db;
+      const ea = a.entrada || '9999-99-99', eb = b.entrada || '9999-99-99';  // demais por entrada
+      return ea < eb ? -1 : ea > eb ? 1 : 0;
+    });
     const oEsc = orgao.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     return `<div class="table-wrap" style="margin-bottom:18px">
-      <div class="proc-group-hd"><span>🏛 ${procEsc(orgao)}</span><span style="font-size:11px;font-weight:600;opacity:.75">${rows.length} processo${rows.length!==1?'s':''}</span>
+      <div class="proc-group-hd"><span>🏛 ${procEsc(orgao)}</span><span class="proc-count-chip">${rows.length}</span>
         <button class="proc-add-btn" onclick="procAddRow('${oEsc}')">+ Adicionar</button></div>
       <div style="overflow-x:auto"><table class="proc-table">
         <thead><tr>
-          <th style="width:14%">Tipo</th><th style="width:7%">Protocolo</th><th style="width:6%">Entrada</th>
-          <th style="width:17%">Descrição</th><th style="width:10%">Matrícula</th><th style="width:10%">Projeto</th>
-          <th style="width:6%">Previsão</th><th style="width:9%">Analista</th><th style="width:10%">Status</th>
-          <th style="width:6%">Data real</th><th style="width:9%">Órgão</th><th style="width:3%"></th>
+          <th style="width:12%">Tipo</th><th style="width:6%">Protocolo</th><th style="width:8%">Entrada</th>
+          <th style="width:15%">Descrição</th><th style="width:8%">Matrícula</th><th style="width:9%">Projeto</th>
+          <th style="width:8%">Previsão</th><th style="width:8%">Analista</th><th style="width:9%">Status</th>
+          <th style="width:8%">Data real</th><th style="width:5%">⏱ Dias</th><th style="width:8%">Órgão</th><th style="width:2%"></th>
         </tr></thead>
         <tbody>${rows.map(p => {
           const st = procStatusInfo(p.status);
-          return `<tr>
-            <td><input class="proc-input" value="${procEsc(p.tipo)}" onchange="procUpd(${p.id},'tipo',this.value)"/></td>
+          const done = procIsDone(p);
+          const dias = procDias(p);
+          const atrasadoPrev = !done && p.previsao && new Date(p.previsao+'T00:00:00') < hoje;
+          const diasHtml = dias === null ? '<span style="font-size:10px;color:var(--text-muted)">—</span>'
+            : dias.fechado ? `<span class="proc-dias-badge proc-dias-done">${dias.n}d</span>`
+            : `<span class="proc-dias-badge proc-dias-open" title="Processo em aberto há ${dias.n} dias">${dias.n}d ⏳</span>`;
+          return `<tr class="${done?'proc-done':''}">
+            <td><input class="proc-input" value="${procEsc(p.tipo)}" onchange="procUpd(${p.id},'tipo',this.value)" list="proc-tipos-list"/></td>
             <td><input class="proc-input" value="${procEsc(p.protocolo)}" onchange="procUpd(${p.id},'protocolo',this.value)"/></td>
-            <td><input class="proc-input" value="${procEsc(p.entrada)}" onchange="procUpd(${p.id},'entrada',this.value)"/></td>
+            <td><input class="proc-input" type="date" value="${procEsc(p.entrada)}" onchange="procUpd(${p.id},'entrada',this.value)"/></td>
             <td><input class="proc-input" value="${procEsc(p.descricao)}" onchange="procUpd(${p.id},'descricao',this.value)"/></td>
             <td><input class="proc-input" value="${procEsc(p.matricula)}" onchange="procUpd(${p.id},'matricula',this.value)"/></td>
             <td><input class="proc-input" value="${procEsc(p.projeto)}" onchange="procUpd(${p.id},'projeto',this.value)" list="proc-projetos-list"/></td>
-            <td><input class="proc-input" value="${procEsc(p.previsao)}" onchange="procUpd(${p.id},'previsao',this.value)"/></td>
+            <td><input class="proc-input" type="date" value="${procEsc(p.previsao)}" onchange="procUpd(${p.id},'previsao',this.value)" style="${atrasadoPrev?'color:var(--red);font-weight:600':''}" title="${atrasadoPrev?'Previsão vencida':''}"/></td>
             <td><input class="proc-input" value="${procEsc(p.analista)}" onchange="procUpd(${p.id},'analista',this.value)" list="proc-analistas-list"/></td>
             <td><select class="proc-input" style="background:${st.bg};color:${st.fg};font-weight:600" onchange="procUpd(${p.id},'status',this.value)">
               ${PROC_STATUS.map(s=>`<option value="${procEsc(s.key)}"${(p.status||'')===s.key?' selected':''}>${s.key||'—'}</option>`).join('')}
             </select></td>
-            <td><input class="proc-input" value="${procEsc(p.dataReal)}" onchange="procUpd(${p.id},'dataReal',this.value)"/></td>
+            <td><input class="proc-input" type="date" value="${procEsc(p.dataReal)}" onchange="procUpd(${p.id},'dataReal',this.value)"/></td>
+            <td style="text-align:center">${diasHtml}</td>
             <td><select class="proc-input" onchange="procUpd(${p.id},'orgao',this.value)">
               ${orgaosSel.map(o=>`<option value="${procEsc(o)}"${p.orgao===o?' selected':''}>${procEsc(o)}</option>`).join('')}
             </select></td>
@@ -6139,8 +6229,8 @@ function procUpd(id, campo, valor) {
   const p = procData.itens.find(x => x.id === id); if (!p) return;
   p[campo] = valor;
   procSave();
-  // Campos que mudam agrupamento/cores/estatísticas exigem re-render
-  if (campo === 'orgao' || campo === 'status') procRender();
+  // Datas, status, tipo e órgão mudam ordenação/cores/indicadores — re-renderiza
+  if (['orgao','status','entrada','dataReal','previsao','tipo'].indexOf(campo) !== -1) procRender();
 }
 
 function procDel(id) {
