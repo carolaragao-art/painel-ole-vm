@@ -545,7 +545,7 @@
   }
 
   /* Processos — Órgãos (v13.1, cores da marca) */
-  .proc-table { width:100%; border-collapse:collapse; min-width:1180px; }
+  .proc-table { width:100%; border-collapse:collapse; min-width:1400px; table-layout:fixed; }
   .proc-table thead tr { background:var(--navy); }
   .proc-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:nowrap; font-weight:600; }
   .proc-table td { padding:4px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
@@ -6051,11 +6051,20 @@ function procSave() {
 
 function procIsDone(p) { return PROC_DONE_STATUS.indexOf((p.status||'').toUpperCase()) !== -1; }
 
-// Dias de processo: dataReal − entrada (concluído) ou hoje − entrada (em aberto)
+// Dias de processo: dataReal − entrada (concluído) ou hoje − entrada (em aberto).
+// Sempre em dias inteiros (datas normalizadas à meia-noite) — sem o arredondamento
+// pela hora do dia que somava 1 dia a mais à tarde.
 function procDias(p) {
   if (!p.entrada) return null;
   const ini = new Date(p.entrada + 'T00:00:00');
-  const fim = p.dataReal ? new Date(p.dataReal + 'T00:00:00') : new Date();
+  let fim;
+  if (p.dataReal) {
+    fim = new Date(p.dataReal + 'T00:00:00');
+  } else if (procIsDone(p)) {
+    return { pendente: true };   // retirado/concluído sem Data Real: não fica contando
+  } else {
+    fim = new Date(); fim.setHours(0, 0, 0, 0);
+  }
   const n = Math.round((fim - ini) / 86400000);
   if (isNaN(n)) return null;
   return { n: n, fechado: !!p.dataReal };
@@ -6190,14 +6199,14 @@ function procRender() {
         <button class="proc-add-btn" onclick="procAddRow('${oEsc}')">+ Adicionar</button></div>
       <div style="overflow-x:auto"><table class="proc-table">
         <thead><tr>
-          <th style="width:13%">Tipo</th><th style="width:6%">Protocolo</th><th style="width:8%">Entrada</th>
-          <th style="width:17%">Descrição</th><th style="width:9%">Matrícula</th>
-          <th style="width:10%"><select class="proc-th-filter${procFilProjeto?' active':''}" onchange="procSetFilProjeto(this.value)" title="Filtrar por projeto">
+          <th style="width:18%">Tipo</th><th style="width:6%">Protocolo</th><th style="width:8%">Entrada</th>
+          <th style="width:13%">Descrição</th><th style="width:8%">Matrícula</th>
+          <th style="width:9%"><select class="proc-th-filter${procFilProjeto?' active':''}" onchange="procSetFilProjeto(this.value)" title="Filtrar por projeto">
             <option value="">Projeto (todos) ▾</option>
             ${projetos.map(pr=>`<option value="${procEsc(pr)}"${procFilProjeto===pr?' selected':''}>${procEsc(pr)}</option>`).join('')}
           </select></th>
-          <th style="width:8%">Previsão</th><th style="width:8%">Analista</th><th style="width:10%">Status</th>
-          <th style="width:8%">Data real</th><th style="width:5%">⏱ Dias</th><th style="width:2%"></th>
+          <th style="width:8%">Previsão</th><th style="width:7%">Analista</th><th style="width:9%">Status</th>
+          <th style="width:8%">Data real</th><th style="width:4%">⏱ Dias</th><th style="width:2%"></th>
         </tr></thead>
         <tbody>${rows.map(p => {
           const st = procStatusInfo(p.status);
@@ -6205,13 +6214,14 @@ function procRender() {
           const dias = procDias(p);
           const atrasadoPrev = !done && p.previsao && new Date(p.previsao+'T00:00:00') < hoje;
           const diasHtml = dias === null ? '<span style="font-size:10px;color:var(--text-muted)">—</span>'
+            : dias.pendente ? '<span style="font-size:10px;color:var(--text-muted)" title="Preencha a Data Real para calcular os dias deste processo">? d</span>'
             : dias.fechado ? `<span class="proc-dias-badge proc-dias-done">${dias.n}d</span>`
             : `<span class="proc-dias-badge proc-dias-open" title="Processo em aberto há ${dias.n} dias">${dias.n}d ⏳</span>`;
           return `<tr class="${done?'proc-done':''}">
-            <td><input class="proc-input" value="${procEsc(p.tipo)}" onchange="procUpd(${p.id},'tipo',this.value)" list="proc-tipos-list"/></td>
+            <td><input class="proc-input" value="${procEsc(p.tipo)}" onchange="procUpd(${p.id},'tipo',this.value)" list="proc-tipos-list" title="${procEsc(p.tipo)}"/></td>
             <td><input class="proc-input" value="${procEsc(p.protocolo)}" onchange="procUpd(${p.id},'protocolo',this.value)"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(p.entrada)}" onchange="procUpd(${p.id},'entrada',this.value)"/></td>
-            <td><input class="proc-input" value="${procEsc(p.descricao)}" onchange="procUpd(${p.id},'descricao',this.value)"/></td>
+            <td><input class="proc-input" value="${procEsc(p.descricao)}" onchange="procUpd(${p.id},'descricao',this.value)" title="${procEsc(p.descricao)}"/></td>
             <td><input class="proc-input" value="${procEsc(p.matricula)}" onchange="procUpd(${p.id},'matricula',this.value)"/></td>
             <td><input class="proc-input" value="${procEsc(p.projeto)}" onchange="procUpd(${p.id},'projeto',this.value)" list="proc-projetos-list"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(p.previsao)}" onchange="procUpd(${p.id},'previsao',this.value)" style="${atrasadoPrev?'color:var(--red);font-weight:600':''}" title="${atrasadoPrev?'Previsão vencida':''}"/></td>
