@@ -578,6 +578,33 @@
   .proc-th-filter { background:transparent; border:none; color:rgba(255,255,255,.85); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; font-family:'Poppins',sans-serif; cursor:pointer; outline:none; max-width:120px; }
   .proc-th-filter.active { color:var(--gold); }
   .proc-th-filter option { color:var(--text); text-transform:none; letter-spacing:0; }
+  .proc-done-toggle td { text-align:center; font-size:11px; font-weight:600; color:var(--text-muted); background:var(--surface2); cursor:pointer; padding:7px 6px; user-select:none; }
+  .proc-done-toggle:hover td { color:var(--navy); }
+
+  /* Certidões e Licenças — Legalização */
+  .cert-table { width:100%; border-collapse:collapse; min-width:1400px; table-layout:fixed; }
+  .cert-table thead tr { background:var(--navy); }
+  .cert-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:nowrap; font-weight:600; }
+  .cert-table td { padding:4px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .cert-group-hd { display:flex; align-items:center; gap:10px; padding:9px 16px; background:var(--surface); border-bottom:3px solid var(--cor,#E8622A); }
+  .cert-group-nome { font-family:'Poppins',sans-serif; font-weight:700; font-size:14.5px; color:var(--cor,#E8622A); border:1px solid transparent; border-radius:6px; background:transparent; outline:none; padding:2px 6px; min-width:80px; flex:1; }
+  .cert-group-nome:hover, .cert-group-nome:focus { border-color:var(--border); background:var(--surface2); }
+  .cert-status-sel { width:100%; font-size:10.5px; font-weight:700; font-family:'Poppins',sans-serif; color:#fff; border:none; border-radius:5px; padding:5px 6px; cursor:pointer; outline:none; text-align:center; }
+  .cert-status-sel option { color:var(--text); background:#fff; font-weight:600; }
+  .cert-dias-badge { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; white-space:nowrap; color:#fff; }
+  .cert-leg-item { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--text-muted); }
+  .cert-leg-dot { display:inline-block; width:10px; height:10px; border-radius:3px; }
+  .cert-del-grupo { background:transparent; border:none; cursor:pointer; color:var(--text-muted); font-size:13px; padding:2px 7px; border-radius:6px; }
+  .cert-del-grupo:hover { color:var(--red); background:var(--surface2); }
+  .cert-caret { cursor:pointer; user-select:none; font-size:12px; color:var(--cor,#E8622A); width:22px; text-align:center; flex-shrink:0; transition:transform .15s; }
+  .cert-sum-chip { display:inline-block; font-size:10px; font-weight:700; color:#fff; padding:2px 8px; border-radius:99px; }
+  .cert-file-chip { display:inline-flex; align-items:center; gap:2px; font-size:10px; background:var(--surface2); border:1px solid var(--border); border-radius:99px; padding:1px 6px; max-width:118px; }
+  .cert-file-chip a { color:var(--navy); text-decoration:none; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cert-file-chip a:hover { text-decoration:underline; }
+  .cert-file-chip b { cursor:pointer; color:var(--text-muted); font-weight:700; padding:0 2px; line-height:1; }
+  .cert-file-chip b:hover { color:var(--red); }
+  .cert-upload-btn { background:transparent; border:1px dashed var(--border); border-radius:99px; cursor:pointer; font-size:11px; padding:2px 8px; color:var(--text-muted); }
+  .cert-upload-btn:hover { border-color:var(--ole-orange); color:var(--ole-orange); }
 
   /* Backlog / Projetos */
   .backlog-epic { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
@@ -2381,6 +2408,19 @@
       <button class="proc-novo-btn" onclick="procOpenModal()">➕ Novo processo</button>
     </div>
 
+    <!-- Certidões e Licenças (vem primeiro: processo crucial do setor) -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;color:var(--navy)">🛡 Certidões e Licenças — Legalização</div>
+        <div style="font-size:11.5px;color:var(--text-muted)">Status automático pela data de vencimento e pela antecedência de renovação de cada documento</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div id="cert-legenda" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        <button class="proc-add-btn" style="background:var(--navy);border-color:var(--navy)" onclick="certAddGrupo()">+ Novo grupo</button>
+      </div>
+    </div>
+    <div id="cert-groups" style="margin-bottom:26px"></div>
+
     <!-- Stats -->
     <div id="proc-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:16px"></div>
 
@@ -3560,7 +3600,7 @@ function showTab(name) {
   if (name === 'sprint')  { if(typeof spSyncEpicsFromProjetos==='function'){spSyncEpicsFromProjetos();spPopulateEpicFilters();spRenderTasks();spRenderHistorico();spRenderRecados();spPopulateMeta();} }
   if (name === 'kanban')  { if(typeof kbRender==='function'){spSyncEpicsFromProjetos();spPopulateEpicFilters();kbRender();} }
   if (name === 'backlog') { if(typeof blRenderEpics==='function') blRenderEpics(); }
-  if (name === 'procs')   { if(typeof procRender==='function') procRender(); }
+  if (name === 'procs')   { if(typeof procRender==='function') procRender(); if(typeof certRender==='function') certRender(); }
 }
 
 function toast(msg) {
@@ -5832,6 +5872,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ffRender();             // [v12] renderiza fichas
   loadAll();
   procLoad();             // [v13] carrega processos dos órgãos
+  certLoad();             // [v14] carrega certidões e licenças
   // Inicializa sprint
   spLoadLocal();
   // [v10] Carrega dados iniciais da Carol apenas se localStorage estiver vazio
@@ -6021,8 +6062,10 @@ const PROC_SEED = [
 let procData = { atualizadoEm:'', itens:[] };
 let procNextId = 1;
 let procFilProjeto = '';   // filtro da coluna Projeto (no cabeçalho da tabela)
+let procDoneExpand = {};   // por órgão: mostrar/ocultar processos concluídos
 
 function procSetFilProjeto(v) { procFilProjeto = v; procRender(); }
+function procToggleDone(orgao) { procDoneExpand[orgao] = !procDoneExpand[orgao]; procRender(); }
 
 function procEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -6187,15 +6230,15 @@ function procRender() {
 
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   cont.innerHTML = nomes.map(orgao => {
-    const rows = grupos[orgao].slice().sort((a,b) => {
-      const da = procIsDone(a)?1:0, db = procIsDone(b)?1:0;   // retirados vão para o fim
-      if (da !== db) return da - db;
-      const ea = a.entrada || '9999-99-99', eb = b.entrada || '9999-99-99';  // demais por entrada
-      return ea < eb ? -1 : ea > eb ? 1 : 0;
-    });
+    const porEntrada = (a,b) => { const ea = a.entrada || '9999-99-99', eb = b.entrada || '9999-99-99'; return ea < eb ? -1 : ea > eb ? 1 : 0; };
+    const abertos = grupos[orgao].filter(p => !procIsDone(p)).sort(porEntrada);
+    const concluidos = grupos[orgao].filter(p => procIsDone(p)).sort(porEntrada);
+    const expandido = !!procDoneExpand[orgao];
+    // concluídos ficam recolhidos por padrão — só aparecem ao clicar
+    const rows = expandido ? abertos.concat(concluidos) : abertos;
     const oEsc = orgao.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     return `<div class="table-wrap" style="margin-bottom:18px">
-      <div class="proc-group-hd"><span>🏛 ${procEsc(orgao)}</span><span class="proc-count-chip">${rows.length}</span>
+      <div class="proc-group-hd"><span>🏛 ${procEsc(orgao)}</span><span class="proc-count-chip" title="${abertos.length} em aberto · ${concluidos.length} concluídos">${abertos.length}</span>
         <button class="proc-add-btn" onclick="procAddRow('${oEsc}')">+ Adicionar</button></div>
       <div style="overflow-x:auto"><table class="proc-table">
         <thead><tr>
@@ -6233,7 +6276,7 @@ function procRender() {
             <td style="text-align:center">${diasHtml}</td>
             <td><button class="proc-del-btn" onclick="procDel(${p.id})" title="Excluir processo">✕</button></td>
           </tr>`;
-        }).join('')}</tbody>
+        }).join('')}${concluidos.length ? `<tr class="proc-done-toggle" onclick="procToggleDone('${oEsc}')"><td colspan="12">${expandido ? '▾ Ocultar concluídos' : '▸ Mostrar concluídos'} (${concluidos.length})</td></tr>` : ''}</tbody>
       </table></div>
     </div>`;
   }).join('');
@@ -6292,6 +6335,252 @@ window.procRender=procRender; window.procUpd=procUpd; window.procDel=procDel;
 window.procAddRow=procAddRow; window.procOpenModal=procOpenModal;
 window.procCloseModal=procCloseModal; window.procSaveNew=procSaveNew;
 window.procLoad=procLoad; window.procSetFilProjeto=procSetFilProjeto;
+window.procToggleDone=procToggleDone;
+
+// ════════════════════════════════════════════════════════════
+// CERTIDÕES E LICENÇAS — LEGALIZAÇÃO  [v14]
+// Checagem com status automático: Vencida (passou do vencimento),
+// Renovar (dentro da antecedência), Atualizada (no prazo).
+// Em andamento e Suspenso são definidos manualmente.
+// Persistência: chave 'ole_certs' (sincronizada com o banco).
+// ════════════════════════════════════════════════════════════
+const CERT_CORES_GRUPO = ['#E8622A','#1D3461','#0f7b6c','#8B2020','#7c3aed','#c77f10'];
+const CERT_STATUS_INFO = {
+  'ATUALIZADA':   { label:'Atualizada',   cor:'#00A85C' },
+  'RENOVAR':      { label:'Renovar',      cor:'#F5A623' },
+  'VENCIDA':      { label:'Vencida',      cor:'#E2445C' },
+  'EM ANDAMENTO': { label:'Em andamento', cor:'#FF6D3A' },
+  'SUSPENSO':     { label:'Suspenso',     cor:'#9AA0A6' },
+  'SEM DATA':     { label:'Sem data',     cor:'#C4C7CC' }
+};
+const CERT_SEED = { grupos: [
+  { id:1, nome:'Licença Ambiental', itens:[
+    { id:1, nome:'Loteamento PS3', orgao:'JUNTA COMERCIAL', cidade:'', emissao:'2024-03-11', vencimento:'2030-08-09', antecedencia:120, statusManual:'', link:'', finalidade:'' },
+    { id:2, nome:'Loteamento PS4', orgao:'JUNTA COMERCIAL', cidade:'', emissao:'2024-02-05', vencimento:'2028-02-04', antecedencia:120, statusManual:'', link:'', finalidade:'' },
+    { id:3, nome:'PS4 — Mód. 02 e 03', orgao:'JUNTA COMERCIAL', cidade:'', emissao:'2024-09-16', vencimento:'2026-09-16', antecedencia:120, statusManual:'', link:'', finalidade:'' }
+  ]},
+  { id:2, nome:"DVT's", itens:[
+    { id:4, nome:'Morada dos Sabiás', orgao:'JUNTA COMERCIAL', cidade:'ITAITINGA', emissao:'2025-05-02', vencimento:'2026-05-01', antecedencia:120, statusManual:'', link:'', finalidade:'' }
+  ]},
+  { id:3, nome:"AVT's", itens:[
+    { id:5, nome:'Passarinhos 3', orgao:'CARTÓRIO', cidade:'', emissao:'2023-06-21', vencimento:'2023-12-08', antecedencia:60, statusManual:'SUSPENSO', link:'', finalidade:'' },
+    { id:6, nome:'Passarinhos 4', orgao:'CARTÓRIO', cidade:'', emissao:'2023-06-21', vencimento:'2023-12-08', antecedencia:60, statusManual:'SUSPENSO', link:'', finalidade:'' }
+  ]}
+]};
+
+let certData = { grupos: [] };
+let certNextGrupoId = 1;
+let certNextItemId = 1;
+let certUI = { recolhidos: {} };   // preferência local por navegador (não vai ao banco)
+
+function certLoad() {
+  let raw = null;
+  try { raw = localStorage.getItem('ole_certs'); } catch(e) {}
+  if (raw) { try { certData = JSON.parse(raw); } catch(e) { certData = null; } }
+  if (!certData || !Array.isArray(certData.grupos)) certData = { grupos: [] };
+  if (!certData.grupos.length && !certData.seeded) {
+    certData = JSON.parse(JSON.stringify(CERT_SEED));
+  }
+  certNextGrupoId = certData.grupos.reduce((m,g)=>Math.max(m,g.id||0),0)+1;
+  certNextItemId = certData.grupos.reduce((m,g)=>Math.max(m, g.itens.reduce((mi,i)=>Math.max(mi,i.id||0),0)),0)+1;
+  try { const ui = JSON.parse(localStorage.getItem('ole_certs_ui')||'{}'); if (ui && ui.recolhidos) certUI = ui; } catch(e) {}
+}
+
+function certToggleGrupo(gid) {
+  certUI.recolhidos[gid] = !certUI.recolhidos[gid];
+  try { localStorage.setItem('ole_certs_ui', JSON.stringify(certUI)); } catch(e) {}
+  certRender();
+}
+
+function certSave() {
+  certData.seeded = true;
+  try { localStorage.setItem('ole_certs', JSON.stringify(certData)); } catch(e) {}
+}
+
+// Regra de status: manual (Em andamento/Suspenso) vence; senão calcula pelo vencimento
+function certStatus(item) {
+  if (item.statusManual === 'SUSPENSO') return { key:'SUSPENSO', dias:certDiasRestantes(item) };
+  if (item.statusManual === 'EM ANDAMENTO') return { key:'EM ANDAMENTO', dias:certDiasRestantes(item) };
+  if (!item.vencimento) return { key:'SEM DATA', dias:null };
+  const dias = certDiasRestantes(item);
+  if (dias < 0) return { key:'VENCIDA', dias };
+  if (dias <= (Number(item.antecedencia)||0)) return { key:'RENOVAR', dias };
+  return { key:'ATUALIZADA', dias };
+}
+
+function certDiasRestantes(item) {
+  if (!item.vencimento) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  return Math.round((new Date(item.vencimento+'T00:00:00') - hoje) / 86400000);
+}
+
+function certRender() {
+  const cont = document.getElementById('cert-groups'); if (!cont) return;
+  const leg = document.getElementById('cert-legenda');
+  if (leg) leg.innerHTML = ['ATUALIZADA','RENOVAR','VENCIDA','EM ANDAMENTO','SUSPENSO'].map(k =>
+    `<span class="cert-leg-item"><span class="cert-leg-dot" style="background:${CERT_STATUS_INFO[k].cor}"></span>${CERT_STATUS_INFO[k].label}</span>`).join('');
+  if (!certData.grupos.length) {
+    cont.innerHTML = `<div style="text-align:center;padding:1.6rem;color:var(--text-muted);font-size:13px;border:1.5px dashed var(--border);border-radius:var(--radius)">Nenhum grupo ainda — clique em "+ Novo grupo".</div>`;
+    return;
+  }
+  cont.innerHTML = certData.grupos.map((g, gi) => {
+    const cor = CERT_CORES_GRUPO[gi % CERT_CORES_GRUPO.length];
+    const recolhido = !!certUI.recolhidos[g.id];
+    // Resumo por status para o grupo recolhido
+    const contagem = {};
+    g.itens.forEach(i => { const k = certStatus(i).key; contagem[k] = (contagem[k]||0)+1; });
+    const resumo = recolhido ? Object.keys(contagem).map(k =>
+      `<span class="cert-sum-chip" style="background:${CERT_STATUS_INFO[k].cor}">${contagem[k]} ${CERT_STATUS_INFO[k].label}</span>`).join(' ') : '';
+    return `<div class="table-wrap" style="margin-bottom:14px">
+      <div class="cert-group-hd" style="--cor:${cor}">
+        <span class="cert-caret" onclick="certToggleGrupo(${g.id})" title="${recolhido?'Abrir grupo':'Recolher grupo'}">${recolhido?'▶':'▼'}</span>
+        <input class="cert-group-nome" value="${procEsc(g.nome)}" onchange="certUpdGrupo(${g.id}, this.value)" title="Clique para renomear o grupo"/>
+        <span class="proc-count-chip" style="background:${cor}">${g.itens.length}</span>
+        ${resumo}
+        <button class="proc-add-btn" style="background:${cor};border-color:${cor}" onclick="certAddItem(${g.id})">+ Adicionar</button>
+        <button class="cert-del-grupo" onclick="certDelGrupo(${g.id})" title="Excluir grupo">✕</button>
+      </div>
+      <div style="overflow-x:auto;${recolhido?'display:none':''}"><table class="cert-table">
+        <thead><tr>
+          <th style="width:15%">Certidão / Licença</th><th style="width:9%">Órgão</th><th style="width:7%">Cidade</th>
+          <th style="width:8%">Emissão</th><th style="width:8%">Vencimento</th><th style="width:7%" title="Com quantos dias de antecedência a renovação precisa começar">Renovar antes (dias)</th>
+          <th style="width:9%">Status</th><th style="width:5%">Dias</th><th style="width:10%">Arquivos</th><th style="width:10%">Link p/ emissão</th><th style="width:10%">Finalidade</th><th style="width:2%"></th>
+        </tr></thead>
+        <tbody>${g.itens.map(item => {
+          const st = certStatus(item);
+          const info = CERT_STATUS_INFO[st.key];
+          const diasHtml = st.dias === null ? '<span style="font-size:10px;color:var(--text-muted)">—</span>'
+            : `<span class="cert-dias-badge" style="background:${info.cor}" title="${st.dias < 0 ? 'Vencida há '+Math.abs(st.dias)+' dias' : st.dias+' dias até o vencimento'}">${st.dias}d</span>`;
+          return `<tr>
+            <td><input class="proc-input" value="${procEsc(item.nome)}" onchange="certUpd(${g.id},${item.id},'nome',this.value)" title="${procEsc(item.nome)}"/></td>
+            <td><input class="proc-input" value="${procEsc(item.orgao)}" onchange="certUpd(${g.id},${item.id},'orgao',this.value)"/></td>
+            <td><input class="proc-input" value="${procEsc(item.cidade)}" onchange="certUpd(${g.id},${item.id},'cidade',this.value)"/></td>
+            <td><input class="proc-input" type="date" value="${procEsc(item.emissao)}" onchange="certUpd(${g.id},${item.id},'emissao',this.value)"/></td>
+            <td><input class="proc-input" type="date" value="${procEsc(item.vencimento)}" onchange="certUpd(${g.id},${item.id},'vencimento',this.value)"/></td>
+            <td><input class="proc-input" type="number" min="0" step="1" value="${procEsc(item.antecedencia)}" onchange="certUpd(${g.id},${item.id},'antecedencia',this.value)" style="text-align:center"/></td>
+            <td><select class="cert-status-sel" style="background:${info.cor}" onchange="certUpd(${g.id},${item.id},'statusManual',this.value)" title="Automático segue a regra de vencimento; Em andamento e Suspenso são manuais">
+              <option value=""${!item.statusManual?' selected':''}>${item.statusManual?'⚡ Automático':'⚡ '+info.label}</option>
+              <option value="EM ANDAMENTO"${item.statusManual==='EM ANDAMENTO'?' selected':''}>Em andamento</option>
+              <option value="SUSPENSO"${item.statusManual==='SUSPENSO'?' selected':''}>Suspenso</option>
+            </select></td>
+            <td style="text-align:center">${diasHtml}</td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
+              ${(item.arquivos||[]).map(a=>`<span class="cert-file-chip"><a href="/api/arquivo/${a.id}" target="_blank" rel="noopener" title="${procEsc(a.nome)}">📄 ${procEsc(certNomeCurto(a.nome))}</a><b onclick="certDelArquivo(${g.id},${item.id},'${a.id}')" title="Remover arquivo">×</b></span>`).join('')}
+              <button class="cert-upload-btn" onclick="certUpload(${g.id},${item.id})" title="Anexar arquivo (PDF ou imagem, até 4MB)">📎</button>
+            </div></td>
+            <td><div style="display:flex;align-items:center;gap:3px"><input class="proc-input" value="${procEsc(item.link)}" onchange="certUpd(${g.id},${item.id},'link',this.value)" placeholder="https://..."/>${item.link?`<a href="${procEsc(item.link)}" target="_blank" rel="noopener" style="font-size:12px;text-decoration:none" title="Abrir link">↗</a>`:''}</div></td>
+            <td><input class="proc-input" value="${procEsc(item.finalidade)}" onchange="certUpd(${g.id},${item.id},'finalidade',this.value)" title="${procEsc(item.finalidade)}"/></td>
+            <td><button class="proc-del-btn" onclick="certDelItem(${g.id},${item.id})" title="Excluir">✕</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+}
+
+function certGrupo(gid) { return certData.grupos.find(g => g.id === gid); }
+
+function certUpd(gid, iid, campo, valor) {
+  const g = certGrupo(gid); if (!g) return;
+  const item = g.itens.find(i => i.id === iid); if (!item) return;
+  item[campo] = campo === 'antecedencia' ? (parseInt(valor,10) || 0) : valor;
+  certSave();
+  // Datas, antecedência e status mudam a cor/regra — re-renderiza
+  if (['emissao','vencimento','antecedencia','statusManual'].indexOf(campo) !== -1) certRender();
+}
+
+function certUpdGrupo(gid, nome) {
+  const g = certGrupo(gid); if (!g) return;
+  g.nome = nome.trim() || g.nome;
+  certSave();
+}
+
+function certAddGrupo() {
+  certData.grupos.push({ id: certNextGrupoId++, nome: 'Novo grupo (clique para renomear)', itens: [] });
+  certSave();
+  certRender();
+}
+
+function certDelGrupo(gid) {
+  const g = certGrupo(gid); if (!g) return;
+  if (g.itens.length && !confirm('Excluir o grupo "' + g.nome + '" e seus ' + g.itens.length + ' itens?')) return;
+  certData.grupos = certData.grupos.filter(x => x.id !== gid);
+  certSave();
+  certRender();
+}
+
+function certAddItem(gid) {
+  const g = certGrupo(gid); if (!g) return;
+  g.itens.push({ id: certNextItemId++, nome:'', orgao:'', cidade:'', emissao:'', vencimento:'', antecedencia:120, statusManual:'', link:'', finalidade:'', arquivos:[] });
+  certUI.recolhidos[gid] = false;
+  certSave();
+  certRender();
+}
+
+function certNomeCurto(n) { n = String(n||''); return n.length > 15 ? n.substring(0, 12) + '…' : n; }
+
+// Upload de arquivo da licença: vira anexo no banco e chip clicável na linha
+function certUpload(gid, iid) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.pdf,image/*';
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    if (f.size > 4 * 1024 * 1024) { alert('Arquivo muito grande (máximo 4MB). Dica: comprima o PDF antes de anexar.'); return; }
+    let base64;
+    try {
+      base64 = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result).split(',')[1]);
+        r.onerror = () => reject(new Error('falha na leitura'));
+        r.readAsDataURL(f);
+      });
+    } catch(e) { alert('Não consegui ler o arquivo.'); return; }
+    toast('📎 Enviando arquivo...');
+    try {
+      const resp = await fetch('/api/arquivo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ nome: f.name, mime: f.type || 'application/pdf', base64 })
+      });
+      const j = await resp.json();
+      if (!j.ok) throw new Error(j.error || 'falha no envio');
+      const g = certGrupo(gid); const item = g && g.itens.find(i => i.id === iid); if (!item) return;
+      if (!item.arquivos) item.arquivos = [];
+      item.arquivos.push({ id: j.id, nome: f.name });
+      certSave();
+      certRender();
+      toast('📎 Arquivo anexado');
+    } catch(e) {
+      alert('Não consegui enviar o arquivo: ' + e.message);
+    }
+  };
+  inp.click();
+}
+
+function certDelArquivo(gid, iid, aid) {
+  if (!confirm('Remover este arquivo?')) return;
+  const g = certGrupo(gid); const item = g && g.itens.find(i => i.id === iid); if (!item) return;
+  item.arquivos = (item.arquivos || []).filter(a => a.id !== aid);
+  certSave();
+  certRender();
+  fetch('/api/arquivo/' + aid, { method: 'DELETE', credentials: 'same-origin' }).catch(() => {});
+}
+
+function certDelItem(gid, iid) {
+  const g = certGrupo(gid); if (!g) return;
+  const item = g.itens.find(i => i.id === iid);
+  if (item && (item.nome || item.vencimento) && !confirm('Excluir "' + (item.nome || 'este item') + '"?')) return;
+  g.itens = g.itens.filter(i => i.id !== iid);
+  certSave();
+  certRender();
+}
+
+window.certRender=certRender; window.certUpd=certUpd; window.certUpdGrupo=certUpdGrupo;
+window.certAddGrupo=certAddGrupo; window.certDelGrupo=certDelGrupo;
+window.certAddItem=certAddItem; window.certDelItem=certDelItem; window.certLoad=certLoad;
+window.certToggleGrupo=certToggleGrupo; window.certUpload=certUpload; window.certDelArquivo=certDelArquivo;
 
 })();
 </script>

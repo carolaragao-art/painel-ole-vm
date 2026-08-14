@@ -17,7 +17,7 @@
     'ole_ap_cellstate', 'ole_ap_projetos', 'ole_ff_fichas', 'ole_projetos',
     'ole_sp_epics', 'ole_sp_hist', 'ole_sp_meta', 'ole_sp_rec', 'ole_sp_sem',
     'ole_sp_tasks', 'ole_tasks', 'ole_updates', 'ole_pipeline_cells',
-    'ole_sp_num', 'ole_sp_week', 'ole_procs'
+    'ole_sp_num', 'ole_sp_week', 'ole_procs', 'ole_certs'
   ];
 
   var server = window.__OLE_STATE__ || {};
@@ -96,7 +96,7 @@
 
   // Chaves PURAMENTE LOCAIS deste navegador (não vão para o banco nem são
   // compartilhadas entre usuários). Ex.: a última aba aberta é preferência de cada um.
-  var LOCAL_ONLY = { 'ole_ultima_aba': 1 };
+  var LOCAL_ONLY = { 'ole_ultima_aba': 1, 'ole_certs_ui': 1 };
   var realLSget = function (k) { try { return realLS ? realLS.getItem(k) : null; } catch (e) { return null; } };
   var realLSset = function (k, v) { try { if (realLS) realLS.setItem(k, v); } catch (e) {} };
   var realLSdel = function (k) { try { if (realLS) realLS.removeItem(k); } catch (e) {} };
