@@ -580,6 +580,8 @@
   .proc-th-filter option { color:var(--text); text-transform:none; letter-spacing:0; }
   .proc-done-toggle td { text-align:center; font-size:11px; font-weight:600; color:var(--text-muted); background:var(--surface2); cursor:pointer; padding:7px 6px; user-select:none; }
   .proc-done-toggle:hover td { color:var(--navy); }
+  .bl-done-toggle { font-size:11.5px; font-weight:600; color:var(--text-muted); background:var(--surface2); border-radius:8px; padding:6px 10px; margin:6px 0; cursor:pointer; user-select:none; text-align:center; }
+  .bl-done-toggle:hover { color:var(--navy); background:#eef2f7; }
 
   /* Certidões e Licenças — Legalização */
   .cert-table { width:100%; border-collapse:collapse; min-width:1400px; table-layout:fixed; }
@@ -4904,7 +4906,8 @@ function blRenderEpicContent(e, idx, totalGroup) {
   const pct = tot ? Math.round(totConc / tot * 100) : 0;
   const st = spSetor(e.setor);
 
-  const backlogHTML = (e.backlog && e.backlog.length) ? e.backlog.map(b => `
+  // [v15] Concluídos ficam recolhidos no fim, para o backlog mostrar só o que falta
+  const itemHTML = b => `
     <div class="backlog-item">
       <div class="backlog-chk ${b.done ? 'done' : ''}" onclick="blToggleItem(${e.id},'${b.id}')" title="Marcar como ${b.done ? 'pendente' : 'concluído'}">${b.done ? '<span style="color:#fff;font-size:9px">✓</span>' : ''}</div>
       <span class="backlog-item-text ${b.done ? 'done' : ''}">${b.texto}</span>
@@ -4913,7 +4916,15 @@ function blRenderEpicContent(e, idx, totalGroup) {
       <button class="backlog-epic-btn" onclick="blEditItem(${e.id},'${b.id}')" title="Editar tarefa" style="padding:2px 7px;color:var(--text-muted)">✏️</button>
       <button class="backlog-epic-btn" onclick="blRemoveItem(${e.id},'${b.id}')" title="Remover item" style="padding:2px 7px;color:var(--text-muted)">✕</button>
       ${!b.done ? `<button class="backlog-pull-btn" onclick="blPuxarSprint(${e.id},'${b.id}')" title="Mover para a Sprint Semanal">⚡ Puxar p/ sprint</button>` : ''}
-    </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:6px 0">Backlog vazio — adicione itens abaixo.</div>';
+    </div>`;
+  const pendentes = (e.backlog || []).filter(b => !b.done);
+  const feitos = (e.backlog || []).filter(b => b.done);
+  const abertoFeitos = !!blDoneExpand[e.id];
+  const backlogHTML = (e.backlog && e.backlog.length)
+    ? pendentes.map(itemHTML).join('')
+      + (pendentes.length ? '' : '<div style="font-size:12px;color:var(--text-muted);padding:6px 0">Tudo concluído neste projeto! 🎉</div>')
+      + (feitos.length ? `<div class="bl-done-toggle" onclick="blToggleDone(${e.id})">${abertoFeitos ? '▾ Ocultar concluídas' : '▸ Mostrar concluídas'} (${feitos.length})</div>${abertoFeitos ? feitos.map(itemHTML).join('') : ''}` : '')
+    : '<div style="font-size:12px;color:var(--text-muted);padding:6px 0">Backlog vazio — adicione itens abaixo.</div>';
 
   return `<div class="backlog-epic" data-epic-id="${e.id}" style="margin-bottom:0;box-shadow:none;border:1px solid var(--border)">
     <div class="backlog-epic-hd" style="background:transparent">
@@ -5056,6 +5067,10 @@ function blRenderEpics() {
 
   container.innerHTML = html;
 }
+
+let blDoneExpand = {};   // por projeto: mostrar/ocultar tarefas já concluídas
+function blToggleDone(epicId) { blDoneExpand[epicId] = !blDoneExpand[epicId]; blRenderEpics(); }
+window.blToggleDone = blToggleDone;
 
 // ── Reordena os empreendimentos (grupos) do backlog para cima/baixo ──
 // Recalcula a mesma ordenação usada em blRenderEpics, troca o grupo com o
