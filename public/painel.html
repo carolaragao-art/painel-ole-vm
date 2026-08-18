@@ -1533,10 +1533,6 @@
           <div class="form-group"><label>Responsável</label>
             <select id="ap-resp">
               <option value="">— Sem responsável —</option>
-              <option value="Beatriz">Beatriz</option>
-              <option value="Ingrid">Ingrid</option>
-              <option value="Luiza">Luiza</option>
-              <option value="Carol">Carol</option>
             </select>
           </div>
           <div class="form-group"><label>Status</label>
@@ -2204,7 +2200,7 @@
         <input type="hidden" id="sp-f-edit-id" value="">
         <div class="sp-form-row single"><div class="sp-form-field"><label>Título da tarefa</label><input id="sp-f-titulo" type="text" placeholder="Descreva a atividade..."/></div></div>
         <div class="sp-form-row triple">
-          <div class="sp-form-field"><label>Responsável</label><select id="sp-f-resp"><option>Beatriz</option><option>Ingrid</option><option>Luiza</option><option>Carol</option></select></div>
+          <div class="sp-form-field"><label>Responsável</label><select id="sp-f-resp"></select></div>
           <div class="sp-form-field"><label>Área</label><select id="sp-f-setor"><option value="prospeccao">PROSP</option><option value="legalizacao">LEG</option><option value="novos">NVP</option><option value="gestao">GESTÃO</option></select></div>
           <div class="sp-form-field"><label>Projeto</label><select id="sp-f-epic" onchange="spOnEpicChange()"></select></div>
         </div>
@@ -2234,6 +2230,21 @@
       </div>
     </div>
 
+    <!-- Modal equipe -->
+    <div class="sprint-modal-overlay" id="eqModal">
+      <div class="sprint-modal-box" style="max-width:480px">
+        <div class="sprint-modal-title">👥 Equipe do painel</div>
+        <div id="eq-lista" style="margin-bottom:14px"></div>
+        <div class="sp-form-row" style="grid-template-columns:1fr auto auto;align-items:end;gap:8px">
+          <div class="sp-form-field"><label>Nova integrante</label><input id="eq-novo-nome" type="text" placeholder="Nome" onkeydown="if(event.key==='Enter')eqAdd()"/></div>
+          <div class="sp-form-field"><label>Cor</label><input id="eq-novo-cor" type="color" value="#0f7b6c" style="width:46px;height:37px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);padding:2px;cursor:pointer"/></div>
+          <button class="btn-save" onclick="eqAdd()" style="height:37px;white-space:nowrap">+ Adicionar</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">Remover alguém não apaga as tarefas antigas — o nome permanece no histórico das sprints. O login do painel é separado (peça ao Claude para alterar).</div>
+        <div class="sp-form-actions"><button class="btn-cancel" onclick="eqCloseModal()">Fechar</button></div>
+      </div>
+    </div>
+
     <!-- Header sprint -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
       <div>
@@ -2241,6 +2252,7 @@
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Time de Desenvolvimento Imobiliário · Sprint <input id="sp-num-input" type="text" style="width:28px;font-family:'Poppins',sans-serif;font-size:12px;border:none;border-bottom:1px solid var(--border);color:var(--navy);font-weight:600;outline:none;background:transparent" value="—"/> · <input id="sp-week-input" type="week" style="font-family:'Poppins',sans-serif;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);background:var(--surface2);outline:none"/></div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="sp-encerrar-btn" onclick="eqOpenModal()" title="Adicionar ou remover integrantes da equipe">👥 Equipe</button>
         <button class="sp-encerrar-btn" onclick="spEncerrarSprint()">📦 Encerrar sprint</button>
         <button class="sprint-add-btn" onclick="spOpenModal()">➕ Nova tarefa</button>
       </div>
@@ -2276,7 +2288,7 @@
 
     <!-- Filtros -->
     <div class="sprint-filters">
-      <select class="sprint-filter-sel" id="sp-fil-resp" onchange="spRenderTasks()"><option value="">Todas analistas</option><option>Beatriz</option><option>Ingrid</option><option>Luiza</option><option>Carol</option></select>
+      <select class="sprint-filter-sel" id="sp-fil-resp" onchange="spRenderTasks()"><option value="">Todas analistas</option></select>
       <select class="sprint-filter-sel" id="sp-fil-setor" onchange="spRenderTasks()"><option value="">Todos setores</option><option value="prospeccao">PROSP</option><option value="legalizacao">LEG</option><option value="novos">NVP</option><option value="gestao">GESTÃO</option></select>
       <select class="sprint-filter-sel" id="sp-fil-epic" onchange="spRenderTasks()"><option value="">Todos projetos</option></select>
       <select class="sprint-filter-sel" id="sp-fil-orgao" onchange="spRenderTasks()">
@@ -2338,7 +2350,7 @@
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px">Visão de todas as tarefas da sprint por status</div>
 
     <div class="kanban-filters">
-      <select class="sprint-filter-sel" id="kb-fil-resp" onchange="kbRender()"><option value="">Todas analistas</option><option>Beatriz</option><option>Ingrid</option><option>Luiza</option><option>Carol</option></select>
+      <select class="sprint-filter-sel" id="kb-fil-resp" onchange="kbRender()"><option value="">Todas analistas</option></select>
       <select class="sprint-filter-sel" id="kb-fil-setor" onchange="kbRender()"><option value="">Todos setores</option><option value="prospeccao">PROSP</option><option value="legalizacao">LEG</option><option value="novos">NVP</option><option value="gestao">GESTÃO</option></select>
       <select class="sprint-filter-sel" id="kb-fil-epic" onchange="kbRender()"><option value="">Todos projetos</option></select>
     </div>
@@ -2484,10 +2496,6 @@
           <label>Responsável Principal</label>
           <select id="mp-resp">
             <option value="">— Sem responsável —</option>
-            <option value="Beatriz">Beatriz</option>
-            <option value="Ingrid">Ingrid</option>
-            <option value="Luiza">Luiza</option>
-            <option value="Carol">Carol</option>
           </select>
         </div>
       </div>
@@ -2587,10 +2595,7 @@ function renderPipelineTable() {
       <td>
         <select class="resp-edit" onchange="saveProjResp(${idx}, this.value)">
           <option value=""${!p.responsavel?' selected':''}>—</option>
-          <option value="Beatriz"${p.responsavel==='Beatriz'?' selected':''}>Beatriz</option>
-          <option value="Ingrid"${p.responsavel==='Ingrid'?' selected':''}>Ingrid</option>
-          <option value="Luiza"${p.responsavel==='Luiza'?' selected':''}>Luiza</option>
-          <option value="Carol"${p.responsavel==='Carol'?' selected':''}>Carol</option>
+          ${eqNomes().concat(p.responsavel && eqNomes().indexOf(p.responsavel)===-1 ? [p.responsavel] : []).map(a=>`<option value="${a}"${p.responsavel===a?' selected':''}>${a}</option>`).join('')}
         </select>
       </td>
       <td><span class="status-pill ${stCls} status-cycle" onclick="cycleProjectStatus(${idx})">${stLbl}</span></td>
@@ -3659,10 +3664,98 @@ const SP_SETORES = {
   novos:      {label:'NVP',    cls:'badge-np'},
   gestao:     {label:'GESTÃO', cls:'badge-multi', labelFix:'GESTÃO'},
 };
-const SP_ANALISTAS = ['Beatriz','Ingrid','Luiza','Carol'];
-const SP_AV_CLS    = {Beatriz:'av-bia-c', Ingrid:'av-ingrid-c', Luiza:'av-luiza-c', Carol:'av-carol-c'};
-const SP_AV_INIT   = {Beatriz:'B', Ingrid:'I', Luiza:'L', Carol:'C'};
-const SP_AV_COLORS = {Beatriz:'#e8600a', Ingrid:'#16a34a', Luiza:'#dc2626', Carol:'#1e3a6e'};
+// ── Equipe editável [v15] ─────────────────────────────────────
+// A lista de analistas vive na chave compartilhada 'ole_equipe' e é
+// administrada no modal "👥 Equipe" da Sprint. Nomes históricos que
+// saíram (ex.: Ingrid) continuam válidos nos registros antigos via
+// cores legadas. Remover alguém NÃO apaga tarefas antigas.
+const SP_AV_COLORS_LEGADO = {Beatriz:'#e8600a', Ingrid:'#16a34a', Luiza:'#dc2626', Carol:'#1e3a6e'};
+const EQ_PALETA = ['#e8600a','#1e3a6e','#dc2626','#0f7b6c','#7c3aed','#c77f10','#16a34a','#8B2020'];
+let spEquipe = { membros: [] };
+
+function eqLoad() {
+  let raw = null;
+  try { raw = localStorage.getItem('ole_equipe'); } catch(e) {}
+  if (raw) { try { spEquipe = JSON.parse(raw); } catch(e) { spEquipe = null; } }
+  if (!spEquipe || !Array.isArray(spEquipe.membros)) spEquipe = { membros: [] };
+  if (!spEquipe.membros.length && !spEquipe.seeded) {
+    spEquipe = { seeded: true, membros: [
+      { nome:'Beatriz', cor:'#e8600a' },
+      { nome:'Luiza',   cor:'#dc2626' },
+      { nome:'Carol',   cor:'#1e3a6e' }
+    ]};
+  }
+}
+function eqSave() { spEquipe.seeded = true; try { localStorage.setItem('ole_equipe', JSON.stringify(spEquipe)); } catch(e) {} }
+function eqNomes() { return spEquipe.membros.map(m => m.nome); }
+function eqCor(nome) { const m = spEquipe.membros.find(x => x.nome === nome); return m ? m.cor : (SP_AV_COLORS_LEGADO[nome] || '#64748b'); }
+function eqInit(nome) { return (String(nome||'').trim().charAt(0) || '?').toUpperCase(); }
+function eqAvStyle(nome) { const c = eqCor(nome); return `background:${c}22;color:${c}`; }
+
+// Modal de gestão da equipe
+function eqAfterChange() {
+  eqSave();
+  eqPopulateStaticSelects();
+  if (typeof spRenderCarga === 'function') spRenderCarga();
+  if (typeof spRenderTasks === 'function') spRenderTasks();
+  if (typeof inicioRenderSemaforo === 'function') inicioRenderSemaforo();
+  const kb = document.getElementById('tab-kanban');
+  if (kb && kb.classList.contains('active') && typeof kbRender === 'function') kbRender();
+  eqRenderModal();
+}
+function eqRenderModal() {
+  const el = document.getElementById('eq-lista'); if (!el) return;
+  el.innerHTML = spEquipe.membros.map((m, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">
+      <div class="av-mini" style="${eqAvStyle(m.nome)}">${eqInit(m.nome)}</div>
+      <span style="flex:1;font-size:13.5px;font-weight:600;color:var(--text)">${m.nome}</span>
+      <input type="color" value="${m.cor}" onchange="eqSetCor(${i}, this.value)" title="Cor de ${m.nome}" style="width:34px;height:26px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);padding:1px;cursor:pointer"/>
+      <button class="proc-del-btn" onclick="eqRemove(${i})" title="Remover ${m.nome} da equipe">✕</button>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Nenhuma integrante ainda.</div>';
+}
+function eqOpenModal() {
+  eqRenderModal();
+  const c = document.getElementById('eq-novo-cor');
+  if (c) c.value = EQ_PALETA[spEquipe.membros.length % EQ_PALETA.length];
+  document.getElementById('eqModal').classList.add('open');
+}
+function eqCloseModal() { document.getElementById('eqModal').classList.remove('open'); }
+function eqAdd() {
+  const inp = document.getElementById('eq-novo-nome');
+  const nome = (inp.value || '').trim();
+  if (!nome) { alert('Digite o nome da nova integrante.'); return; }
+  if (eqNomes().some(n => n.toLowerCase() === nome.toLowerCase())) { alert('Essa pessoa já está na equipe.'); return; }
+  const cor = document.getElementById('eq-novo-cor').value || EQ_PALETA[spEquipe.membros.length % EQ_PALETA.length];
+  spEquipe.membros.push({ nome: nome, cor: cor });
+  inp.value = '';
+  eqAfterChange();
+  toast('👥 ' + nome + ' entrou na equipe');
+}
+function eqRemove(i) {
+  const m = spEquipe.membros[i]; if (!m) return;
+  if (!confirm('Remover ' + m.nome + ' da equipe?\n\nAs tarefas antigas continuam no histórico — ela só sai das listas, filtros e da carga da sprint.')) return;
+  spEquipe.membros.splice(i, 1);
+  eqAfterChange();
+  toast('👋 ' + m.nome + ' saiu da equipe');
+}
+function eqSetCor(i, cor) { if (spEquipe.membros[i]) { spEquipe.membros[i].cor = cor; eqAfterChange(); } }
+
+// Preenche os selects fixos de responsável em todas as abas
+function eqPopulateStaticSelects() {
+  const fill = (id, vazioLabel) => {
+    const el = document.getElementById(id); if (!el) return;
+    const cur = el.value;
+    el.innerHTML = (vazioLabel !== undefined ? `<option value="">${vazioLabel}</option>` : '') +
+      eqNomes().map(n => `<option value="${n}">${n}</option>`).join('');
+    el.value = cur;
+    if (el.value !== cur) el.value = (vazioLabel !== undefined) ? '' : (eqNomes()[0] || '');
+  };
+  fill('sp-f-resp');
+  fill('sp-fil-resp', 'Todas analistas');
+  fill('kb-fil-resp', 'Todas analistas');
+  fill('ap-resp', '— Sem responsável —');
+  fill('mp-resp', '— Sem responsável —');
+}
 const SP_EPIC_COLORS = ['#1e3a6e','#e8600a','#f5a800','#8b1a1a','#16a34a','#7c3aed'];
 
 // Épicos sincronizados com projetos do pipeline
@@ -3837,17 +3930,17 @@ function spPopulateEpicFilters() {
 
 // ── Carga ────────────────────────────────────────────────────
 function spRenderCarga() {
-  document.getElementById('sp-carga-grid').innerHTML = SP_ANALISTAS.map(a => {
+  document.getElementById('sp-carga-grid').innerHTML = eqNomes().map(a => {
     const total=spTasks.filter(t=>t.resp===a).length;
     const conc=spTasks.filter(t=>t.resp===a&&t.status==='conc').length;
     const pct = total ? Math.round(conc/total*100) : 0;
     return `<div class="sprint-carga-card">
       <div class="sprint-carga-top">
-        <div class="sprint-carga-av av-mini ${SP_AV_CLS[a]}">${SP_AV_INIT[a]}</div>
+        <div class="sprint-carga-av av-mini" style="${eqAvStyle(a)}">${eqInit(a)}</div>
         <span class="sprint-carga-name">${a}</span>
         <span class="sprint-carga-num">${total}</span>
       </div>
-      <div class="sprint-carga-bar-bg"><div class="sprint-carga-bar" style="width:${pct}%;background:${SP_AV_COLORS[a]};transition:width .4s ease"></div></div>
+      <div class="sprint-carga-bar-bg"><div class="sprint-carga-bar" style="width:${pct}%;background:${eqCor(a)};transition:width .4s ease"></div></div>
       <div class="sprint-carga-detail">${total} total · ${conc} concluída${conc!==1?'s':''} · ${pct}%</div>
     </div>`;
   }).join('');
@@ -3994,9 +4087,9 @@ function spRenderTasks() {
         </div>
       </td>
       <td><div style="display:flex;align-items:center;gap:6px">
-        <div class="av-mini ${SP_AV_CLS[t.resp]||''}">${SP_AV_INIT[t.resp]||(t.resp?t.resp[0]:'?')}</div>
+        <div class="av-mini" style="${eqAvStyle(t.resp)}">${eqInit(t.resp)}</div>
         <select class="sp-resp-select" onchange="spUpdateField(${t._numId},'resp',this.value);spRenderTasks()">
-          ${SP_ANALISTAS.map(a=>`<option value="${a}"${t.resp===a?' selected':''}>${a}</option>`).join('')}
+          ${eqNomes().concat(t.resp && eqNomes().indexOf(t.resp)===-1 ? [t.resp] : []).map(a=>`<option value="${a}"${t.resp===a?' selected':''}>${a}</option>`).join('')}
         </select>
       </div></td>
       <td><span class="sp-badge badge-area ${st.cls}" style="font-size:10px">${st.label}</span></td>
@@ -4115,7 +4208,11 @@ function spEditTask(numId) {
   document.getElementById('spModalTitle').textContent = '✏️ Editar tarefa';
   document.getElementById('spModalSaveBtn').textContent = 'Salvar alterações';
   document.getElementById('sp-f-titulo').value = t.titulo || '';
-  document.getElementById('sp-f-resp').value = t.resp || 'Beatriz';
+  const respSel = document.getElementById('sp-f-resp');
+  if (t.resp && !Array.from(respSel.options).some(o => o.value === t.resp)) {
+    respSel.insertAdjacentHTML('beforeend', `<option value="${t.resp}">${t.resp}</option>`);
+  }
+  respSel.value = t.resp || (eqNomes()[0] || '');
   document.getElementById('sp-f-setor').value = t.setor || 'prospeccao';
   document.getElementById('sp-f-epic').value = t.epicId ? String(t.epicId) : '';
   if (document.getElementById('sp-f-orgao')) document.getElementById('sp-f-orgao').value = t.orgao || '';
@@ -4479,7 +4576,7 @@ function kbRender() {
             <div style="flex:1;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;cursor:pointer" onclick="kbAbrirObs(${t._numId})" title="Clique para ver/adicionar observações">${t.titulo}${atrasado?' ⚠':''}</div>
           </div>
           <div class="kb-card-meta">
-            <div class="av-mini ${SP_AV_CLS[t.resp]||''}">${SP_AV_INIT[t.resp]||'?'}</div>
+            <div class="av-mini" style="${eqAvStyle(t.resp)}">${eqInit(t.resp)}</div>
             <span class="sp-badge ${spPCls(t.prio)}" style="font-size:10px;padding:1px 6px">${spPLabel(t.prio)}</span>
             ${t.orgao?`<span class="sp-badge" style="font-size:10px;padding:1px 6px;background:#eef2ff;color:#3730a3">${t.orgao}</span>`:''}
           </div>
@@ -4746,7 +4843,7 @@ function blRenderEpicContent(e, idx, totalGroup) {
     <div class="backlog-item">
       <div class="backlog-chk ${b.done ? 'done' : ''}" onclick="blToggleItem(${e.id},'${b.id}')" title="Marcar como ${b.done ? 'pendente' : 'concluído'}">${b.done ? '<span style="color:#fff;font-size:9px">✓</span>' : ''}</div>
       <span class="backlog-item-text ${b.done ? 'done' : ''}">${b.texto}</span>
-      ${b.resp ? `<span class="av-mini ${SP_AV_CLS[b.resp]||''}" title="Responsável: ${b.resp}" style="width:22px;height:22px;font-size:10px;flex:0 0 auto">${SP_AV_INIT[b.resp]||'?'}</span>` : ''}
+      ${b.resp ? `<span class="av-mini" title="Responsável: ${b.resp}" style="width:22px;height:22px;font-size:10px;flex:0 0 auto;${eqAvStyle(b.resp)}">${eqInit(b.resp)}</span>` : ''}
       ${b.prazoPrev ? `<span style="font-size:10px;color:var(--text-muted);background:var(--surface2);padding:2px 7px;border-radius:6px;white-space:nowrap" title="Prazo previsto">📅 ${spFmtDate(b.prazoPrev)}</span>` : ''}
       <button class="backlog-epic-btn" onclick="blEditItem(${e.id},'${b.id}')" title="Editar tarefa" style="padding:2px 7px;color:var(--text-muted)">✏️</button>
       <button class="backlog-epic-btn" onclick="blRemoveItem(${e.id},'${b.id}')" title="Remover item" style="padding:2px 7px;color:var(--text-muted)">✕</button>
@@ -4777,7 +4874,7 @@ function blRenderEpicContent(e, idx, totalGroup) {
         <input type="text" id="bl-input-${e.id}" placeholder="Nova tarefa do backlog..." onkeydown="if(event.key==='Enter')blAddItem(${e.id})" style="flex:2;min-width:180px"/>
         <select id="bl-input-resp-${e.id}" title="Responsável" style="flex:0 0 130px;font-size:12px;font-family:'Poppins',sans-serif;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none">
           <option value="">👤 Responsável</option>
-          ${SP_ANALISTAS.map(a=>`<option value="${a}">${a}</option>`).join('')}
+          ${eqNomes().map(a=>`<option value="${a}">${a}</option>`).join('')}
         </select>
         <input type="date" id="bl-input-prazo-${e.id}" title="Prazo previsto (opcional)" style="flex:0 0 130px;font-size:12px;font-family:'Poppins',sans-serif;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none"/>
         <button onclick="blAddItem(${e.id})" style="flex:0 0 auto">+ Adicionar</button>
@@ -5089,7 +5186,7 @@ function blEditItem(epicId, bId) {
           <label>Responsável (opcional)</label>
           <select id="bl-edit-resp" style="width:100%">
             <option value="">👤 Sem responsável</option>
-            ${SP_ANALISTAS.map(a=>`<option value="${a}"${b.resp===a?' selected':''}>${a}</option>`).join('')}
+            ${eqNomes().concat(b.resp && eqNomes().indexOf(b.resp)===-1 ? [b.resp] : []).map(a=>`<option value="${a}"${b.resp===a?' selected':''}>${a}</option>`).join('')}
           </select>
         </div>
         <div class="form-group full">
@@ -5293,16 +5390,18 @@ function inicioRenderSemaforo(){
   const el=document.getElementById('time-sem-grid');if(!el)return;
   const semLabels={verde:'Tranquila',amarelo:'Atenção',vermelho:'Sobrecarregada'};
   const semColors={verde:'#16a34a',amarelo:'#d97706',vermelho:'#dc2626'};
-  el.innerHTML=SP_ANALISTAS.map(a=>`
+  el.innerHTML=eqNomes().map(a=>{
+    const sem = spSemaforos[a] || 'verde';
+    return `
     <div class="time-sem-card">
-      <div class="time-sem-top"><div class="av-mini ${SP_AV_CLS[a]}">${SP_AV_INIT[a]}</div><span class="time-sem-name">${a}</span></div>
+      <div class="time-sem-top"><div class="av-mini" style="${eqAvStyle(a)}">${eqInit(a)}</div><span class="time-sem-name">${a}</span></div>
       <div class="time-sem-btns">
-        <button class="time-sem-btn verde ${spSemaforos[a]==='verde'?'selected':''}" onclick="inicioSetSem('${a}','verde')" title="Tranquila"></button>
-        <button class="time-sem-btn amarelo ${spSemaforos[a]==='amarelo'?'selected':''}" onclick="inicioSetSem('${a}','amarelo')" title="Atenção"></button>
-        <button class="time-sem-btn vermelho ${spSemaforos[a]==='vermelho'?'selected':''}" onclick="inicioSetSem('${a}','vermelho')" title="Sobrecarregada"></button>
+        <button class="time-sem-btn verde ${sem==='verde'?'selected':''}" onclick="inicioSetSem('${a}','verde')" title="Tranquila"></button>
+        <button class="time-sem-btn amarelo ${sem==='amarelo'?'selected':''}" onclick="inicioSetSem('${a}','amarelo')" title="Atenção"></button>
+        <button class="time-sem-btn vermelho ${sem==='vermelho'?'selected':''}" onclick="inicioSetSem('${a}','vermelho')" title="Sobrecarregada"></button>
       </div>
-      <div class="time-sem-label" style="color:${semColors[spSemaforos[a]]}">${semLabels[spSemaforos[a]]}</div>
-    </div>`).join('');
+      <div class="time-sem-label" style="color:${semColors[sem]}">${semLabels[sem]}</div>
+    </div>`;}).join('');
 }
 function inicioSetSem(nome,cor){spSemaforos[nome]=cor;spSaveLocal();inicioRenderSemaforo();}
 
@@ -5338,7 +5437,7 @@ function inicioRender(){
       tbody.innerHTML=spTasks.map(t=>{
         const atrasado=spIsPast(t.prazo)&&t.status!=='conc';const ep=spEpicById(t.epicId);
         return`<tr>
-          <td><div style="display:flex;align-items:center;gap:4px"><div class="av-mini ${SP_AV_CLS[t.resp]||''}">${SP_AV_INIT[t.resp]||'?'}</div><span style="font-size:11px">${t.resp}</span></div></td>
+          <td><div style="display:flex;align-items:center;gap:4px"><div class="av-mini" style="${eqAvStyle(t.resp)}">${eqInit(t.resp)}</div><span style="font-size:11px">${t.resp}</span></div></td>
           <td><div style="font-size:12px;font-weight:500">${t.titulo}</div>${atrasado?'<span class="sp-badge-atrasado">⚠ Atrasado</span>':''}</td>
           <td>${ep?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${ep.cor}22;color:${ep.cor}">${ep.nome}</span>`:'—'}</td>
           <td><span class="sp-badge ${spSCls(t.status)}">${spSLabel(t.status)}</span></td>
@@ -5877,6 +5976,8 @@ document.addEventListener('DOMContentLoaded', () => {
   spLoadLocal();
   // [v10] Carrega dados iniciais da Carol apenas se localStorage estiver vazio
   spCarregarDadosCarol();
+  eqLoad();                    // [v15] equipe editável
+  eqPopulateStaticSelects();
   spSyncEpicsFromProjetos();
   const today=new Date(),y=today.getFullYear(),start=new Date(y,0,1);
   const wk=Math.ceil(((today-start)/86400000+start.getDay()+1)/7);
@@ -6581,6 +6682,8 @@ window.certRender=certRender; window.certUpd=certUpd; window.certUpdGrupo=certUp
 window.certAddGrupo=certAddGrupo; window.certDelGrupo=certDelGrupo;
 window.certAddItem=certAddItem; window.certDelItem=certDelItem; window.certLoad=certLoad;
 window.certToggleGrupo=certToggleGrupo; window.certUpload=certUpload; window.certDelArquivo=certDelArquivo;
+window.eqOpenModal=eqOpenModal; window.eqCloseModal=eqCloseModal; window.eqAdd=eqAdd;
+window.eqRemove=eqRemove; window.eqSetCor=eqSetCor;
 
 })();
 </script>
