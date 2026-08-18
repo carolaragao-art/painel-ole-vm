@@ -1,6 +1,6 @@
-import { checkCredentials, makeToken, buildCookie } from '../../lib/auth';
+import { checkCredentialsAsync, makeToken, buildCookie } from '../../lib/auth';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     res.status(405).json({ error: 'metodo nao permitido' });
@@ -11,7 +11,8 @@ export default function handler(req, res) {
     try { body = JSON.parse(body); } catch (e) { body = {}; }
   }
   const { user, pass } = body || {};
-  if (!checkCredentials(user, pass)) {
+  const ok = await checkCredentialsAsync(user, pass);
+  if (!ok) {
     res.status(401).json({ error: 'Usuário ou senha inválidos' });
     return;
   }

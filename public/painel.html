@@ -2240,7 +2240,17 @@
           <div class="sp-form-field"><label>Cor</label><input id="eq-novo-cor" type="color" value="#0f7b6c" style="width:46px;height:37px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);padding:2px;cursor:pointer"/></div>
           <button class="btn-save" onclick="eqAdd()" style="height:37px;white-space:nowrap">+ Adicionar</button>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">Remover alguém não apaga as tarefas antigas — o nome permanece no histórico das sprints. O login do painel é separado (peça ao Claude para alterar).</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">Remover alguém não apaga as tarefas antigas — o nome permanece no histórico das sprints.</div>
+        <div id="eq-logins-sec" style="display:none;margin-top:16px;padding-top:14px;border-top:2px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🔐 Logins do painel <span style="font-weight:500;color:var(--text-muted);text-transform:none;letter-spacing:0">(só a administradora vê)</span></div>
+          <div id="eq-logins-lista" style="margin-bottom:10px"></div>
+          <div class="sp-form-row" style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px">
+            <div class="sp-form-field"><label>Usuário</label><input id="login-novo-user" type="text" placeholder="ex: fernanda"/></div>
+            <div class="sp-form-field"><label>Senha inicial</label><input id="login-novo-senha" type="text" placeholder="mín. 4 caracteres"/></div>
+            <button class="btn-save" onclick="loginsAdd()" style="height:37px;white-space:nowrap">+ Criar</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px">As alterações valem na hora — sem precisar de nova publicação.</div>
+        </div>
         <div class="sp-form-actions"><button class="btn-cancel" onclick="eqCloseModal()">Fechar</button></div>
       </div>
     </div>
@@ -3717,7 +3727,55 @@ function eqOpenModal() {
   eqRenderModal();
   const c = document.getElementById('eq-novo-cor');
   if (c) c.value = EQ_PALETA[spEquipe.membros.length % EQ_PALETA.length];
+  const sec = document.getElementById('eq-logins-sec');
+  if (sec) {
+    const isAdmin = (window.__OLE_USER__ || '') === 'carol';
+    sec.style.display = isAdmin ? 'block' : 'none';
+    if (isAdmin) loginsLoad();
+  }
   document.getElementById('eqModal').classList.add('open');
+}
+
+// ── Administração de logins (via /api/usuarios, só administradora) ──
+async function loginsLoad() {
+  const el = document.getElementById('eq-logins-lista'); if (!el) return;
+  el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Carregando...</span>';
+  try {
+    const r = await fetch('/api/usuarios', { credentials: 'same-origin' }).then(x => x.json());
+    if (!r.ok) throw new Error(r.error || 'falha');
+    el.innerHTML = r.usuarios.map(u => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border)">
+        <span style="flex:1;font-size:13px;font-weight:600">🔑 ${u}${u==='carol'?' <span style="font-size:10px;color:var(--text-muted);font-weight:500">(administradora)</span>':''}</span>
+        <button class="sp-hist-toggle" style="font-size:10px" onclick="loginsReset('${u}')">redefinir senha</button>
+        ${u==='carol' ? '' : `<button class="proc-del-btn" onclick="loginsRemove('${u}')" title="Revogar o acesso de ${u}">✕</button>`}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<span style="font-size:12px;color:var(--red)">Não consegui carregar os logins.</span>';
+  }
+}
+async function loginsAdd() {
+  const u = (document.getElementById('login-novo-user').value || '').trim().toLowerCase();
+  const s = document.getElementById('login-novo-senha').value || '';
+  if (!u || s.length < 4) { alert('Informe o usuário e uma senha com pelo menos 4 caracteres.'); return; }
+  const r = await fetch('/api/usuarios', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ op:'add', usuario:u, senha:s }) }).then(x=>x.json()).catch(()=>({}));
+  if (r.ok) {
+    toast('🔑 Acesso criado para ' + u);
+    document.getElementById('login-novo-user').value = '';
+    document.getElementById('login-novo-senha').value = '';
+    loginsLoad();
+  } else { alert('Erro: ' + (r.error || 'falha ao salvar')); }
+}
+async function loginsReset(u) {
+  const s = prompt('Nova senha para "' + u + '" (mínimo 4 caracteres):');
+  if (s === null) return;
+  if (s.length < 4) { alert('Senha muito curta.'); return; }
+  const r = await fetch('/api/usuarios', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ op:'reset', usuario:u, senha:s }) }).then(x=>x.json()).catch(()=>({}));
+  if (r.ok) toast('🔑 Senha de ' + u + ' redefinida'); else alert('Erro: ' + (r.error || 'falha'));
+}
+async function loginsRemove(u) {
+  if (!confirm('Revogar o acesso de "' + u + '" ao painel? Ela não conseguirá mais entrar.')) return;
+  const r = await fetch('/api/usuarios', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ op:'remove', usuario:u }) }).then(x=>x.json()).catch(()=>({}));
+  if (r.ok) { toast('🚫 Acesso de ' + u + ' revogado'); loginsLoad(); } else { alert('Erro: ' + (r.error || 'falha')); }
 }
 function eqCloseModal() { document.getElementById('eqModal').classList.remove('open'); }
 function eqAdd() {
@@ -3918,12 +3976,19 @@ window.spSaveMeta = spSaveMeta;
 window.spPopulateMeta = spPopulateMeta;
 
 function spPopulateEpicFilters() {
+  // [v15] Ordena por nome e, quando o mesmo projeto existe em mais de uma
+  // área, acrescenta a sigla (PS3 · LEG, PS3 · PROSP) — sem opções repetidas.
+  const contagem = {};
+  spEpics.forEach(e => { contagem[e.nome] = (contagem[e.nome] || 0) + 1; });
+  const ordenados = spEpics.slice().sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR') ||
+    String(spSetor(a.setor).label).localeCompare(String(spSetor(b.setor).label), 'pt-BR'));
   ['sp-fil-epic','sp-f-epic','kb-fil-epic'].forEach(id => {
     const el = document.getElementById(id); if(!el) return;
     const isSel = id === 'sp-f-epic';
     const cur = el.value;
     el.innerHTML = (isSel?'<option value="">Sem projeto</option>':'<option value="">Todos projetos</option>')
-      + spEpics.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+      + ordenados.map(e=>`<option value="${e.id}">${e.nome}${contagem[e.nome] > 1 ? ' · ' + spSetor(e.setor).label : ''}</option>`).join('');
     el.value = cur;
   });
 }
@@ -6684,6 +6749,7 @@ window.certAddItem=certAddItem; window.certDelItem=certDelItem; window.certLoad=
 window.certToggleGrupo=certToggleGrupo; window.certUpload=certUpload; window.certDelArquivo=certDelArquivo;
 window.eqOpenModal=eqOpenModal; window.eqCloseModal=eqCloseModal; window.eqAdd=eqAdd;
 window.eqRemove=eqRemove; window.eqSetCor=eqSetCor;
+window.loginsAdd=loginsAdd; window.loginsReset=loginsReset; window.loginsRemove=loginsRemove;
 
 })();
 </script>
