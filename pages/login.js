@@ -35,7 +35,7 @@ export default function Login() {
   return (
     <div style={styles.wrap}>
       <form onSubmit={submit} style={styles.card}>
-        <div style={styles.logoMark}>OV</div>
+        <img src="/logo.png" alt="Olé Casas · Viana e Moura Construções" style={styles.logoMark} />
         <h1 style={styles.title}>Painel Executivo</h1>
         <p style={styles.sub}>Olé Casas × Viana e Moura</p>
 
@@ -76,10 +76,7 @@ const styles = {
     background: '#fff', borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 360,
     boxShadow: '0 20px 60px rgba(0,0,0,.3)', display: 'flex', flexDirection: 'column',
   },
-  logoMark: {
-    width: 48, height: 48, background: '#E8A020', borderRadius: 10, display: 'flex',
-    alignItems: 'center', justifyContent: 'center', color: '#1D3461', fontWeight: 900, fontSize: 20, marginBottom: 16,
-  },
+  logoMark: { height: 44, width: 'auto', maxWidth: '100%', display: 'block', marginBottom: 18 },
   title: { fontSize: 22, color: '#1D3461', margin: 0, fontWeight: 700 },
   sub: { fontSize: 13, color: '#64748b', marginTop: 4, marginBottom: 24 },
   label: { fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.5px' },
