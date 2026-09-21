@@ -4541,7 +4541,8 @@ function spRenderHistorico() {
   const sec=document.getElementById('sp-grafico-section');
   const c=document.getElementById('sp-hist-container');
   if(spHistorico.length && sec) {
-    const shown=spHistorico.slice().reverse().slice(-8);
+    // Mais recente primeiro (spHistorico[0] é a última encerrada)
+    const shown=spHistorico.slice(0,8);
     sec.innerHTML=`<div class="table-wrap" style="padding:16px 20px;margin-bottom:16px">
       <div class="section-title" style="margin-bottom:12px;border-bottom-color:var(--ole-orange)">📊 Desempenho por sprint</div>
       ${shown.map(h=>`<div class="sp-bar-row"><span class="sp-bar-label">Sprint ${h.spNum}</span><div class="sp-bar-track"><div class="sp-bar-fill" style="width:${h.pct}%;background:${spPerfColor(h.pct)}">${h.pct>12?h.pct+'%':''}</div></div><span class="sp-bar-pct">${h.pct}%</span></div>`).join('')}
