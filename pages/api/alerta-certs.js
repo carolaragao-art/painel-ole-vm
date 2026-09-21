@@ -49,7 +49,10 @@ export default async function handler(req, res) {
   try {
     const state = await getAllState();
     let grupos = [];
-    try { grupos = JSON.parse(state.ole_certs || '[]'); } catch (e) { grupos = []; }
+    try {
+      const raiz = JSON.parse(state.ole_certs || '[]');
+      grupos = Array.isArray(raiz) ? raiz : (Array.isArray(raiz.grupos) ? raiz.grupos : []);
+    } catch (e) { grupos = []; }
     let memoria = {};
     try { memoria = JSON.parse(state.ole_certs_alertas || '{}'); } catch (e) { memoria = {}; }
 
