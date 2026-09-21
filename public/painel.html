@@ -2310,6 +2310,9 @@
       </table>
     </div>
 
+    <!-- Bloqueadas fora da sprint (não contam no % de conclusão) -->
+    <div id="sp-bloq-section" style="margin-top:22px"></div>
+
     <!-- Histórico de sprints -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:28px;">
       <div class="section-title" style="margin-bottom:0">📦 Histórico de Sprints</div>
@@ -3790,6 +3793,7 @@ const SP_EPIC_COLORS = ['#1e3a6e','#e8600a','#f5a800','#8b1a1a','#16a34a','#7c3a
 let spEpics = [];
 let spTasks = [];
 let spHistorico = [];
+let spBloqueadas = [];  // tarefas bloqueadas "congeladas" — fora da sprint e do % de conclusão
 let spNextTaskId = 1;
 let spNextBId = 100;
 let spNextEpicId = 100;
@@ -3837,6 +3841,7 @@ function spSaveLocal() {
   try { localStorage.setItem('ole_sp_sem',   JSON.stringify(spSemaforos)); } catch(e) {}
   try { localStorage.setItem('ole_sp_rec',   JSON.stringify(spRecados)); } catch(e) {}
   try { localStorage.setItem('ole_sp_meta',  spMeta || ''); } catch(e) {}
+  try { localStorage.setItem('ole_sp_bloq',  JSON.stringify(spBloqueadas)); } catch(e) {}
 }
 
 function spLoadLocal() {
@@ -3846,6 +3851,7 @@ function spLoadLocal() {
   try { const d=localStorage.getItem('ole_sp_sem');   if(d) spSemaforos=JSON.parse(d); } catch(e){}
   try { const d=localStorage.getItem('ole_sp_rec');   if(d) spRecados=JSON.parse(d); } catch(e){}
   try { const d=localStorage.getItem('ole_sp_meta');  if(d!==null) spMeta=d; } catch(e){}
+  try { const d=localStorage.getItem('ole_sp_bloq');  if(d) spBloqueadas=JSON.parse(d); } catch(e){}
 
   // ── [v12.1] MIGRAÇÃO DE NOMES REDUNDANTES ──
   // O badge de setor (LEG/NVP/PROSP) já mostra a área, então sufixos como
@@ -4117,6 +4123,7 @@ function spRenderTasks() {
           <div style="flex:1;font-size:12.5px;line-height:1.5;font-weight:500;word-wrap:break-word;white-space:normal">${t.titulo}</div>
           <div style="display:flex;gap:3px;flex-shrink:0">
             <button onclick="spEditTask(${t._numId})" title="Editar tarefa" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;color:var(--text-muted);line-height:1" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--navy)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">✏️</button>
+            <button onclick="spCongelarTask(${t._numId})" title="Mover para Bloqueadas: sai da sprint e não conta no % de conclusão" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;color:var(--text-muted);line-height:1" onmouseover="this.style.background='#cffafe';this.style.color='#155e75'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">🧊</button>
             <button onclick="spDeleteTask(${t._numId})" title="Excluir tarefa" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;color:var(--text-muted);line-height:1" onmouseover="this.style.background='#fee2e2';this.style.color='var(--red)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">🗑</button>
           </div>
         </div>
@@ -4159,8 +4166,72 @@ function spRenderTasks() {
       </td>
     </tr>`;
   }).join('');
+  spRenderBloqueadas();
   inicioRender();
 }
+
+// ════════════════════════════════════════════════════════════════════
+// BLOQUEADAS FORA DA SPRINT ("geladeira")
+// Tarefa bloqueada pode ser congelada (🧊): sai de spTasks — logo não
+// entra no % de conclusão, no Kanban nem no encerramento da sprint —
+// e fica nesta área até ser desbloqueada. Dali dá para puxar de volta
+// (volta como "Não iniciado") ou excluir. Persistida em 'ole_sp_bloq'.
+// ════════════════════════════════════════════════════════════════════
+function spCongelarTask(id) {
+  const t = spTasks.find(x => x._numId === id); if (!t) return;
+  spTasks = spTasks.filter(x => x._numId !== id);
+  spBloqueadas.push(t);
+  spSaveLocal();
+  spRenderTasks(); spRenderStats(); spRenderCarga();
+  if (document.getElementById('tab-kanban').classList.contains('active')) kbRender();
+  toast('🧊 Tarefa movida para Bloqueadas — fora do % da sprint');
+}
+
+function spDescongelarTask(idx) {
+  const t = spBloqueadas[idx]; if (!t) return;
+  spBloqueadas.splice(idx, 1);
+  t._numId = spNextTaskId++;
+  t.status = 'nao';
+  spTasks.push(t);
+  spSaveLocal();
+  spRenderTasks(); spRenderStats(); spRenderCarga();
+  if (document.getElementById('tab-kanban').classList.contains('active')) kbRender();
+  toast('⚡ Tarefa voltou para a sprint como "Não iniciado"');
+}
+
+function spExcluirBloqueada(idx) {
+  const t = spBloqueadas[idx]; if (!t) return;
+  if (!confirm('Excluir definitivamente a tarefa bloqueada "' + t.titulo + '"?')) return;
+  spBloqueadas.splice(idx, 1);
+  spSaveLocal();
+  spRenderBloqueadas();
+  toast('🗑 Tarefa bloqueada excluída');
+}
+
+function spRenderBloqueadas() {
+  const sec = document.getElementById('sp-bloq-section'); if (!sec) return;
+  if (!spBloqueadas.length) { sec.innerHTML = ''; return; }
+  sec.innerHTML = `<div class="table-wrap" style="padding:14px 18px;border-left:4px solid #0891b2">
+    <div class="section-title" style="margin-bottom:10px;border-bottom-color:#0891b2">🧊 Bloqueadas — fora da sprint <span style="font-size:11px;font-weight:600;color:var(--text-muted)">${spBloqueadas.length} tarefa${spBloqueadas.length!==1?'s':''} · não conta${spBloqueadas.length!==1?'m':''} no % de conclusão</span></div>
+    ${spBloqueadas.map((t, i) => {
+      const st = spSetor(t.setor), ep = spEpicById(t.epicId);
+      const ultimaObs = spUltimaObs(t);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;flex-wrap:wrap">
+        <span style="flex:1;min-width:200px;font-weight:500;line-height:1.4">${t.titulo}${ultimaObs ? `<div style="font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px">💬 ${ultimaObs}</div>` : ''}</span>
+        ${t.resp ? `<span class="av-mini" title="Responsável: ${t.resp}" style="${eqAvStyle(t.resp)}">${eqInit(t.resp)}</span>` : ''}
+        <span class="sp-badge badge-area ${st.cls}" style="font-size:10px">${st.label}</span>
+        ${ep ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${ep.cor}22;color:${ep.cor}">${ep.nome}</span>` : ''}
+        ${t.prazo ? `<span style="font-size:10px;color:var(--text-muted);white-space:nowrap">📅 ${spFmtDate(t.prazo)}</span>` : ''}
+        <button class="sp-hist-toggle" onclick="spDescongelarTask(${i})" title="Desbloqueou? Volta para a sprint como Não iniciado" style="color:var(--green);border-color:var(--green)">⚡ Puxar p/ sprint</button>
+        <button class="sp-hist-toggle" onclick="spExcluirBloqueada(${i})" title="Excluir definitivamente" style="color:var(--red);border-color:var(--red)">✕</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+window.spCongelarTask = spCongelarTask;
+window.spDescongelarTask = spDescongelarTask;
+window.spExcluirBloqueada = spExcluirBloqueada;
+window.spRenderBloqueadas = spRenderBloqueadas;
 
 // ════════════════════════════════════════════════════════════════════
 // [NOVO v10] spAdicionarObsSprint — observação editada na coluna da Sprint
