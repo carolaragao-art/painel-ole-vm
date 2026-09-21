@@ -123,21 +123,36 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    let idEnvio = null;
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      // Envio via Gmail (senha de app) — entrega direto na caixa do setor.
+      const nodemailer = require('nodemailer');
+      const transporte = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+      });
+      const info = await transporte.sendMail({
+        from: `Painel Olé VM <${process.env.GMAIL_USER}>`,
+        to: DESTINO, subject: assunto, html,
+      });
+      idEnvio = info.messageId;
+    } else if (process.env.RESEND_API_KEY) {
+      const resp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                   'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: REMETENTE, to: [DESTINO], subject: assunto, html }),
+      });
+      const corpo = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        res.status(502).json({ ok: false, erro: corpo });
+        return;
+      }
+      idEnvio = corpo.id;
+    } else {
       res.status(200).json({ ok: false, pending: true,
-        motivo: 'RESEND_API_KEY nao configurada na Vercel', enviaria: paraEnviar });
-      return;
-    }
-
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-                 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: REMETENTE, to: [DESTINO], subject: assunto, html }),
-    });
-    const corpo = await resp.json().catch(() => ({}));
-    if (!resp.ok) {
-      res.status(502).json({ ok: false, erro: corpo });
+        motivo: 'Configure GMAIL_USER + GMAIL_APP_PASSWORD (ou RESEND_API_KEY) na Vercel',
+        enviaria: paraEnviar });
       return;
     }
 
@@ -145,7 +160,7 @@ export default async function handler(req, res) {
     for (const a of paraEnviar) memoria[a.chave] = { status: a.status, enviadoEm: ts };
     await setState('ole_certs_alertas', JSON.stringify(memoria));
 
-    res.status(200).json({ ok: true, enviados: paraEnviar.length, id: corpo.id });
+    res.status(200).json({ ok: true, enviados: paraEnviar.length, id: idEnvio });
   } catch (e) {
     console.error('Erro /api/alerta-certs:', e.message);
     res.status(500).json({ error: 'erro interno' });
