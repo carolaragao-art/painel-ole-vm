@@ -124,15 +124,20 @@ export default async function handler(req, res) {
     }
 
     let idEnvio = null;
-    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-      // Envio via Gmail (senha de app) — entrega direto na caixa do setor.
+    const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+    const smtpPass = process.env.SMTP_PASSWORD || process.env.GMAIL_APP_PASSWORD;
+    if (smtpUser && smtpPass) {
+      // Envio via SMTP (senha de app) — funciona com Gmail pessoal,
+      // Google Workspace (@olecasas.com.br) e, via SMTP_HOST, outros provedores.
       const nodemailer = require('nodemailer');
+      const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+      const port = Number(process.env.SMTP_PORT || 465);
       const transporte = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+        host, port, secure: port === 465,
+        auth: { user: smtpUser, pass: smtpPass },
       });
       const info = await transporte.sendMail({
-        from: `Painel Olé VM <${process.env.GMAIL_USER}>`,
+        from: `Painel Olé VM <${smtpUser}>`,
         to: DESTINO, subject: assunto, html,
       });
       idEnvio = info.messageId;
