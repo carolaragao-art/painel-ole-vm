@@ -348,6 +348,7 @@
   .sp-st-nao     { background:#f1f5f9; color:#64748b; }
   .sp-st-prog    { background:#dce8f5; color:#1e3a6e; }
   .sp-st-aguardo { background:#fef3c7; color:#92400e; }
+  .sp-st-standby { background:#cffafe; color:#155e75; }
   .sp-st-revisao { background:#ede9fe; color:#5b21b6; }
   .sp-st-bloq    { background:#fee2e2; color:#991b1b; }
   .sp-st-conc    { background:#dcfce7; color:#166534; }
@@ -385,8 +386,9 @@
   .kb-count { font-size:11px; background:rgba(0,0,0,0.12); border-radius:20px; padding:1px 8px; }
   .kb-nao    .kb-col-hd { background:#f1f5f9; color:#64748b; border-bottom:2px solid #e2e8f0; }
   .kb-prog   .kb-col-hd { background:#dce8f5; color:#1e3a6e; border-bottom:2px solid #1e3a6e; }
-  .kb-aguardo.kb-col-hd { background:#fef3c7; color:#92400e; border-bottom:2px solid #d97706; }
-  .kb-revisao.kb-col-hd { background:#ede9fe; color:#5b21b6; border-bottom:2px solid #7c3aed; }
+  .kb-aguardo .kb-col-hd { background:#fef3c7; color:#92400e; border-bottom:2px solid #d97706; }
+  .kb-standby .kb-col-hd { background:#cffafe; color:#155e75; border-bottom:2px solid #0891b2; }
+  .kb-revisao .kb-col-hd { background:#ede9fe; color:#5b21b6; border-bottom:2px solid #7c3aed; }
   .kb-bloq   .kb-col-hd { background:#fee2e2; color:#991b1b; border-bottom:2px solid #dc2626; }
   .kb-conc   .kb-col-hd { background:#dcfce7; color:#166534; border-bottom:2px solid #16a34a; }
   .kb-body { padding:8px; min-height:80px; display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); }
@@ -2285,7 +2287,7 @@
         <option value="Ambiental">Ambiental</option>
           <option value="Interno DES.IMOB.">Interno DES.IMOB.</option>
       </select>
-      <select class="sprint-filter-sel" id="sp-fil-status" onchange="spRenderTasks()"><option value="">Todos status</option><option value="nao">Não iniciado</option><option value="prog">Em andamento</option><option value="aguardo">Em aguardo</option><option value="revisao">Revisão</option><option value="bloq">Bloqueado</option><option value="conc">Concluído</option><option value="em_dia">🔵 Em Dia</option><option value="no_prazo">✅ No Prazo</option><option value="em_atraso">⏰ Em Atraso</option><option value="atrasado">⚠ Atrasado</option></select>
+      <select class="sprint-filter-sel" id="sp-fil-status" onchange="spRenderTasks()"><option value="">Todos status</option><option value="nao">Não iniciado</option><option value="prog">Em andamento</option><option value="aguardo">Em aguardo</option><option value="standby">Standby</option><option value="revisao">Revisão</option><option value="bloq">Bloqueado</option><option value="conc">Concluído</option><option value="em_dia">🔵 Em Dia</option><option value="no_prazo">✅ No Prazo</option><option value="em_atraso">⏰ Em Atraso</option><option value="atrasado">⚠ Atrasado</option></select>
     </div>
 
     <!-- Tabela de tarefas -->
@@ -3621,6 +3623,7 @@ const SP_STATUSES = [
   {key:'nao',    label:'Não iniciado', cls:'sp-st-nao',     kcls:'kb-nao'},
   {key:'prog',   label:'Em andamento', cls:'sp-st-prog',    kcls:'kb-prog'},
   {key:'aguardo',label:'Em aguardo',   cls:'sp-st-aguardo', kcls:'kb-aguardo'},
+  {key:'standby',label:'Standby',      cls:'sp-st-standby', kcls:'kb-standby'},
   {key:'revisao',label:'Revisão',      cls:'sp-st-revisao', kcls:'kb-revisao'},
   {key:'bloq',   label:'Bloqueado',    cls:'sp-st-bloq',    kcls:'kb-bloq'},
   {key:'conc',   label:'Concluído',    cls:'sp-st-conc',    kcls:'kb-conc'},
@@ -6227,6 +6230,12 @@ function procLoad() {
     procData.seeded = true;
   }
   procNextId = procData.itens.reduce((m,p)=>Math.max(m,p.id||0),0)+1;
+  // CAGECE e ENEL não têm analista — apaga valores antigos que ficaram salvos
+  let limpouAnalista = false;
+  procData.itens.forEach(p => {
+    if (['CAGECE','ENEL'].indexOf((p.orgao||'').toUpperCase()) !== -1 && p.analista) { p.analista = ''; limpouAnalista = true; }
+  });
+  if (limpouAnalista) { try { localStorage.setItem('ole_procs', JSON.stringify(procData)); } catch(e) {} }
   const el = document.getElementById('proc-upd'); if (el) el.textContent = procData.atualizadoEm || '—';
 }
 
