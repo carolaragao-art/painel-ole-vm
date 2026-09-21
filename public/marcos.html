@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcos &amp; Metas | Painel Olé V&amp;M</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1D3461; --blue-light: #2a4a8a;
+    --gold: #E8A020; --gold-light: #f5c04a;
+    --ole-orange: #E8622A; --vm-red: #7B1D1D;
+    --green: #16a34a; --green-light: #22c55e;
+    --amber: #d97706; --red: #dc2626;
+    --bg: #f0f4f8; --surface: #ffffff; --surface2: #f8fafc;
+    --border: #e2e8f0; --text: #1e293b; --text-muted: #64748b;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(15,31,61,0.10);
+    --shadow-lg: 0 8px 40px rgba(15,31,61,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    background:#e8e8e8; padding:0 40px; display:flex; align-items:center;
+    justify-content:space-between; height:72px; border-bottom:3px solid #e8600a;
+    position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,.12);
+  }
+  .logo { display:flex; align-items:center; gap:14px; }
+  .logo-mark { width:36px; height:36px; background:var(--gold); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--navy); font-weight:900; }
+  .logo-text { font-size:18px; color:#1e3a6e; letter-spacing:.5px; font-weight:700; }
+  .logo-sub { font-size:9.5px; color:#6b7c9e; letter-spacing:1.8px; text-transform:uppercase; margin-top:3px; font-weight:500; }
+  .header-right { display:flex; align-items:center; gap:12px; }
+  .mes-badge { background:var(--ole-orange); color:#fff; padding:5px 14px; border-radius:20px;
+    font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  .apres-btn { background:#1e3a6e; color:#fff; border:none; padding:8px 18px; border-radius:8px;
+    font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .apres-btn:hover { background:var(--navy); transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,.3); }
+  main { max-width:1300px; margin:0 auto; padding:32px 24px; }
+
+  .kpi-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-bottom:28px; }
+  .kpi-card { background:var(--surface); border-radius:var(--radius); padding:20px 24px;
+    box-shadow:var(--shadow); border-top:4px solid transparent; transition:transform .2s, box-shadow .2s; }
+  .kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+  .kpi-card.navy  { border-top-color:var(--navy); }
+  .kpi-card.green { border-top-color:var(--green); }
+  .kpi-card.gold  { border-top-color:var(--ole-orange); }
+  .kpi-card.amber { border-top-color:var(--gold); }
+  .kpi-label { font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+  .kpi-value { font-size:36px; font-weight:800; color:var(--navy); line-height:1; }
+  .kpi-sub { font-size:12px; color:var(--text-muted); margin-top:6px; }
+
+  .section-title { font-size:20px; font-weight:700; color:var(--navy); margin:34px 0 6px; padding-bottom:10px;
+    border-bottom:2px solid var(--ole-orange); display:flex; align-items:center; gap:10px; }
+  .section-title span { font-size:12px; color:var(--text-muted); font-weight:400; }
+  .section-sub { font-size:13px; color:var(--text-muted); margin:8px 0 18px; max-width:78ch; }
+
+  .ating-grid { display:grid; grid-template-columns:minmax(280px,380px) 1fr; gap:16px; align-items:stretch; }
+  @media (max-width:820px){ .ating-grid { grid-template-columns:1fr; } }
+  .card { background:var(--surface); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .donut-legend { display:flex; flex-wrap:wrap; gap:12px 18px; justify-content:center; font-size:12px; color:var(--text-muted); }
+  .donut-legend span { display:flex; align-items:center; gap:6px; font-weight:600; }
+  .ldot { width:10px; height:10px; border-radius:3px; }
+  .chart-title { font-size:13px; font-weight:700; color:var(--navy); letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
+  .bars-note { font-size:11.5px; color:var(--text-muted); margin-top:10px; }
+
+  .area-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .area-card { background:var(--surface); border-radius:var(--radius); padding:22px 24px; box-shadow:var(--shadow); border-left:5px solid transparent; }
+  .area-card.prosp { border-left-color:var(--ole-orange); }
+  .area-card.leg   { border-left-color:var(--navy); }
+  .area-card.np    { border-left-color:var(--gold); }
+  .area-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:2px; }
+  .area-name { font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+  .area-card.prosp .area-name { color:#c04a00; }
+  .area-card.leg .area-name   { color:var(--navy); }
+  .area-card.np .area-name    { color:#a07000; }
+  .area-count { font-size:26px; font-weight:800; color:var(--navy); }
+  .conf-line { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); margin:6px 0 12px; }
+  .conf-pill { padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .conf-alta  { background:#dcfce7; color:#166534; }
+  .conf-media { background:#fef3c7; color:#92400e; }
+  .conf-baixa { background:#fee2e2; color:#991b1b; }
+  .area-bar-wrap { height:8px; background:#e2e8f0; border-radius:99px; margin:0 0 14px; overflow:hidden; }
+  .area-bar { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--green),var(--green-light)); }
+  .mlist { display:flex; flex-direction:column; }
+  .mitem { display:flex; gap:10px; align-items:baseline; padding:6px 0; border-top:1px dashed var(--border); font-size:13px; }
+  .mitem .dt { font-weight:700; color:var(--navy); min-width:50px; font-size:12.5px; }
+  .mitem .nm { flex:1; }
+  .mitem .pj { display:block; color:var(--text-muted); font-size:11px; }
+  .sdot { width:9px; height:9px; border-radius:50%; flex:none; align-self:center; }
+  .sdot.ok{background:var(--green-light)} .sdot.late{background:var(--red)}
+  .sdot.and{background:var(--gold)} .sdot.prev{background:#94a3b8}
+
+  .mes-sec { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:18px; overflow:hidden; }
+  .mes-sec.atual { outline:3px solid var(--gold-light); }
+  .mes-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:13px 20px; background:var(--navy); }
+  .mes-head h3 { font-size:15px; color:#fff; font-weight:700; text-transform:capitalize; }
+  .mes-head .tot { background:var(--ole-orange); color:#fff; border-radius:20px; font-size:11px; font-weight:700; padding:2px 10px; }
+  .mes-head .tag-atual { background:var(--gold); color:var(--navy); border-radius:4px; font-size:10px; font-weight:800; padding:2px 8px; text-transform:uppercase; letter-spacing:.8px; }
+  .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+  .badge-area { display:inline-flex; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+  .badge-prosp { background:#fde8d8; color:#c04a00; }
+  .badge-leg   { background:#dce8f5; color:#1e3a6e; }
+  .badge-np    { background:#fff3cd; color:#a07000; }
+  .badge-outro { background:#f1f5f9; color:#64748b; }
+  .marco-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 20px; border-top:1px solid var(--border); border-left:4px solid transparent; }
+  .marco-row:hover { background:var(--surface2); }
+  .marco-row.prior { border-left-color:var(--ole-orange); background:linear-gradient(90deg,#e8622a0d,transparent 45%); }
+  .prior-star { color:var(--ole-orange); font-size:12px; }
+  .marco-dia { font-size:15px; font-weight:800; color:var(--navy); min-width:52px; }
+  .marco-info { flex:1; min-width:220px; }
+  .marco-nome { font-weight:600; font-size:13.5px; color:var(--navy); }
+  .marco-proj { color:var(--text-muted); font-size:11.5px; }
+  .pct-pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; min-width:44px; text-align:center; }
+  .pct-high { background:#dcfce7; color:#166534; }
+  .pct-mid  { background:#fef3c7; color:#92400e; }
+  .pct-low  { background:#fee2e2; color:#991b1b; }
+  .pct-none { background:#f1f5f9; color:#94a3b8; }
+  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .st-ok   { background:#dcfce7; color:#166534; }
+  .st-late { background:#fee2e2; color:#991b1b; }
+  .st-and  { background:#fef3c7; color:#92400e; }
+  .st-prev { background:#f1f5f9; color:#64748b; }
+  .desvio-pill { font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; }
+  .desvio-mais { background:#fee2e2; color:#991b1b; }
+  .desvio-menos{ background:#dcfce7; color:#166534; }
+
+  .regras { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 22px; font-size:12.5px; color:var(--text-muted); line-height:1.7; }
+  .regras b { color:var(--navy); }
+  footer { text-align:center; font-size:11.5px; color:var(--text-muted); padding:26px 20px 34px; }
+
+  /* IMPRESSAO / PDF */
+  @media print {
+    header { position: static; }
+    .apres-btn { display: none; }
+    .card, .area-card, .kpi-card, .mes-sec, .regras { break-inside: avoid; box-shadow: none; border: 1px solid var(--border); }
+    .section-title { break-after: avoid; }
+    .ating-grid { grid-template-columns: 1fr; }
+  }
+
+  /* MODO APRESENTACAO */
+  body.apres .detalhe { display:none; }
+  body.apres .kpi-value { font-size:52px; }
+  body.apres main { max-width:1100px; }
+</style></head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">O</div>
+    <div><div class="logo-text">Olé Casas × Viana e Moura</div>
+    <div class="logo-sub">Marcos &amp; Metas · Desenv. Imobiliário</div></div>
+  </div>
+  <div class="header-right">
+    <span class="mes-badge" id="mesbadge"></span>
+    <button class="apres-btn" onclick="document.body.classList.toggle('apres');this.textContent=document.body.classList.contains('apres')?'Voltar ao painel':'🎬 Apresentação'">🎬 Apresentação</button>
+  </div>
+</header>
+<main>
+  <div class="kpi-strip" id="kpis"></div>
+
+  <div class="section-title">Atingimento da meta <span id="subting"></span></div>
+  <div class="ating-grid">
+    <div class="card donut-wrap">
+      <div class="chart-title">Status dos marcos</div>
+      <svg id="donut" width="230" height="230" viewBox="0 0 230 230"></svg>
+      <div class="donut-legend" id="dleg"></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Metas por mês · previsto × concluído</div>
+      <svg id="bars" width="100%" height="270" viewBox="0 0 860 270" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="bars-note">Cada barra é o total de marcos com meta no mês; a parte verde é o que já foi concluído. Na primeira semana de cada mês atualizamos e medimos o desvio.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Os marcos de cada setor <span>as metas assumidas no dia 0 — 14/09/26</span></div>
+  <p class="section-sub">Cada setor assumiu seus marcos com data congelada no dia 0. É contra essas datas que
+  mediremos o desvio, mês a mês. O selo de confiança indica a chance de cumprir o conjunto no prazo.</p>
+  <div class="area-grid" id="setores"></div>
+
+  <div class="detalhe">
+    <div class="section-title">Calendário mês a mês <span>★ = Condomínio Morada dos Sabiás, a prioridade do momento</span></div>
+    <div id="cal"></div>
+
+    <div class="section-title">Como calculamos a confiança <span>regras v1 — abertas a debate</span></div>
+    <div class="regras">
+      <b>Marco concluído</b> vale 100. <b>Meta vencida sem conclusão</b> vale 10.
+      Nos demais, comparamos o <b>ritmo real</b> (% concluído) com o <b>ritmo esperado</b>
+      (fração do tempo já decorrido entre o início e a meta): ritmo ≥ 100% do esperado ≈ 90 pontos,
+      caindo por faixas até 20. Há bônus de +10 quando a folga passa de 60 dias e desconto de −10
+      quando faltam menos de 15 dias com execução abaixo de 70%.
+      <b>Alta ≥ 75 · Média 50–74 · Baixa &lt; 50.</b> A confiança do setor é a média dos seus marcos.
+    </div>
+  </div>
+</main>
+<footer id="foot"></footer>
+<script>
+const DADOS = {
+  "gerado_em": "2026-09-17T08:39:43",
+  "hoje": "2026-09-17",
+  "marcos": [
+    {
+      "id": "UGB ITA|PS4 - 660 LOTES|PROJETO ESPAÇO PIPA E PÓRTICO",
+      "marco": "PROJETO ESPAÇO PIPA E PÓRTICO",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - 660 LOTES",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-07-07",
+      "termino_atual": "2026-09-24",
+      "pct": 61,
+      "status": null,
+      "responsavel": null,
+      "linha": 5,
+      "meta": "2026-09-24",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS4 - T+1|PROJETOS LEGAIS",
+      "marco": "PROJETOS LEGAIS",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - T+1",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-07-20",
+      "termino_atual": "2026-09-25",
+      "pct": 60,
+      "status": null,
+      "responsavel": null,
+      "linha": 68,
+      "meta": "2026-09-25",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS4 - T+1|PROJETOS MÓDULOS CAIXA (VERIFICAR COM APF)",
+      "marco": "PROJETOS MÓDULOS CAIXA (verificar com APF)",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - T+1",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-09-28",
+      "termino_atual": "2026-10-23",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 72,
+      "meta": "2026-10-23",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS4 - T+1|ALVARÁ",
+      "marco": "Alvará",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-10-13",
+      "termino_atual": "2026-11-25",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 89,
+      "meta": "2026-11-25",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS4 - T+1|LICENÇA",
+      "marco": "Licença",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-07-13",
+      "termino_atual": "2026-11-25",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 96,
+      "meta": "2026-11-25",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS4 - T+1|MEMORIAL DE INCORPORAÇÃO | CONVENÇÃO",
+      "marco": "Memorial de Incorporação | Convenção",
+      "ugb": "UGB ITA",
+      "projeto": "PS4 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-10-26",
+      "termino_atual": "2027-01-01",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 107,
+      "meta": "2027-01-01",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|MASTERPLAN",
+      "marco": "MASTERPLAN",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-09-28",
+      "termino_atual": "2026-12-01",
+      "pct": 13,
+      "status": null,
+      "responsavel": null,
+      "linha": 156,
+      "meta": "2026-12-01",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|PROJETOS LEGAIS",
+      "marco": "PROJETOS LEGAIS",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-12-02",
+      "termino_atual": "2027-01-19",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 168,
+      "meta": "2027-01-19",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|PROJETOS MÓDULOS CAIXA (VERIFICAR COM APF)",
+      "marco": "PROJETOS MÓDULOS CAIXA (verificar com APF)",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-09-28",
+      "termino_atual": "2026-10-23",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 176,
+      "meta": "2026-10-23",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|ALVARÁ",
+      "marco": "Alvará",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-12-23",
+      "termino_atual": "2027-02-04",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 186,
+      "meta": "2027-02-04",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|LICENÇA",
+      "marco": "Licença",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-12-02",
+      "termino_atual": "2027-02-04",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 193,
+      "meta": "2027-02-04",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - T+1|MEMORIAL DE INCORPORAÇÃO | CONVENÇÃO",
+      "marco": "Memorial de Incorporação | Convenção",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - T+1",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-01-20",
+      "termino_atual": "2027-03-30",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 204,
+      "meta": "2027-03-30",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 03 - MEMORIAL",
+      "marco": "Quadra 03 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-08-07",
+      "termino_atual": "2026-09-23",
+      "pct": 63,
+      "status": null,
+      "responsavel": null,
+      "linha": 491,
+      "meta": "2026-09-23",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 04 - MEMORIAL",
+      "marco": "Quadra 04 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-08-13",
+      "termino_atual": "2026-10-07",
+      "pct": 42,
+      "status": null,
+      "responsavel": null,
+      "linha": 497,
+      "meta": "2026-10-07",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 09 - MEMORIAL",
+      "marco": "Quadra 09 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-08-10",
+      "termino_atual": "2026-10-09",
+      "pct": 46,
+      "status": null,
+      "responsavel": null,
+      "linha": 503,
+      "meta": "2026-10-09",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 10 - MEMORIAL",
+      "marco": "Quadra 10 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-08-17",
+      "termino_atual": "2026-09-29",
+      "pct": 28,
+      "status": null,
+      "responsavel": null,
+      "linha": 509,
+      "meta": "2026-09-29",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 11 - MEMORIAL",
+      "marco": "Quadra 11 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-09-28",
+      "termino_atual": "2026-11-03",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 514,
+      "meta": "2026-11-03",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|PS3 - 408 LOTES|QUADRA 07 - MEMORIAL",
+      "marco": "Quadra 07 - Memorial",
+      "ugb": "UGB ITA",
+      "projeto": "PS3 - 408 LOTES",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-10-05",
+      "termino_atual": "2026-11-13",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 519,
+      "meta": "2026-11-13",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|RETIFICAÇÃO MATRÍCULA MÃE 1040",
+      "marco": "RETIFICAÇÃO MATRÍCULA MÃE 1040",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2025-08-14",
+      "termino_atual": "2026-10-21",
+      "pct": 92,
+      "status": null,
+      "responsavel": null,
+      "linha": 545,
+      "meta": "2026-10-21",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|DESMEMBRAMENTO (2 CONDOMÍNIOS+ÁREA DA ETE+RUA)",
+      "marco": "DESMEMBRAMENTO (2 condomínios+área da ETE+Rua)",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2026-03-12",
+      "termino_atual": "2026-12-04",
+      "pct": 43,
+      "status": null,
+      "responsavel": null,
+      "linha": 571,
+      "meta": "2026-12-04",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|ITBI",
+      "marco": "ITBI",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2026-12-07",
+      "termino_atual": "2027-01-12",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 595,
+      "meta": "2027-01-12",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|DESMEMBRAMENTO E ESCRITURA",
+      "marco": "DESMEMBRAMENTO E ESCRITURA",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2026-12-30",
+      "termino_atual": "2027-02-11",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 599,
+      "meta": "2027-02-11",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|PROJETOS LEGAIS",
+      "marco": "PROJETOS LEGAIS",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-05-29",
+      "termino_atual": "2026-10-13",
+      "pct": 73,
+      "status": null,
+      "responsavel": null,
+      "linha": 677,
+      "meta": "2026-10-13",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|PROJETO DO CONDOMÍNIO I",
+      "marco": "Projeto do Condomínio I",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-06-29",
+      "termino_atual": "2026-09-22",
+      "pct": 91,
+      "status": null,
+      "responsavel": null,
+      "linha": 682,
+      "meta": "2026-09-22",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|PROJETOS MÓDULOS CAIXA",
+      "marco": "PROJETOS MÓDULOS CAIXA",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-09-23",
+      "termino_atual": "2026-12-09",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 708,
+      "meta": "2026-12-01",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 8
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|LEGALIZAÇÃO INFRA (2 CONDOMÍNIOS)",
+      "marco": "LEGALIZAÇÃO INFRA (2 condomínios)",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2026-09-23",
+      "termino_atual": "2027-05-17",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 836,
+      "meta": "2027-05-17",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|ALVARÁS (2 CONDOMÍNIOS) + TERRAPLANAGEM + DRENAGEM",
+      "marco": "Alvarás (2 condomínios) + Terraplanagem + Drenagem",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-01-06",
+      "termino_atual": "2027-03-04",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 857,
+      "meta": "2027-03-04",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|MEMORIAL DE INCORPORAÇÃO E INSTITUIÇÃO",
+      "marco": "Memorial de Incorporação e Instituição",
+      "ugb": "UGB ITA",
+      "projeto": "CONDOMÍNIO MORADA DOS SABIÁS (COND I e II)",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-03-08",
+      "termino_atual": "2027-05-18",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 877,
+      "meta": "2027-05-11",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 7
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|ACORDO DE SÓCIOS UGB CAUCAIA",
+      "marco": "ACORDO DE SÓCIOS UGB CAUCAIA",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2026-09-14",
+      "termino_atual": "2026-10-28",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 934,
+      "meta": "2026-10-28",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|ESCRITURA",
+      "marco": "ESCRITURA",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2027-01-18",
+      "termino_atual": "2027-03-02",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 954,
+      "meta": "2027-03-02",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|DESMEMBRAMENTO (CAUCAIA I E II)",
+      "marco": "DESMEMBRAMENTO (CAUCAIA I e II)",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "PROSPECÇÃO",
+      "inicio": "2027-01-18",
+      "termino_atual": "2027-04-06",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 976,
+      "meta": "2027-04-06",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|MASTERPLAN PRELIMINAR",
+      "marco": "MASTERPLAN PRELIMINAR",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-08-03",
+      "termino_atual": "2026-10-30",
+      "pct": 46,
+      "status": null,
+      "responsavel": null,
+      "linha": 993,
+      "meta": "2026-10-30",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|PROJETOS LEGAIS",
+      "marco": "PROJETOS LEGAIS",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "NOVOS PRODUTOS",
+      "inicio": "2026-09-15",
+      "termino_atual": "2027-07-14",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 1003,
+      "meta": "2027-07-14",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|LEGALIZAÇÃO INFRA (2 CONDOMÍNIOS)",
+      "marco": "LEGALIZAÇÃO INFRA (2 condomínios)",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-04-16",
+      "termino_atual": "2027-11-01",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 1145,
+      "meta": "2027-11-01",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|ALVARÁS (2 CONDOMÍNIOS) + TERRAPLANAGEM + DRENAGEM",
+      "marco": "Alvarás (2 condomínios) + Terraplanagem + Drenagem",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-05-14",
+      "termino_atual": "2027-06-24",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 1166,
+      "meta": "2027-06-24",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    },
+    {
+      "id": "UGB CAUCAIA|CAUCAIA I|MEMORIAL DE INCORPORAÇÃO E INSTITUIÇÃO",
+      "marco": "Memorial de Incorporação e Instituição",
+      "ugb": "UGB CAUCAIA",
+      "projeto": "CAUCAIA I",
+      "setor": "LEGALIZAÇÃO",
+      "inicio": "2027-07-05",
+      "termino_atual": "2027-09-07",
+      "pct": 0,
+      "status": null,
+      "responsavel": null,
+      "linha": 1186,
+      "meta": "2027-09-07",
+      "meta_registrada_em": "2026-09-14",
+      "desvio_dias": 0
+    }
+  ]
+};
+const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const MABR=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const HOJE=DADOS.hoje;
+const PRIOR=p=>{p=(p||"").toUpperCase();
+  if(p.includes("RIAMBURGO"))return 0; if(p.includes("CAUCAIA II"))return 3;
+  if(p.includes("CAUCAIA"))return 1; if(p.includes("PS3 - 408"))return 2;
+  if(p.includes("CONDOMÍNIO")||p.includes("MORADA DOS SABIÁS"))return 4; return 99;};
+let M=DADOS.marcos.filter(m=>m.ugb!=="MACROFLUXO - VISÃO GERAL"&&m.meta);
+function br(iso){if(!iso)return"";const[a,m,d]=iso.split("-");return d+"/"+m+"/"+a.slice(2);}
+function brc(iso){return iso?iso.split("-")[2]+"/"+iso.split("-")[1]:"";}
+function dias(a,b){return Math.round((new Date(b)-new Date(a))/864e5);}
+function setKey(s){s=(s||"").toUpperCase();
+  if(s.includes("PROSP"))return"prosp"; if(s.includes("LEGAL"))return"leg";
+  if(s.includes("NOVOS")||s.includes("ARQUIT"))return"np"; return"outro";}
+function estado(m){
+  if(m.pct>=100)return["ok","Concluído"];
+  if(m.meta<HOJE)return["late","Atrasado"];
+  if(m.pct>0)return["and","Em andamento"];
+  return["prev","Previsto"];}
+function confianca(m){
+  if(m.pct>=100)return 100;
+  if(m.meta<HOJE)return 10;
+  const ini=m.inicio&&m.inicio<m.meta?m.inicio:DADOS.hoje;
+  const total=Math.max(dias(ini,m.meta),1);
+  const dec=Math.min(Math.max(dias(ini,HOJE),0),total);
+  const esperado=dec/total;
+  const ritmo=esperado>0?(m.pct/100)/esperado:1;
+  let s= ritmo>=1?90 : ritmo>=.75?75 : ritmo>=.5?55 : ritmo>=.25?35 : 20;
+  const folga=dias(HOJE,m.meta);
+  if(folga>60)s+=10;
+  if(folga<15&&m.pct<70)s-=10;
+  return Math.min(95,Math.max(5,s));}
+function confClass(v){return v>=75?["conf-alta","Alta"]:v>=50?["conf-media","Média"]:["conf-baixa","Baixa"];}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+M.forEach(m=>m.conf=confianca(m));
+
+const hoje=new Date(HOJE);
+document.getElementById("mesbadge").textContent=MESES[hoje.getMonth()]+" "+hoje.getFullYear();
+const conc=M.filter(m=>m.pct>=100).length;
+const vencidos=M.filter(m=>m.meta<HOJE).length;
+const noPrazo=M.filter(m=>m.meta<HOJE&&m.pct>=100).length;
+const ating=vencidos?Math.round(100*noPrazo/vencidos):null;
+const confMedia=Math.round(M.reduce((s,m)=>s+m.conf,0)/M.length);
+const kpis=[
+  ["navy","Marcos mapeados",M.length,"metas dos 3 setores até "+br(M.map(m=>m.meta).sort().slice(-1)[0])],
+  ["green","Concluídos",conc,conc?Math.round(100*conc/M.length)+"% do total":"a jornada começa agora"],
+  ["gold","Atingimento do prazo",ating===null?"—":ating+"%",ating===null?"nenhuma meta vencida ainda":noPrazo+" de "+vencidos+" metas vencidas no prazo"],
+  ["amber","Confiança média",confMedia,confClass(confMedia)[1]+" · regras v1"]];
+document.getElementById("kpis").innerHTML=kpis.map(([c,l,v,s])=>
+  '<div class="kpi-card '+c+'"><div class="kpi-label">'+l+'</div><div class="kpi-value">'+v+'</div><div class="kpi-sub">'+s+'</div></div>').join("");
+document.getElementById("subting").textContent="dia 0: 14/09/26 · atualizado "+br(DADOS.gerado_em.slice(0,10));
+document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB · metas congeladas no dia 0 (14/09/2026) · retroalimentação na 1ª semana de cada mês · MACROFLUXO fora do escopo";
+
+// DONUT
+(function(){
+  const cnt={ok:0,and:0,prev:0,late:0};
+  M.forEach(m=>cnt[estado(m)[0]]++);
+  const cores={ok:"#22c55e",and:"#E8A020",prev:"#94a3b8",late:"#dc2626"};
+  const rot={ok:"Concluído",and:"Em andamento",prev:"Previsto",late:"Atrasado"};
+  const svg=document.getElementById("donut");
+  const cx=115,cy=115,r=88,w=30,total=M.length;
+  let a0=-Math.PI/2,html="";
+  ["ok","and","prev","late"].forEach(k=>{
+    if(!cnt[k])return;
+    const a1=a0+2*Math.PI*cnt[k]/total;
+    const large=(a1-a0)>Math.PI?1:0;
+    const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    if(cnt[k]===total){ html+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+cores[k]+'" stroke-width="'+w+'"/>'; }
+    else html+='<path d="M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+'" fill="none" stroke="'+cores[k]+'" stroke-width="'+w+'" stroke-linecap="butt"/>';
+    a0=a1;
+  });
+  html+='<text x="'+cx+'" y="'+(cy-6)+'" text-anchor="middle" font-size="40" font-weight="800" fill="#1D3461" font-family="Poppins,sans-serif">'+total+'</text>';
+  html+='<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" font-size="12" fill="#64748b" font-family="Poppins,sans-serif">marcos</text>';
+  svg.innerHTML=html;
+  document.getElementById("dleg").innerHTML=["ok","and","prev","late"].filter(k=>cnt[k])
+    .map(k=>'<span><i class="ldot" style="background:'+cores[k]+'"></i>'+rot[k]+": "+cnt[k]+"</span>").join("");
+})();
+
+// BARRAS MENSAIS
+(function(){
+  const porMes={};
+  M.forEach(m=>{const k=m.meta.slice(0,7);(porMes[k] ||= {t:0,c:0});porMes[k].t++;if(m.pct>=100)porMes[k].c++;});
+  const keys=Object.keys(porMes).sort();
+  const svg=document.getElementById("bars");
+  const W=860,H=270,pad={l:34,r:10,t:16,b:40};
+  const maxV=Math.max(...keys.map(k=>porMes[k].t));
+  const bw=Math.min(46,(W-pad.l-pad.r)/keys.length*0.62);
+  const step=(W-pad.l-pad.r)/keys.length;
+  let html="";
+  for(let g=0;g<=maxV;g+=Math.ceil(maxV/4)||1){
+    const y=H-pad.b-(H-pad.t-pad.b)*g/maxV;
+    html+='<line x1="'+pad.l+'" y1="'+y+'" x2="'+(W-pad.r)+'" y2="'+y+'" stroke="#e2e8f0"/>';
+    html+='<text x="'+(pad.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#94a3b8" font-family="Poppins,sans-serif">'+g+'</text>';
+  }
+  keys.forEach((k,i)=>{
+    const{t,c}=porMes[k];
+    const x=pad.l+step*i+(step-bw)/2;
+    const hT=(H-pad.t-pad.b)*t/maxV, hC=(H-pad.t-pad.b)*c/maxV;
+    const ehAtual=k===HOJE.slice(0,7);
+    html+='<rect x="'+x+'" y="'+(H-pad.b-hT)+'" width="'+bw+'" height="'+hT+'" rx="6" fill="'+(ehAtual?"#2a4a8a":"#1D3461")+'" opacity="'+(ehAtual?1:.82)+'"/>';
+    if(c)html+='<rect x="'+x+'" y="'+(H-pad.b-hC)+'" width="'+bw+'" height="'+hC+'" rx="6" fill="#22c55e"/>';
+    html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b-hT-6)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#1D3461" font-family="Poppins,sans-serif">'+t+'</text>';
+    const[a,mn]=k.split("-");
+    html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b+16)+'" text-anchor="middle" font-size="11" fill="'+(ehAtual?"#E8622A":"#64748b")+'" font-weight="'+(ehAtual?800:500)+'" font-family="Poppins,sans-serif">'+MABR[+mn-1]+"/"+a.slice(2)+'</text>';
+  });
+  svg.innerHTML=html;
+})();
+
+// SETORES
+(function(){
+  const ordem=["PROSPECÇÃO","LEGALIZAÇÃO","NOVOS PRODUTOS"];
+  const porSetor={};
+  M.forEach(m=>{const s=(m.setor||"GERAL").toUpperCase();(porSetor[s] ||= []).push(m);});
+  const chaves=Object.keys(porSetor).sort((a,b)=>{
+    const ia=ordem.findIndex(o=>a.includes(o.split(" ")[0]));
+    const ib=ordem.findIndex(o=>b.includes(o.split(" ")[0]));
+    return(ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+  document.getElementById("setores").innerHTML=chaves.map(s=>{
+    const l=porSetor[s].sort((a,b)=>a.meta.localeCompare(b.meta));
+    const okn=l.filter(m=>m.pct>=100).length;
+    const conf=Math.round(l.reduce((x,m)=>x+m.conf,0)/l.length);
+    const[cc,cl]=confClass(conf);
+    const itens=l.map(m=>{const[st]=estado(m);
+      return'<div class="mitem"><i class="sdot '+st+'"></i><span class="dt">'+brc(m.meta)+'</span>'+
+      '<span class="nm">'+esc(m.marco)+'<span class="pj">'+esc(m.projeto)+'</span></span></div>';}).join("");
+    return'<div class="area-card '+setKey(s)+'"><div class="area-head">'+
+      '<span class="area-name">'+esc(s)+'</span><span class="area-count">'+l.length+'</span></div>'+
+      '<div class="conf-line">Confiança: <span class="conf-pill '+cc+'">'+cl+' · '+conf+'</span>'+
+      (okn?'<span>· '+okn+' concluído'+(okn>1?'s':'')+'</span>':'')+'</div>'+
+      '<div class="area-bar-wrap"><div class="area-bar" style="width:'+Math.round(100*okn/l.length)+'%"></div></div>'+
+      '<div class="mlist detalhe">'+itens+'</div></div>';}).join("");
+})();
+
+// CALENDARIO
+(function(){
+  const porMes={};
+  M.forEach(m=>{(porMes[m.meta.slice(0,7)] ||= []).push(m);});
+  document.getElementById("cal").innerHTML=Object.keys(porMes).sort().map(ym=>{
+    const[a,mn]=ym.split("-");
+    const ehAtual=ym===HOJE.slice(0,7);
+    const l=porMes[ym].sort((x,y)=>x.meta.localeCompare(y.meta)||
+      PRIOR(x.projeto)-PRIOR(y.projeto)||x.projeto.localeCompare(y.projeto));
+    const porSetor={};
+    l.forEach(m=>{const s=m.setor||"Geral";porSetor[s]=(porSetor[s]||0)+1;});
+    const chips=Object.entries(porSetor).map(([s,n])=>
+      '<span class="badge-area badge-'+setKey(s)+'">'+esc(s)+': '+n+'</span>').join("");
+    const rows=l.map(m=>{
+      const[st,rot]=estado(m);
+      const pctCls=m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none";
+      const dv=m.desvio_dias;
+      const ehPrior=/CONDOMÍNIO|MORADA DOS SABIÁS/.test((m.projeto||"").toUpperCase());
+      return'<div class="marco-row'+(ehPrior?" prior":"")+'"><span class="marco-dia">'+brc(m.meta)+'</span>'+
+        '<span class="marco-info"><span class="marco-nome">'+(ehPrior?'<span class="prior-star" title="Projeto prioritário">★</span> ':'')+esc(m.marco)+'</span><br>'+
+        '<span class="marco-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+'</span></span>'+
+        '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
+        '<span class="pct-pill '+pctCls+'">'+m.pct+'%</span>'+
+        '<span class="status-pill st-'+st+'">'+rot+'</span>'+
+        (dv?'<span class="desvio-pill '+(dv>0?"desvio-mais":"desvio-menos")+'">'+(dv>0?"+":"")+dv+'d</span>':'')+
+        '</div>';}).join("");
+    return'<section class="mes-sec'+(ehAtual?" atual":"")+'"><div class="mes-head"><h3>'+MESES[+mn-1]+" "+a+'</h3>'+
+      '<span class="tot">'+l.length+'</span>'+(ehAtual?'<span class="tag-atual">mês atual</span>':"")+
+      '<div class="chips">'+chips+'</div></div>'+rows+'</section>';}).join("");
+})();
+</script>
+</body></html>

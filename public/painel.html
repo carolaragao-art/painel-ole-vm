@@ -934,6 +934,7 @@
 <main>
   <!-- NAV TABS -->
   <div class="nav-tabs">
+    <div class="nav-tab" onclick="showTab('marcos')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Marcos &amp; Metas</div>
     <div class="nav-tab" onclick="showTab('executivo')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Painel Executivo</div>
     <div class="nav-tab" onclick="showTab('graficos')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Gráficos</div>
     <div class="nav-tab" onclick="showTab('areas')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Áreas</div>
@@ -945,6 +946,10 @@
   </div>
 
   <!-- TAB: EXECUTIVO -->
+  <div class="tab-section" id="tab-marcos">
+    <iframe src="/marcos.html" title="Marcos e Metas" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
+  </div>
+
   <div class="tab-section" id="tab-executivo">
 
     <!-- BRAND HERO -->
@@ -3562,7 +3567,7 @@ function showTab(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-' + name);
   if (tabEl) tabEl.classList.add('active');
-  const map = {executivo:0,graficos:1,areas:2,atualizacao:3,sprint:4,kanban:5,backlog:6,procs:7};
+  const map = {marcos:0,executivo:1,graficos:2,areas:3,atualizacao:4,sprint:5,kanban:6,backlog:7,procs:8};
   const tabs = document.querySelectorAll('.nav-tab');
   if (map[name] !== undefined && tabs[map[name]]) tabs[map[name]].classList.add('active');
   if (name === 'graficos') {
@@ -6106,10 +6111,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Só usa data atual se não tiver número salvo
   if(numEl && (!numEl.value || numEl.value === '—' || numEl.value === '')) numEl.value=wk;
   if(weekEl && !weekEl.value) weekEl.value=y+'-W'+String(wk).padStart(2,'0');
-  // [ajuste] Abre a última aba usada (padrão sprint)
-  var _ultimaAba = 'sprint';
-  try { _ultimaAba = localStorage.getItem('ole_ultima_aba') || 'sprint'; } catch (e) {}
-  if (['executivo','graficos','areas','atualizacao','sprint','kanban','backlog','procs'].indexOf(_ultimaAba) === -1) _ultimaAba = 'sprint';
+  // [ajuste] Abre a última aba usada (padrão: Marcos & Metas, a 1ª página)
+  var _ultimaAba = 'marcos';
+  try { _ultimaAba = localStorage.getItem('ole_ultima_aba') || 'marcos'; } catch (e) {}
+  if (['marcos','executivo','graficos','areas','atualizacao','sprint','kanban','backlog','procs'].indexOf(_ultimaAba) === -1) _ultimaAba = 'marcos';
   showTab(_ultimaAba);
   // [ajuste] Atualiza o mês exibido conforme a data de hoje
   atualizarMesAtual();

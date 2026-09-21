@@ -7,3 +7,5 @@
 npm-debug.log*
 *.pem
 .vercel
+
+desktop.ini
