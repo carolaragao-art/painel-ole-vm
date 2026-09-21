@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/alerta-certs", "schedule": "0 11 * * *" }
+  ]
+}
