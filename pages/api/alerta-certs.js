@@ -20,14 +20,26 @@ function br(iso) {
   return `${d}/${m}/${a}`;
 }
 
+// Mesma regra do painel (certStatus): o prazo-limite para PEDIR a renovação
+// é vencimento − antecedência, e o aviso acende AVISO_DIAS dias antes dele.
+const AVISO_DIAS = 15;
+
 function statusDe(item, hoje) {
   const man = String(item.statusManual || '').toUpperCase();
   if (man === 'EM ANDAMENTO' || man === 'SUSPENSO') return { key: man, dias: null };
   if (!item.vencimento) return { key: 'SEM DATA', dias: null };
   const dias = Math.round((new Date(item.vencimento + 'T00:00:00') - hoje) / 86400000);
   if (dias < 0) return { key: 'VENCIDA', dias };
-  if (dias <= (Number(item.antecedencia) || 0)) return { key: 'RENOVAR', dias };
+  if (dias <= (Number(item.antecedencia) || 0) + AVISO_DIAS) return { key: 'RENOVAR', dias };
   return { key: 'ATUALIZADA', dias };
+}
+
+// Data-limite (ISO) para pedir a renovação: vencimento − antecedência
+function limiteRenovacao(item) {
+  if (!item.vencimento) return null;
+  const d = new Date(item.vencimento + 'T00:00:00');
+  d.setDate(d.getDate() - (Number(item.antecedencia) || 0));
+  return d;
 }
 
 function autorizado(req) {
@@ -73,9 +85,19 @@ export default async function handler(req, res) {
                  agora - mem.enviadoEm > REENVIO_DIAS * 86400000) enviar = true; // lembrete semanal
 
         if (critico) {
-          const motivo = st.key === 'VENCIDA'
-            ? `Vencida há ${Math.abs(st.dias)} dia(s) — o documento perdeu a validade e precisa ser renovado imediatamente para não travar protocolos e processos que dependem dele.`
-            : `Vence em ${st.dias} dia(s) e a antecedência cadastrada é de ${Number(item.antecedencia) || 0} dias — a renovação precisa começar agora para ficar pronta antes do vencimento.`;
+          let motivo;
+          if (st.key === 'VENCIDA') {
+            motivo = `Vencida há ${Math.abs(st.dias)} dia(s) — o documento perdeu a validade e precisa ser renovado imediatamente para não travar protocolos e processos que dependem dele.`;
+          } else {
+            const lim = limiteRenovacao(item);
+            const diasLim = lim ? Math.round((lim - hoje) / 86400000) : null;
+            const quando = diasLim === null ? ''
+              : diasLim > 0 ? ` — daqui a ${diasLim} dia(s)`
+              : diasLim === 0 ? ' — HOJE'
+              : ` — já passou há ${Math.abs(diasLim)} dia(s)`;
+            const limBr = lim ? `${String(lim.getDate()).padStart(2, '0')}/${String(lim.getMonth() + 1).padStart(2, '0')}/${lim.getFullYear()}` : '—';
+            motivo = `Vence em ${st.dias} dia(s). Com antecedência de ${Number(item.antecedencia) || 0} dias, o prazo para pedir a renovação termina em ${limBr}${quando}.`;
+          }
           alertas.push({ chave, enviar, grupo: g.nome || '', nome: item.nome || '',
             orgao: item.orgao || '', cidade: item.cidade || '',
             vencimento: item.vencimento || '', status: st.key, dias: st.dias,
