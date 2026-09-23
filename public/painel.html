@@ -586,9 +586,9 @@
   .bl-done-toggle:hover { color:var(--navy); background:#eef2f7; }
 
   /* Certidões e Licenças — Legalização */
-  .cert-table { width:100%; border-collapse:collapse; min-width:1400px; table-layout:fixed; }
+  .cert-table { width:100%; border-collapse:collapse; table-layout:fixed; }
   .cert-table thead tr { background:var(--navy); }
-  .cert-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:nowrap; font-weight:600; }
+  .cert-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:normal; font-weight:600; vertical-align:middle; }
   .cert-table td { padding:4px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .cert-group-hd { display:flex; align-items:center; gap:10px; padding:9px 16px; background:var(--surface); border-bottom:3px solid var(--cor,#E8622A); }
   .cert-group-nome { font-family:'Poppins',sans-serif; font-weight:700; font-size:14.5px; color:var(--cor,#E8622A); border:1px solid transparent; border-radius:6px; background:transparent; outline:none; padding:2px 6px; min-width:80px; flex:1; }
@@ -6631,15 +6631,27 @@ function certSave() {
   try { localStorage.setItem('ole_certs', JSON.stringify(certData)); } catch(e) {}
 }
 
-// Regra de status: manual (Em andamento/Suspenso) vence; senão calcula pelo vencimento
+// Regra de status: manual (Em andamento/Suspenso) vence; senão calcula pelo vencimento.
+// O prazo-limite para PEDIR a renovação é vencimento − antecedência.
+// O aviso "Renovar" acende CERT_AVISO_DIAS dias antes desse prazo-limite,
+// para a equipe ser notificada com folga (pedido da Carol, set/2026).
+const CERT_AVISO_DIAS = 15;
 function certStatus(item) {
   if (item.statusManual === 'SUSPENSO') return { key:'SUSPENSO', dias:certDiasRestantes(item) };
   if (item.statusManual === 'EM ANDAMENTO') return { key:'EM ANDAMENTO', dias:certDiasRestantes(item) };
   if (!item.vencimento) return { key:'SEM DATA', dias:null };
   const dias = certDiasRestantes(item);
   if (dias < 0) return { key:'VENCIDA', dias };
-  if (dias <= (Number(item.antecedencia)||0)) return { key:'RENOVAR', dias };
+  if (dias <= (Number(item.antecedencia)||0) + CERT_AVISO_DIAS) return { key:'RENOVAR', dias };
   return { key:'ATUALIZADA', dias };
+}
+
+// Data-limite para pedir a renovação (vencimento − antecedência), em dd/mm/aaaa
+function certPrazoRenovacao(item) {
+  if (!item.vencimento) return null;
+  const d = new Date(item.vencimento + 'T00:00:00');
+  d.setDate(d.getDate() - (Number(item.antecedencia)||0));
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
 }
 
 function certDiasRestantes(item) {
@@ -6677,21 +6689,22 @@ function certRender() {
       <div style="overflow-x:auto;${recolhido?'display:none':''}"><table class="cert-table">
         <thead><tr>
           <th style="width:15%">Certidão / Licença</th><th style="width:9%">Órgão</th><th style="width:7%">Cidade</th>
-          <th style="width:8%">Emissão</th><th style="width:8%">Vencimento</th><th style="width:7%" title="Com quantos dias de antecedência a renovação precisa começar">Renovar antes (dias)</th>
+          <th style="width:8%">Emissão</th><th style="width:8%">Vencimento</th><th style="width:7%" title="Com quantos dias de antecedência a renovação precisa ser pedida. O status Renovar acende 15 dias antes desse prazo-limite.">Renovar antes (dias)</th>
           <th style="width:9%">Status</th><th style="width:5%">Dias</th><th style="width:10%">Arquivos</th><th style="width:10%">Link p/ emissão</th><th style="width:10%">Finalidade</th><th style="width:2%"></th>
         </tr></thead>
         <tbody>${g.itens.map(item => {
           const st = certStatus(item);
           const info = CERT_STATUS_INFO[st.key];
+          const prazoRen = certPrazoRenovacao(item);
           const diasHtml = st.dias === null ? '<span style="font-size:10px;color:var(--text-muted)">—</span>'
-            : `<span class="cert-dias-badge" style="background:${info.cor}" title="${st.dias < 0 ? 'Vencida há '+Math.abs(st.dias)+' dias' : st.dias+' dias até o vencimento'}">${st.dias}d</span>`;
+            : `<span class="cert-dias-badge" style="background:${info.cor}" title="${st.dias < 0 ? 'Vencida há '+Math.abs(st.dias)+' dias' : st.dias+' dias até o vencimento'}${prazoRen ? ' · Pedir renovação até '+prazoRen : ''}">${st.dias}d</span>`;
           return `<tr>
             <td><input class="proc-input" value="${procEsc(item.nome)}" onchange="certUpd(${g.id},${item.id},'nome',this.value)" title="${procEsc(item.nome)}"/></td>
             <td><input class="proc-input" value="${procEsc(item.orgao)}" onchange="certUpd(${g.id},${item.id},'orgao',this.value)"/></td>
             <td><input class="proc-input" value="${procEsc(item.cidade)}" onchange="certUpd(${g.id},${item.id},'cidade',this.value)"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(item.emissao)}" onchange="certUpd(${g.id},${item.id},'emissao',this.value)"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(item.vencimento)}" onchange="certUpd(${g.id},${item.id},'vencimento',this.value)"/></td>
-            <td><input class="proc-input" type="number" min="0" step="1" value="${procEsc(item.antecedencia)}" onchange="certUpd(${g.id},${item.id},'antecedencia',this.value)" style="text-align:center"/></td>
+            <td><input class="proc-input" type="number" min="0" step="1" value="${procEsc(item.antecedencia)}" onchange="certUpd(${g.id},${item.id},'antecedencia',this.value)" style="text-align:center"/>${prazoRen ? `<div style="font-size:9px;color:var(--text-muted);text-align:center;line-height:1.2" title="Data-limite para pedir a renovação (vencimento − antecedência). O aviso acende 15 dias antes.">pedir até ${prazoRen}</div>` : ''}</td>
             <td><select class="cert-status-sel" style="background:${info.cor}" onchange="certUpd(${g.id},${item.id},'statusManual',this.value)" title="Automático segue a regra de vencimento; Em andamento e Suspenso são manuais">
               <option value=""${!item.statusManual?' selected':''}>${item.statusManual?'⚡ Automático':'⚡ '+info.label}</option>
               <option value="EM ANDAMENTO"${item.statusManual==='EM ANDAMENTO'?' selected':''}>Em andamento</option>
@@ -6700,7 +6713,7 @@ function certRender() {
             <td style="text-align:center">${diasHtml}</td>
             <td><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
               ${(item.arquivos||[]).map(a=>`<span class="cert-file-chip"><a href="/api/arquivo/${a.id}" target="_blank" rel="noopener" title="${procEsc(a.nome)}">📄 ${procEsc(certNomeCurto(a.nome))}</a><b onclick="certDelArquivo(${g.id},${item.id},'${a.id}')" title="Remover arquivo">×</b></span>`).join('')}
-              <button class="cert-upload-btn" onclick="certUpload(${g.id},${item.id})" title="Anexar arquivo (PDF ou imagem, até 4MB)">📎</button>
+              <button class="cert-upload-btn" onclick="certUpload(${g.id},${item.id})" title="Anexar arquivo (PDF, Word, Excel ou imagem — até 3MB)">📎</button>
             </div></td>
             <td><div style="display:flex;align-items:center;gap:3px"><input class="proc-input" value="${procEsc(item.link)}" onchange="certUpd(${g.id},${item.id},'link',this.value)" placeholder="https://..."/>${item.link?`<a href="${procEsc(item.link)}" target="_blank" rel="noopener" style="font-size:12px;text-decoration:none" title="Abrir link">↗</a>`:''}</div></td>
             <td><input class="proc-input" value="${procEsc(item.finalidade)}" onchange="certUpd(${g.id},${item.id},'finalidade',this.value)" title="${procEsc(item.finalidade)}"/></td>
@@ -6757,10 +6770,11 @@ function certNomeCurto(n) { n = String(n||''); return n.length > 15 ? n.substrin
 function certUpload(gid, iid) {
   const inp = document.createElement('input');
   inp.type = 'file';
-  inp.accept = '.pdf,image/*';
+  inp.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*';
   inp.onchange = async () => {
     const f = inp.files && inp.files[0]; if (!f) return;
-    if (f.size > 4 * 1024 * 1024) { alert('Arquivo muito grande (máximo 4MB). Dica: comprima o PDF antes de anexar.'); return; }
+    // 3MB: o base64 infla ~33% e o servidor (Vercel) recusa corpo acima de 4,5MB
+    if (f.size > 3 * 1024 * 1024) { alert('Arquivo muito grande (máximo 3MB). Dica: comprima o PDF em ilovepdf.com/pt/comprimir_pdf antes de anexar.'); return; }
     let base64;
     try {
       base64 = await new Promise((resolve, reject) => {
@@ -6776,10 +6790,15 @@ function certUpload(gid, iid) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ nome: f.name, mime: f.type || 'application/pdf', base64 })
+        body: JSON.stringify({ nome: f.name, mime: f.type || 'application/octet-stream', base64 })
       });
-      const j = await resp.json();
-      if (!j.ok) throw new Error(j.error || 'falha no envio');
+      let j = null; try { j = await resp.json(); } catch(e) {}
+      if (!resp.ok || !j || !j.ok) {
+        const msg = resp.status === 413 ? 'arquivo grande demais para o servidor — reduza para até 3MB'
+          : resp.status === 401 ? 'sessão expirada — atualize a página e faça login de novo'
+          : (j && j.error) || ('erro ' + resp.status + ' no servidor');
+        throw new Error(msg);
+      }
       const g = certGrupo(gid); const item = g && g.itens.find(i => i.id === iid); if (!item) return;
       if (!item.arquivos) item.arquivos = [];
       item.arquivos.push({ id: j.id, nome: f.name });
