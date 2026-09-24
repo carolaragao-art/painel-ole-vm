@@ -120,7 +120,7 @@ export default async function handler(req, res) {
         <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">${a.orgao}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">${br(a.vencimento)}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:${a.status === 'VENCIDA' ? '#dc2626' : '#d97706'};font-weight:700">${a.status}</td>
-        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">${a.motivo}${a.finalidade ? '<br><span style="color:#64748b;font-size:12px">Finalidade: ' + a.finalidade + '</span>' : ''}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">${a.motivo}${a.finalidade ? '<br><span style="color:#64748b;font-size:12px">Nº do documento: ' + a.finalidade + '</span>' : ''}</td>
       </tr>`).join('');
 
     const vencidas = paraEnviar.filter(a => a.status === 'VENCIDA').length;

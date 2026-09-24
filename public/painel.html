@@ -587,6 +587,9 @@
 
   /* Certidões e Licenças — Legalização */
   .cert-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  /* Datas compactas para dd/mm/aaaa caber inteiro (ano visível) */
+  .cert-table input[type="date"] { font-size:10.5px; padding:5px 2px; letter-spacing:-.2px; }
+  .cert-table input[type="date"]::-webkit-calendar-picker-indicator { margin:0; padding:0; width:12px; }
   .cert-table thead tr { background:var(--navy); }
   .cert-table th { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,.85); text-align:left; padding:9px 6px; white-space:normal; font-weight:600; vertical-align:middle; }
   .cert-table td { padding:4px 3px; border-bottom:1px solid var(--border); vertical-align:middle; }
@@ -6688,9 +6691,9 @@ function certRender() {
       </div>
       <div style="overflow-x:auto;${recolhido?'display:none':''}"><table class="cert-table">
         <thead><tr>
-          <th style="width:15%">Certidão / Licença</th><th style="width:9%">Órgão</th><th style="width:7%">Cidade</th>
-          <th style="width:8%">Emissão</th><th style="width:8%">Vencimento</th><th style="width:7%" title="Com quantos dias de antecedência a renovação precisa ser pedida. O status Renovar acende 15 dias antes desse prazo-limite.">Renovar antes (dias)</th>
-          <th style="width:9%">Status</th><th style="width:5%">Dias</th><th style="width:10%">Arquivos</th><th style="width:10%">Link p/ emissão</th><th style="width:10%">Finalidade</th><th style="width:2%"></th>
+          <th style="width:17%">Certidão / Licença</th><th style="width:7%">Cidade</th>
+          <th style="width:10%">Emissão</th><th style="width:10%">Vencimento</th><th style="width:8%" title="Com quantos dias de antecedência a renovação precisa ser pedida. O status Renovar acende 15 dias antes desse prazo-limite.">Renovar antes (dias)</th>
+          <th style="width:10%">Status</th><th style="width:5%">Dias</th><th style="width:4%" title="Arquivos anexados">📎</th><th style="width:12%">Link p/ emissão</th><th style="width:15%">Nº do documento</th><th style="width:2%"></th>
         </tr></thead>
         <tbody>${g.itens.map(item => {
           const st = certStatus(item);
@@ -6699,8 +6702,7 @@ function certRender() {
           const diasHtml = st.dias === null ? '<span style="font-size:10px;color:var(--text-muted)">—</span>'
             : `<span class="cert-dias-badge" style="background:${info.cor}" title="${st.dias < 0 ? 'Vencida há '+Math.abs(st.dias)+' dias' : st.dias+' dias até o vencimento'}${prazoRen ? ' · Pedir renovação até '+prazoRen : ''}">${st.dias}d</span>`;
           return `<tr>
-            <td><input class="proc-input" value="${procEsc(item.nome)}" onchange="certUpd(${g.id},${item.id},'nome',this.value)" title="${procEsc(item.nome)}"/></td>
-            <td><input class="proc-input" value="${procEsc(item.orgao)}" onchange="certUpd(${g.id},${item.id},'orgao',this.value)"/></td>
+            <td><input class="proc-input" value="${procEsc(item.nome)}" onchange="certUpd(${g.id},${item.id},'nome',this.value)" title="${procEsc(item.nome)}${item.orgao?' · Órgão: '+procEsc(item.orgao):''}"/></td>
             <td><input class="proc-input" value="${procEsc(item.cidade)}" onchange="certUpd(${g.id},${item.id},'cidade',this.value)"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(item.emissao)}" onchange="certUpd(${g.id},${item.id},'emissao',this.value)"/></td>
             <td><input class="proc-input" type="date" value="${procEsc(item.vencimento)}" onchange="certUpd(${g.id},${item.id},'vencimento',this.value)"/></td>
@@ -6712,11 +6714,11 @@ function certRender() {
             </select></td>
             <td style="text-align:center">${diasHtml}</td>
             <td><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
-              ${(item.arquivos||[]).map(a=>`<span class="cert-file-chip"><a href="/api/arquivo/${a.id}" target="_blank" rel="noopener" title="${procEsc(a.nome)}">📄 ${procEsc(certNomeCurto(a.nome))}</a><b onclick="certDelArquivo(${g.id},${item.id},'${a.id}')" title="Remover arquivo">×</b></span>`).join('')}
+              ${(item.arquivos||[]).map(a=>`<span class="cert-file-chip"><a href="/api/arquivo/${a.id}" target="_blank" rel="noopener" title="${procEsc(a.nome)}">📄</a><b onclick="certDelArquivo(${g.id},${item.id},'${a.id}')" title="Remover arquivo">×</b></span>`).join('')}
               <button class="cert-upload-btn" onclick="certUpload(${g.id},${item.id})" title="Anexar arquivo (PDF, Word, Excel ou imagem — até 3MB)">📎</button>
             </div></td>
             <td><div style="display:flex;align-items:center;gap:3px"><input class="proc-input" value="${procEsc(item.link)}" onchange="certUpd(${g.id},${item.id},'link',this.value)" placeholder="https://..."/>${item.link?`<a href="${procEsc(item.link)}" target="_blank" rel="noopener" style="font-size:12px;text-decoration:none" title="Abrir link">↗</a>`:''}</div></td>
-            <td><input class="proc-input" value="${procEsc(item.finalidade)}" onchange="certUpd(${g.id},${item.id},'finalidade',this.value)" title="${procEsc(item.finalidade)}"/></td>
+            <td><input class="proc-input" value="${procEsc(item.finalidade)}" onchange="certUpd(${g.id},${item.id},'finalidade',this.value)" placeholder="ex.: Alvará nº 1366/2026" title="${procEsc(item.finalidade)}"/></td>
             <td><button class="proc-del-btn" onclick="certDelItem(${g.id},${item.id})" title="Excluir">✕</button></td>
           </tr>`;
         }).join('')}</tbody>
