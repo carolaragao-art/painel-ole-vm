@@ -586,7 +586,9 @@
   .bl-done-toggle:hover { color:var(--navy); background:#eef2f7; }
 
   /* Certidões e Licenças — Legalização */
-  .cert-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  /* calc(100% - 2px): sem isso o arredondamento das larguras deixa a tabela
+     1px maior que o contêiner e o navegador mostra barra de rolagem à toa */
+  .cert-table { width:calc(100% - 2px); border-collapse:collapse; table-layout:fixed; }
   /* Datas compactas para dd/mm/aaaa caber inteiro (ano visível) */
   .cert-table input[type="date"] { font-size:10.5px; padding:5px 2px; letter-spacing:-.2px; }
   .cert-table input[type="date"]::-webkit-calendar-picker-indicator { margin:0; padding:0; width:12px; }
@@ -6691,9 +6693,9 @@ function certRender() {
       </div>
       <div style="overflow-x:auto;${recolhido?'display:none':''}"><table class="cert-table">
         <thead><tr>
-          <th style="width:17%">Certidão / Licença</th><th style="width:7%">Cidade</th>
+          <th style="width:19%">Certidão / Licença</th><th style="width:7%">Cidade</th>
           <th style="width:10%">Emissão</th><th style="width:10%">Vencimento</th><th style="width:8%" title="Com quantos dias de antecedência a renovação precisa ser pedida. O status Renovar acende 15 dias antes desse prazo-limite.">Renovar antes (dias)</th>
-          <th style="width:10%">Status</th><th style="width:5%">Dias</th><th style="width:4%" title="Arquivos anexados">📎</th><th style="width:12%">Link p/ emissão</th><th style="width:15%">Nº do documento</th><th style="width:2%"></th>
+          <th style="width:10%">Status</th><th style="width:5%">Dias</th><th style="width:4%" title="Arquivos anexados">📎</th><th style="width:8%">Link</th><th style="width:17%">Nº do documento</th><th style="width:2%"></th>
         </tr></thead>
         <tbody>${g.itens.map(item => {
           const st = certStatus(item);
