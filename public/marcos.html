@@ -97,7 +97,20 @@
   .mes-head h3 { font-size:15px; color:#fff; font-weight:700; text-transform:capitalize; }
   .mes-head .tot { background:var(--ole-orange); color:#fff; border-radius:20px; font-size:11px; font-weight:700; padding:2px 10px; }
   .mes-head .tag-atual { background:var(--gold); color:var(--navy); border-radius:4px; font-size:10px; font-weight:800; padding:2px 8px; text-transform:uppercase; letter-spacing:.8px; }
+  .mes-head .tot-ok { background:#22c55e; color:#fff; border-radius:20px; font-size:11px; font-weight:800; padding:2px 10px; }
   .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+  /* Metas já atingidas: recolhidas por padrão */
+  .feitas-head { display:flex; align-items:center; gap:10px; padding:10px 20px; border-top:1px solid var(--border);
+    background:#f0fdf4; cursor:pointer; user-select:none; font-size:13px; color:#166534; }
+  .feitas-head:hover { background:#e7fbee; }
+  .feitas-head .fh-ico { color:#22c55e; font-size:13px; transition:transform .15s; display:inline-block; }
+  .feitas-head.aberto .fh-ico { transform:rotate(90deg); }
+  .feitas-head .fh-txt { flex:1; min-width:0; }
+  .feitas-head .fh-pct { background:#22c55e; color:#fff; border-radius:20px; font-size:11px; font-weight:800; padding:2px 10px; }
+  .feitas-head .fh-ver { font-size:11px; font-weight:700; color:#15803d; text-decoration:underline; white-space:nowrap; }
+  .feitas-corpo { display:none; }
+  .feitas-corpo.aberto { display:block; }
+  @media print { .feitas-corpo { display:block; } .feitas-head .fh-ver { display:none; } }
   .badge-area { display:inline-flex; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
   .badge-prosp { background:#fde8d8; color:#c04a00; }
   .badge-leg   { background:#dce8f5; color:#1e3a6e; }
@@ -957,7 +970,7 @@ document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB
     l.forEach(m=>{const s=m.setor||"Geral";porSetor[s]=(porSetor[s]||0)+1;});
     const chips=Object.entries(porSetor).map(([s,n])=>
       '<span class="badge-area badge-'+setKey(s)+'">'+esc(s)+': '+n+'</span>').join("");
-    const rows=l.map(m=>{
+    const linha=(m)=>{
       const[st,rot]=estado(m);
       const pctCls=m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none";
       const dv=m.desvio_dias;
@@ -969,10 +982,32 @@ document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB
         '<span class="pct-pill '+pctCls+'">'+m.pct+'%</span>'+
         '<span class="status-pill st-'+st+'">'+rot+'</span>'+
         (dv?'<span class="desvio-pill '+(dv>0?"desvio-mais":"desvio-menos")+'">'+(dv>0?"+":"")+dv+'d</span>':'')+
-        '</div>';}).join("");
+        '</div>';};
+    // Metas já batidas ficam recolhidas: o mês mostra só quantas foram atingidas.
+    const feitas=l.filter(m=>m.pct>=100), abertas=l.filter(m=>m.pct<100);
+    const pctMes=Math.round(100*feitas.length/l.length);
+    const idg="g"+ym.replace("-","");
+    const grupo=feitas.length?
+      '<div class="feitas-head" data-g="'+idg+'" id="h'+idg+'">'+
+        '<span class="fh-ico">▸</span>'+
+        '<span class="fh-txt"><b>'+feitas.length+' de '+l.length+'</b> '+(l.length>1?"metas atingidas":"meta atingida")+' neste mês</span>'+
+        '<span class="fh-pct">'+pctMes+'%</span>'+
+        '<span class="fh-ver">ver metas</span>'+
+      '</div><div class="feitas-corpo" id="'+idg+'">'+feitas.map(linha).join("")+'</div>':"";
     return'<section class="mes-sec'+(ehAtual?" atual":"")+'"><div class="mes-head"><h3>'+MESES[+mn-1]+" "+a+'</h3>'+
       '<span class="tot">'+l.length+'</span>'+(ehAtual?'<span class="tag-atual">mês atual</span>':"")+
-      '<div class="chips">'+chips+'</div></div>'+rows+'</section>';}).join("");
+      (feitas.length?'<span class="tot-ok">✓ '+feitas.length+'</span>':"")+
+      '<div class="chips">'+chips+'</div></div>'+grupo+abertas.map(linha).join("")+'</section>';}).join("");
 })();
+
+// Abre/fecha o bloco de metas já atingidas do mês
+document.getElementById("cal").addEventListener("click",function(e){
+  const h=e.target.closest(".feitas-head");
+  if(!h)return;
+  const c=document.getElementById(h.dataset.g);
+  const aberto=c.classList.toggle("aberto");
+  h.classList.toggle("aberto",aberto);
+  h.querySelector(".fh-ver").textContent=aberto?"ocultar":"ver metas";
+});
 </script>
 </body></html>
