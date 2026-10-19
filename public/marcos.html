@@ -859,6 +859,8 @@ document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB
   });
   html+='<text x="'+cx+'" y="'+(cy-6)+'" text-anchor="middle" font-size="40" font-weight="800" fill="#1D3461" font-family="Poppins,sans-serif">'+total+'</text>';
   html+='<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" font-size="12" fill="#64748b" font-family="Poppins,sans-serif">marcos</text>';
+  // percentual já atingido, discreto, embaixo do total
+  if(cnt.ok)html+='<text x="'+cx+'" y="'+(cy+40)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="#15803d" font-family="Poppins,sans-serif">'+Math.round(100*cnt.ok/total)+'% atingido</text>';
   svg.innerHTML=html;
   document.getElementById("dleg").innerHTML=["ok","and","prev","late"].filter(k=>cnt[k])
     .map(k=>'<span><i class="ldot" style="background:'+cores[k]+'"></i>'+rot[k]+": "+cnt[k]+"</span>").join("");
@@ -894,6 +896,8 @@ document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB
     if(c)html+='<rect x="'+x+'" y="'+(H-pad.b-hC)+'" width="'+bw+'" height="'+hC+'" rx="6" fill="#22c55e"/>';
     html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b-hT-6)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#1D3461" font-family="Poppins,sans-serif">'+t+'</text>';
     html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b+16)+'" text-anchor="middle" font-size="11" fill="'+(ehAtual?"#E8622A":"#64748b")+'" font-weight="'+(ehAtual?800:500)+'" font-family="Poppins,sans-serif">'+MABR[+mn-1]+"/"+a.slice(2)+'</text>';
+    // % atingido do mês, discreto, logo abaixo do rótulo
+    if(c)html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b+30)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d" font-family="Poppins,sans-serif">'+Math.round(100*c/t)+'%</text>';
     html+='</g>';
   });
   svg.innerHTML=html;
