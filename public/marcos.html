@@ -125,6 +125,8 @@
   .dm-txt b { display:block; color:var(--ink); font-weight:700; }
   .dm-proj { font-size:11px; color:var(--muted); }
   .dm-vazio { padding:8px 20px 12px; font-size:12.5px; color:var(--muted); }
+  .dep-pill { font-size:9.5px; font-weight:700; color:#8a5a00; background:#fdf6e6; border:1px solid var(--gold);
+    border-radius:20px; padding:1px 8px; white-space:nowrap; }
   @media print { .dm-fundo { display:none !important; } }
   .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
   /* Metas já atingidas: recolhidas por padrão */
@@ -799,6 +801,13 @@ function dias(a,b){return Math.round((new Date(b)-new Date(a))/864e5);}
 function setKey(s){s=(s||"").toUpperCase();
   if(s.includes("PROSP"))return"prosp"; if(s.includes("LEGAL"))return"leg";
   if(s.includes("NOVOS")||s.includes("ARQUIT"))return"np"; return"outro";}
+// Projetos que só andam depois de outro — a dependência fica visível para a
+// meta não ser lida como atraso do time (decisão da Carol, 19/10/2026).
+const DEPENDE={"CONDOMÍNIO TESTE":"depende da entrada do Morada dos Sabiás"};
+function dep(m){
+  const p=(m.projeto||"").toUpperCase();
+  for(const k in DEPENDE) if(p.includes(k)) return DEPENDE[k];
+  return "";}
 function estado(m){
   if(m.pct>=100)return["ok","Concluído"];
   if(m.meta<HOJE)return["late","Atrasado"];
@@ -918,7 +927,7 @@ function abrirMes(ym){
   const item=(m)=>{
     const[st,rot]=estado(m); const dv=m.desvio_dias;
     return'<div class="dm-item"><span class="dm-dia">'+brc(m.meta)+'</span>'+
-      '<span class="dm-txt"><b>'+esc(m.marco)+'</b><span class="dm-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+'</span></span>'+
+      '<span class="dm-txt"><b>'+esc(m.marco)+'</b><span class="dm-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
       '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
       '<span class="pct-pill '+(m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none")+'">'+m.pct+'%</span>'+
       '<span class="status-pill st-'+st+'">'+rot+'</span>'+
@@ -983,7 +992,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")fecharMes();});
       const ehPrior=/CONDOMÍNIO|MORADA DOS SABIÁS/.test((m.projeto||"").toUpperCase());
       return'<div class="marco-row'+(ehPrior?" prior":"")+'"><span class="marco-dia">'+brc(m.meta)+'</span>'+
         '<span class="marco-info"><span class="marco-nome">'+(ehPrior?'<span class="prior-star" title="Projeto prioritário">★</span> ':'')+esc(m.marco)+'</span><br>'+
-        '<span class="marco-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+'</span></span>'+
+        '<span class="marco-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
         '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
         '<span class="pct-pill '+pctCls+'">'+m.pct+'%</span>'+
         '<span class="status-pill st-'+st+'">'+rot+'</span>'+
