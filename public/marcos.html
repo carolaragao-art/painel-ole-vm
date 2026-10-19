@@ -98,6 +98,34 @@
   .mes-head .tot { background:var(--ole-orange); color:#fff; border-radius:20px; font-size:11px; font-weight:700; padding:2px 10px; }
   .mes-head .tag-atual { background:var(--gold); color:var(--navy); border-radius:4px; font-size:10px; font-weight:800; padding:2px 8px; text-transform:uppercase; letter-spacing:.8px; }
   .mes-head .tot-ok { background:#22c55e; color:#fff; border-radius:20px; font-size:11px; font-weight:800; padding:2px 10px; }
+  /* Barras do gráfico: cada mês abre o detalhe */
+  .bar-g { cursor:pointer; }
+  .bar-g:hover .bar-hit, .bar-g:focus .bar-hit { fill:#1d34610d; }
+  .bar-g:focus { outline:none; }
+  /* Janela com as metas do mês */
+  .dm-fundo { display:none; position:fixed; inset:0; background:rgba(15,31,61,.5); z-index:90; padding:18px; overflow-y:auto; }
+  .dm-fundo.aberto { display:flex; align-items:flex-start; justify-content:center; }
+  .dm-caixa { background:var(--surface); border-radius:var(--radius); box-shadow:0 18px 50px rgba(0,0,0,.3);
+    width:100%; max-width:780px; margin-top:6vh; overflow:hidden; }
+  .dm-topo { display:flex; align-items:flex-start; gap:12px; padding:16px 20px; background:var(--navy); color:#fff; }
+  .dm-topo h3 { font-size:17px; font-weight:800; text-transform:capitalize; }
+  .dm-topo .dm-sub { font-size:12.5px; opacity:.9; margin-top:2px; }
+  .dm-x { margin-left:auto; background:transparent; border:0; color:#fff; font-size:26px; line-height:1;
+    cursor:pointer; padding:0 4px; border-radius:6px; }
+  .dm-x:hover { background:rgba(255,255,255,.15); }
+  .dm-corpo { padding:6px 0 14px; max-height:68vh; overflow-y:auto; }
+  .dm-bloco-tit { font-size:11.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase;
+    padding:12px 20px 6px; }
+  .dm-bloco-tit.ok { color:#15803d; }
+  .dm-bloco-tit.pend { color:#b45309; }
+  .dm-item { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:9px 20px; border-top:1px solid var(--border); }
+  .dm-dia { font-size:12px; font-weight:800; color:var(--navy); background:var(--surface2);
+    border-radius:6px; padding:3px 8px; white-space:nowrap; }
+  .dm-txt { flex:1; min-width:180px; font-size:13px; }
+  .dm-txt b { display:block; color:var(--ink); font-weight:700; }
+  .dm-proj { font-size:11px; color:var(--muted); }
+  .dm-vazio { padding:8px 20px 12px; font-size:12.5px; color:var(--muted); }
+  @media print { .dm-fundo { display:none !important; } }
   .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
   /* Metas já atingidas: recolhidas por padrão */
   .feitas-head { display:flex; align-items:center; gap:10px; padding:10px 20px; border-top:1px solid var(--border);
@@ -188,7 +216,7 @@
     <div class="card">
       <div class="chart-title">Metas por mês · previsto × concluído</div>
       <svg id="bars" width="100%" height="270" viewBox="0 0 860 270" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="bars-note">Cada barra é o total de marcos com meta no mês; a parte verde é o que já foi concluído. Na primeira semana de cada mês atualizamos e medimos o desvio.</div>
+      <div class="bars-note">Cada barra é o total de marcos com meta no mês; a parte verde é o que já foi concluído. <b>Clique em um mês</b> para ver quais metas foram atingidas e quais não. Na primeira semana de cada mês atualizamos e medimos o desvio.</div>
     </div>
   </div>
 
@@ -213,6 +241,20 @@
   </div>
 </main>
 <footer id="foot"></footer>
+
+<div class="dm-fundo" id="modal-mes" onclick="if(event.target===this)fecharMes()">
+  <div class="dm-caixa" role="dialog" aria-modal="true" aria-labelledby="dm-titulo">
+    <div class="dm-topo">
+      <div>
+        <h3 id="dm-titulo"></h3>
+        <div class="dm-sub" id="dm-sub"></div>
+      </div>
+      <button class="dm-x" id="dm-fechar" onclick="fecharMes()" aria-label="Fechar">×</button>
+    </div>
+    <div class="dm-corpo" id="dm-corpo"></div>
+  </div>
+</div>
+
 <script>
 // Dentro do painel (iframe), o cabecalho proprio some e o badge/botao
 // migram para uma barra fina no topo do conteudo.
@@ -843,14 +885,54 @@ document.getElementById("foot").textContent="Fonte: Smartsheet OLE VM - DEV IMOB
     const x=pad.l+step*i+(step-bw)/2;
     const hT=(H-pad.t-pad.b)*t/maxV, hC=(H-pad.t-pad.b)*c/maxV;
     const ehAtual=k===HOJE.slice(0,7);
+    const[a,mn]=k.split("-");
+    // cada mês é um grupo clicável (a faixa invisível cobre a coluna inteira)
+    html+='<g class="bar-g" data-m="'+k+'" role="button" tabindex="0">'+
+      '<title>'+MESES[+mn-1]+' '+a+' — clique para ver as metas</title>'+
+      '<rect class="bar-hit" x="'+(pad.l+step*i)+'" y="'+pad.t+'" width="'+step+'" height="'+(H-pad.t-pad.b+22)+'" fill="transparent"/>';
     html+='<rect x="'+x+'" y="'+(H-pad.b-hT)+'" width="'+bw+'" height="'+hT+'" rx="6" fill="'+(ehAtual?"#2a4a8a":"#1D3461")+'" opacity="'+(ehAtual?1:.82)+'"/>';
     if(c)html+='<rect x="'+x+'" y="'+(H-pad.b-hC)+'" width="'+bw+'" height="'+hC+'" rx="6" fill="#22c55e"/>';
     html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b-hT-6)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#1D3461" font-family="Poppins,sans-serif">'+t+'</text>';
-    const[a,mn]=k.split("-");
     html+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b+16)+'" text-anchor="middle" font-size="11" fill="'+(ehAtual?"#E8622A":"#64748b")+'" font-weight="'+(ehAtual?800:500)+'" font-family="Poppins,sans-serif">'+MABR[+mn-1]+"/"+a.slice(2)+'</text>';
+    html+='</g>';
   });
   svg.innerHTML=html;
+  svg.addEventListener("click",e=>{const g=e.target.closest("g[data-m]");if(g)abrirMes(g.dataset.m);});
+  svg.addEventListener("keydown",e=>{
+    if(e.key!=="Enter"&&e.key!==" ")return;
+    const g=e.target.closest("g[data-m]"); if(g){e.preventDefault();abrirMes(g.dataset.m);}});
 })();
+
+// DETALHE DO MÊS (clique na barra) — o que foi atingido e o que não foi
+function abrirMes(ym){
+  const[a,mn]=ym.split("-");
+  const l=M.filter(m=>m.meta.slice(0,7)===ym)
+    .sort((x,y)=>x.meta.localeCompare(y.meta)||x.projeto.localeCompare(y.projeto));
+  if(!l.length)return;
+  const feitas=l.filter(m=>m.pct>=100), abertas=l.filter(m=>m.pct<100);
+  const pct=Math.round(100*feitas.length/l.length);
+  const item=(m)=>{
+    const[st,rot]=estado(m); const dv=m.desvio_dias;
+    return'<div class="dm-item"><span class="dm-dia">'+brc(m.meta)+'</span>'+
+      '<span class="dm-txt"><b>'+esc(m.marco)+'</b><span class="dm-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+'</span></span>'+
+      '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
+      '<span class="pct-pill '+(m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none")+'">'+m.pct+'%</span>'+
+      '<span class="status-pill st-'+st+'">'+rot+'</span>'+
+      (dv?'<span class="desvio-pill '+(dv>0?"desvio-mais":"desvio-menos")+'">'+(dv>0?"+":"")+dv+'d</span>':'')+
+      '</div>';};
+  const bloco=(titulo,cls,arr,vazio)=>'<div class="dm-bloco"><div class="dm-bloco-tit '+cls+'">'+titulo+' · '+arr.length+'</div>'+
+    (arr.length?arr.map(item).join(""):'<div class="dm-vazio">'+vazio+'</div>')+'</div>';
+  document.getElementById("dm-titulo").textContent=MESES[+mn-1]+" "+a;
+  document.getElementById("dm-sub").innerHTML='<b>'+feitas.length+' de '+l.length+'</b> '+
+    (l.length>1?"metas atingidas":"meta atingida")+' · '+pct+'%';
+  document.getElementById("dm-corpo").innerHTML=
+    bloco("✅ Atingidas","ok",feitas,"Nenhuma meta atingida neste mês ainda.")+
+    bloco("⏳ Não atingidas","pend",abertas,"Todas as metas do mês foram atingidas. 🎉");
+  document.getElementById("modal-mes").classList.add("aberto");
+  document.getElementById("dm-fechar").focus();
+}
+function fecharMes(){document.getElementById("modal-mes").classList.remove("aberto");}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")fecharMes();});
 
 // SETORES
 (function(){
