@@ -119,6 +119,18 @@
   .obrig{font-size:8.5px;font-weight:800;color:var(--brick);background:#fbe9e9;border-radius:20px;
     padding:1px 7px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:2px}
 
+  /* trilha dos 4 passos: verificar, qualificar, contratar, avaliar */
+  .passos{display:flex;gap:0;margin:14px 0 2px;border:1px solid var(--line);border-radius:10px;
+    overflow:hidden;background:var(--surface)}
+  .passo{flex:1;padding:7px 6px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);
+    border-right:1px solid var(--line);cursor:pointer;line-height:1.25}
+  .passo:last-child{border-right:none}
+  .passo b{display:block;font-family:'DM Mono',monospace;font-size:12px}
+  .passo:hover{background:#fafbfc}
+  .passo.feito{color:var(--verde);background:#f7faf1}
+  .passo.agora{color:#fff;background:var(--navy)}
+  .passo.agora b{color:#fff}
+
   /* blocos que só abrem quando interessam */
   details.blk{border-top:1px solid var(--line);padding:13px 0}
   details.blk>summary{cursor:pointer;font-size:10.5px;font-weight:800;color:var(--muted);
@@ -394,6 +406,12 @@ function abrirFicha(id){
   document.getElementById('ficha').classList.add('on');
   document.getElementById('fundo').classList.add('on');
   document.getElementById('ficha').scrollTop = 0;
+  // já abre o bloco do passo em que este fornecedor está
+  const p = passoAtual(f,e);
+  if(p===3 || p===4){
+    const blk = document.getElementById(p===3? 'blk-doc':'blk-aval');
+    if(blk) blk.open = true;
+  }
 }
 function fecharFicha(){
   document.getElementById('ficha').classList.remove('on');
@@ -405,17 +423,18 @@ function fichaHtml(f,e){
       '<h2>'+esc(f.razao)+'</h2><div class="disc">'+esc(f.nome)+' · '+esc(f.disciplina)+'</div></div>'+
     '<div class="f-corpo">'+
 
+    passosHtml(f,e)+
     verifHtml(f,e)+
 
-    '<details class="blk"><summary>Contato e pasta no Drive'+
+    '<details class="blk" id="blk-contato"><summary>Contato e pasta no Drive'+
       '<em>'+esc((e.contato.pessoa!==undefined?e.contato.pessoa:f.nome)||'—')+'</em></summary>'+
       '<div class="inner">'+ cadastroHtml(f,e) +'</div></details>'+
 
-    '<details class="blk"><summary>Contratação'+
+    '<details class="blk" id="blk-doc"><summary>3 · Contratação'+
       '<em>'+esc(e.doc.tipo||'sem documento')+'</em></summary>'+
       '<div class="inner">'+ docHtml(f,e) +'</div></details>'+
 
-    '<details class="blk"><summary>Avaliação do semestre'+
+    '<details class="blk" id="blk-aval"><summary>4 · Avaliar o fornecedor (a cada semestre)'+
       '<em>'+(ultimaAval(f.id)? num(ultimaAval(f.id).nota)+' em '+ultimaAval(f.id).semestre : 'ainda não avaliado')+'</em></summary>'+
       '<div class="inner">'+ avalHtml(f,e) +'</div></details>'+
 
@@ -455,13 +474,13 @@ const PERGUNTAS = [
    q:'Você tem registro ativo no CREA ou no CAU? Qual é o número?',
    porque:'é o que permite assinar o projeto — sem isso a ART/RRT não sai',
    campo:'nº do registro'},
-  {id:'acervo', elim:true,
-   q:'Consegue me mandar uma ART ou RRT de um projeto parecido com o nosso?',
-   porque:'acervo técnico: a evidência que a auditoria pede da qualificação',
-   campo:'qual projeto mandou'},
+  {id:'acervo', elim:false,
+   q:'Você já fez projeto parecido com o nosso? Qual?',
+   porque:'experiência na disciplina — anote a obra, não precisa pedir documento',
+   campo:'projeto que ele citou'},
   {id:'fiscal', elim:true,
-   q:'Vocês emitem nota fiscal e estão com CND e FGTS em dia?',
-   porque:'formalidade e legalidade (SIAC 8.4.1.2)',
+   q:'Vocês emitem nota fiscal?',
+   porque:'formalidade da contratação (SIAC 8.4.1.2)',
    campo:''},
   {id:'nbr', elim:false,
    q:'Já fez projeto de habitação atendendo a NBR 15575?',
@@ -484,6 +503,30 @@ const PERGUNTAS = [
    porque:'responsabilidades definidas (SIAC 8.4.3.4)',
    campo:'nome do responsável'}
 ];
+/* Em que passo este fornecedor está: 1 verificar · 2 qualificar · 3 contratar · 4 avaliar */
+function passoAtual(f,e){
+  const v = veredito(e.qualif.resp||{});
+  if(v.k==='pend') return 1;
+  if(e.qualif.status==='pendente') return 2;
+  if(e.qualif.status==='nao') return 2;
+  if(!e.doc.tipo || e.doc.tipo==='Ainda não há documento') return 3;
+  if(!e.avaliacoes.some(a=>a.semestre===semestreAtual())) return 4;
+  return 5;
+}
+function passosHtml(f,e){
+  const atual = passoAtual(f,e);
+  const P = [['Verificar','as perguntas'],['Qualificar','registrar'],['Contratar','proposta ou OS'],['Avaliar','nota do semestre']];
+  return '<div class="passos">'+ P.map((p,i)=>{
+    const n = i+1, cls = n<atual? 'feito' : n===atual? 'agora' : '';
+    return '<div class="passo '+cls+'" data-passo="'+n+'"><b>'+(n<atual?'✓':n)+'</b>'+p[0]+'</div>';
+  }).join('')+'</div>'+
+  '<div style="font-size:10.5px;color:var(--muted);margin-bottom:2px">'+
+    (atual===1? 'Faça as perguntas abaixo antes de pedir proposta.' :
+     atual===2? 'Verificado — falta registrar a qualificação no botão acima.' :
+     atual===3? 'Qualificado. Agora guarde a proposta, OS ou contrato no passo 3.' :
+     atual===4? 'Contratado. A nota do semestre '+semestreAtual()+' é no passo 4.' :
+     'Tudo em dia neste semestre.')+'</div>';
+}
 function veredito(resp){
   const elim = PERGUNTAS.filter(p=>p.elim);
   const nao = elim.filter(p=>resp[p.id]==='nao');
@@ -508,7 +551,7 @@ function verifHtml(f,e){
         (acao? '<div class="v-acao">'+acao+'</div>':'')+'</div>'+
     '</div>'+
     '<div class="bloco" style="padding-top:12px">'+
-      '<h3 style="display:flex;align-items:center">Perguntas da ligação'+
+      '<h3 style="display:flex;align-items:center">1 · Perguntas da ligação'+
         '<button class="btn" style="margin-left:auto;font-size:10.5px;padding:4px 9px" data-copiar="1">📋 Copiar roteiro</button></h3>'+
       PERGUNTAS.map(p=>pergHtml(p,resp,txt)).join('')+
       '<input class="busca" style="width:100%;margin-top:10px" data-ressalva="1" '+
@@ -782,12 +825,19 @@ document.getElementById('ficha').addEventListener('change', e => {
   else if(t.dataset.obs)     { est(aberto).obs = t.value; salvar(); }
 });
 document.getElementById('ficha').addEventListener('click', e => {
-  const t = e.target.closest('[data-resp],[data-reg],[data-copiar]');
+  const t = e.target.closest('[data-resp],[data-reg],[data-copiar],[data-passo]');
   if(!t) return;
   if(t.dataset.resp)        setResp(t.dataset.resp, t.dataset.v);
   else if(t.dataset.reg)    registrarQualif(t.dataset.reg);
   else if(t.dataset.copiar) copiarRoteiro();
+  else if(t.dataset.passo)  irParaPasso(+t.dataset.passo);
 });
+function irParaPasso(n){
+  const ficha = document.getElementById('ficha');
+  if(n<=2){ ficha.scrollTo({top:0,behavior:'smooth'}); return; }
+  const el = document.getElementById(n===3? 'blk-doc' : 'blk-aval');
+  if(el){ el.open = true; el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
 document.getElementById('busca').oninput = e => { busca = e.target.value; render(); };
 document.getElementById('btn-regua').onclick = abrirRegua;
 document.getElementById('btn-inativos').onclick = function(){
