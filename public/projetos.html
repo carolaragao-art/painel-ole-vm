@@ -51,11 +51,11 @@
     padding:9px 13px;margin-bottom:11px;font-size:12px;color:#7a5200}
 
   .lista{background:var(--surface);border-radius:12px;box-shadow:0 2px 12px rgba(26,58,92,.08);overflow:hidden}
-  .cab,.linha{display:grid;grid-template-columns:minmax(170px,1.15fr) minmax(108px,.7fr) 310px minmax(176px,1.25fr) 124px 136px;
+  .cab,.linha{display:grid;grid-template-columns:minmax(150px,1fr) minmax(112px,.72fr) 258px minmax(150px,1fr) 104px 112px minmax(168px,1.1fr);
     align-items:center;gap:10px;padding:0 13px}
   .cab{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;height:38px;
     font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-  .cab .trilha-cab{display:grid;grid-template-columns:24px repeat(7,37px) 24px;align-items:end;justify-items:center;padding-bottom:4px}
+  .cab .trilha-cab{display:grid;grid-template-columns:22px repeat(7,30px) 22px;align-items:end;justify-items:center;padding-bottom:4px}
   .cab .trilha-cab span{font-size:8px;line-height:1.2;text-align:center;opacity:.9;letter-spacing:0;
     white-space:nowrap;text-transform:none;font-weight:600}
   .linha{min-height:48px;border-bottom:1px solid var(--line);padding-top:5px;padding-bottom:5px}
@@ -84,9 +84,9 @@
   .prazo.ok{background:#f1f8e8;color:var(--verde)}
   .prazo sup{font-size:8.5px}
 
-  .trilha{display:grid;grid-template-columns:24px repeat(7,37px) 24px;align-items:center;justify-items:center}
-  .nav{width:24px;height:34px;border:0;background:none;color:#aab6c4;font-size:16px;cursor:default;border-radius:7px}
-  .et{position:relative;width:37px;height:28px;display:flex;align-items:center;justify-content:center}
+  .trilha{display:grid;grid-template-columns:22px repeat(7,30px) 22px;align-items:center;justify-items:center}
+  .nav{width:22px;height:34px;border:0;background:none;color:#aab6c4;font-size:16px;cursor:default;border-radius:7px}
+  .et{position:relative;width:30px;height:28px;display:flex;align-items:center;justify-content:center}
   .et::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:var(--line);z-index:0}
   .et:first-of-type::before{left:50%} .et:last-of-type::before{right:50%}
   .et.feita::before{background:#b9c6d4}
@@ -129,6 +129,27 @@
     font-weight:700;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--navy)}
   .dlg-pe .ok{background:var(--navy);color:#fff;border-color:var(--navy)}
   .dlg-pe .lixo{color:#b91c1c;border-color:#e8a5a0;flex:0 0 auto;min-width:0;padding:10px 13px}
+
+  /* campos que a Carol edita (o resto é espelho do Smartsheet) */
+  .ed{border-bottom:1px dashed #b9c6d4;cursor:text;display:inline-block;max-width:100%;
+    overflow-wrap:anywhere;border-radius:2px}
+  .ed:hover{background:#eef4fb;border-bottom-color:var(--azul)}
+  .ed.vazio{color:#9aa8b5;font-style:italic;border-bottom-style:dotted}
+  .cel-edit input,.cel-edit select,.cel-edit textarea{width:100%;font-family:inherit;font-size:12px;
+    border:1.5px solid var(--azul);border-radius:7px;padding:4px 6px;outline:none;background:#fff;color:var(--ink)}
+  .cel-edit textarea{resize:vertical;min-height:48px;line-height:1.3}
+  .ok-flash{color:var(--verde);font-size:10px;font-weight:700}
+  .erro-flash{color:#b91c1c;font-size:10px;font-weight:700;cursor:pointer}
+  .coment{font-size:11.5px;color:#46586a;line-height:1.3;max-width:100%}
+  .coment .data{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);font-weight:600}
+  .coment.velho{background:#fdf6e6;border-radius:6px;padding:3px 6px}
+  .coment.velho .data{color:#8a5a00}
+  .cab .selo{font-size:7.5px;font-weight:800;border-radius:4px;padding:1px 4px;margin-left:4px;
+    background:rgba(255,255,255,.2);letter-spacing:.3px}
+  .legenda{font-size:10.5px;color:var(--muted);margin:0 0 9px 2px}
+  .legenda b{color:var(--navy)}
+  .modo-local{background:#fdecea;border:1px solid #e8a5a0;color:#b91c1c;border-radius:9px;
+    padding:7px 11px;font-size:11.5px;margin-bottom:9px;display:none}
 
   footer{text-align:center;font-size:10.5px;color:var(--muted);margin-top:16px;line-height:1.6}
 
@@ -173,6 +194,11 @@
     <button class="btn-sec" onclick="window.print()">🖨 Imprimir</button>
   </div>
 
+  <div class="modo-local" id="modo-local">Sem conexão com o painel: suas edições estão sendo guardadas
+    só neste navegador. Abra a aba dentro do painel (logada) para gravar para o time.</div>
+  <div class="legenda">🔒 <b>Etapa, data e %</b> vêm do Smartsheet (só leitura) · ✎ <b>empresa, projetista,
+    pagamento, prometido e comentário</b> são do painel — clique para editar, salva sozinho.</div>
+
   <div class="lista" id="lista"></div>
 
   <footer>
@@ -201,13 +227,17 @@
 <script>
 const ETAPAS=["Contratação", "Projeto", "Análise crítica", "Finalização", "Pagamento", "Órgão", "Aprovado"];
 const CURTAS=["Contrat.","Projeto","Análise","Final.","Pagto","Órgão","Aprov."];
-const P=[{"id": "SS72550171", "caminho": ["PROJETOS INFRA", "TOPOGRAFIA"], "grupo": "PROJETOS INFRA", "nome": "TOPOGRAFIA", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-01-28", "fim_projeto": "2026-01-28", "sub": [], "atipico": true, "apelido": "TOPOGRAFIA", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS38977943", "caminho": ["PROJETOS INFRA", "SONDAGEM INICIAL"], "grupo": "PROJETOS INFRA", "nome": "SONDAGEM INICIAL", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-01-29", "fim_projeto": "2026-01-29", "sub": [], "atipico": true, "apelido": "SONDAGEM INICIAL", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS7255469", "caminho": ["PROJETOS INFRA", "PL INCÊNDIO CONDOMÍNIO"], "grupo": "PROJETOS INFRA", "nome": "PL INCÊNDIO CONDOMÍNIO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-30", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-19", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-09", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-16", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-30", "etapa": 3}], "atipico": false, "apelido": "Incêndio", "empresa": "Rabelo Engenharia", "projetista": "Fernando", "pagamento": "Pago Adiantamento", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS54268572", "caminho": ["PROJETOS INFRA", "PL REDE ELÉTRICA E ILUMINAÇÃO"], "grupo": "PROJETOS INFRA", "nome": "PL REDE ELÉTRICA E ILUMINAÇÃO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-23", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-19", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-02", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-09", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-23", "etapa": 3}], "atipico": false, "apelido": "Rede Elétrica", "empresa": "Fácil Eletrificações", "projetista": "Gabriel", "pagamento": "Pago os dois condomínios", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS60801243", "caminho": ["PROJETOS INFRA", "PL DRENAGEM, TERRAPLANAGEM E PAVIMENTAÇÃO"], "grupo": "PROJETOS INFRA", "nome": "PL DRENAGEM, TERRAPLANAGEM E PAVIMENTAÇÃO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2026-12-10", "fim_projeto": "2026-12-31", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2026-12-10", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-12-17", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-12-31", "etapa": 3}], "atipico": false, "apelido": "Drenagem e Terraplanagem", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS54035519", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal da Rede de Água"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal da Rede de Água", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2026-12-31", "fim_projeto": "2027-01-21", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2026-12-31", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-07", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-01-21", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Rede", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SS39085461", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal Estrutural Reservatório", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-12-17", "fim_projeto": "2027-02-04", "sub": [{"nome": "Contratação do projetista", "pct": null, "fim": "2026-12-17", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-14", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-21", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-04", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Estrutural", "empresa": "Dipawa", "projetista": "Fernandes", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SS27379169", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal Elétrico Reservatório", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-12-17", "fim_projeto": "2027-02-04", "sub": [{"nome": "Contratação do projetista", "pct": null, "fim": "2026-12-17", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-14", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-21", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-04", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Elétrico", "empresa": "Engemec", "projetista": "João/Diego", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SS33143212", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ESGOTAMENTO SANITÁRIO", "Projeto Legal da Rede de Esgoto"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal da Rede de Esgoto", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2027-01-21", "fim_projeto": "2027-02-11", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-21", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-28", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-11", "etapa": 3}], "atipico": false, "apelido": "Esgotamento SES", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ESGOTAMENTO SANITÁRIO"}, {"id": "SS86611682", "caminho": ["PROJETOS INFRA", "SONDAGEM POÇO PROFUNDO"], "grupo": "PROJETOS INFRA", "nome": "SONDAGEM POÇO PROFUNDO", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-09-22", "fim_projeto": "2026-09-22", "sub": [], "atipico": true, "apelido": "Poço Profundo", "empresa": "Geologia e Sondagens", "projetista": "Raimundo", "pagamento": "Pagar a outra", "obs": "Investigar com Luiza e Amanda", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS29449813", "caminho": ["PROJETOS INFRA", "PL CANTEIRO"], "grupo": "PROJETOS INFRA", "nome": "PL CANTEIRO", "pct": 30, "etapa": 1, "etapa_nome": "Projeto", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-11-13", "fim_projeto": "2026-11-13", "sub": [], "atipico": true, "apelido": "PL CANTEIRO", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS27952867", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO ELÉTRICO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO ELÉTRICO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-20", "fim_projeto": "2026-11-10", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-10-20", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-10-27", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-03", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-10", "etapa": 3}], "atipico": false, "apelido": "Elétrico", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS12263879", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO HIDROSSANITÁRIO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO HIDROSSANITÁRIO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-28", "fim_projeto": "2026-11-18", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-10-28", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-18", "etapa": 3}], "atipico": false, "apelido": "Hidrossanitário", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS46462948", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO COBERTA"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO COBERTA", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-21", "fim_projeto": "2026-11-25", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-25", "etapa": 3}], "atipico": false, "apelido": "Coberta", "empresa": "Milatec", "projetista": "Igor", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS95375949", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO OLÉ"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO OLÉ", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-11-05", "fim_projeto": "2026-12-02", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-11-05", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-11-16", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-23", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-12-02", "etapa": 3}], "atipico": false, "apelido": "Olé", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS96289206", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO DE FUNDAÇÃO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO DE FUNDAÇÃO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-21", "fim_projeto": "2026-11-25", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-25", "etapa": 3}], "atipico": false, "apelido": "Fundação", "empresa": "Otoch (orçamento)", "projetista": "Sérgio", "pagamento": "Verificar com VM e Jonas", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS46845512", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "PROJETO E EXECUÇÃO REDE ADUTORA"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "PROJETO E EXECUÇÃO REDE ADUTORA", "pct": 71, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do doc de doação CAGECE", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-02", "sub": [{"nome": "Execução da rede adutora", "pct": 100, "fim": "2026-07-06", "etapa": 1}, {"nome": "Elaboração do doc de doação CAGECE", "pct": null, "fim": "2026-10-19", "etapa": 1}, {"nome": "Finalização do processo", "pct": null, "fim": "2026-11-02", "etapa": 3}], "atipico": false, "apelido": "Rede Adutora", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA"}, {"id": "SS56212486", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Civil da Rede de Água"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Civil da Rede de Água", "pct": 0, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-27", "fim_projeto": "2026-11-17", "sub": [{"nome": "Revisão do projeto", "pct": 0, "fim": "2026-10-27", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-11-03", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-11-17", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Projeto Civil", "empresa": "", "projetista": "", "pagamento": "Atualização do projeto civil — contratar", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS73564658", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Estrutural Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-10-27", "fim_projeto": "2026-12-15", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2026-10-27", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2026-11-24", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-12-01", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-12-15", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Estrutural", "empresa": "Dipawa", "projetista": "Fernandes", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS20161646", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Elétrico Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-11-03", "fim_projeto": "2026-12-22", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2026-11-03", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2026-12-01", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-12-08", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-12-22", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Elétrico", "empresa": "Engemec", "projetista": "João/Diego", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS1513156", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto da Elevatória de esgoto"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto da Elevatória de esgoto", "pct": 0, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do Projeto", "prazo_plano": "2027-01-21", "fim_projeto": "2027-02-11", "sub": [{"nome": "Elaboração do Projeto", "pct": 0, "fim": "2027-01-21", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-01-28", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-02-11", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Projeto Civil", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}, {"id": "SS43730975", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Estrutural Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2027-01-21", "fim_projeto": "2027-03-11", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2027-01-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2027-02-18", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-02-25", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-03-11", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Estrutural", "empresa": "Orçar e contratar", "projetista": "", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}, {"id": "SS87829574", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Elétrico Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2027-01-28", "fim_projeto": "2027-03-18", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2027-01-28", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2027-02-25", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-03-04", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-03-18", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Elétrico", "empresa": "Orçar e contratar", "projetista": "", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}];
+const P=[{"id": "SSde4a44b096", "caminho": ["PROJETOS INFRA", "TOPOGRAFIA"], "grupo": "PROJETOS INFRA", "nome": "TOPOGRAFIA", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-01-28", "fim_projeto": "2026-01-28", "sub": [], "atipico": true, "apelido": "TOPOGRAFIA", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS355a3fc703", "caminho": ["PROJETOS INFRA", "SONDAGEM INICIAL"], "grupo": "PROJETOS INFRA", "nome": "SONDAGEM INICIAL", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-01-29", "fim_projeto": "2026-01-29", "sub": [], "atipico": true, "apelido": "SONDAGEM INICIAL", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS5debdfc179", "caminho": ["PROJETOS INFRA", "PL INCÊNDIO CONDOMÍNIO"], "grupo": "PROJETOS INFRA", "nome": "PL INCÊNDIO CONDOMÍNIO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-30", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-19", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-09", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-16", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-30", "etapa": 3}], "atipico": false, "apelido": "Incêndio", "empresa": "Rabelo Engenharia", "projetista": "Fernando", "pagamento": "Pago Adiantamento", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS95d89a51cf", "caminho": ["PROJETOS INFRA", "PL REDE ELÉTRICA E ILUMINAÇÃO"], "grupo": "PROJETOS INFRA", "nome": "PL REDE ELÉTRICA E ILUMINAÇÃO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-23", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-19", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-02", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-09", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-23", "etapa": 3}], "atipico": false, "apelido": "Rede Elétrica", "empresa": "Fácil Eletrificações", "projetista": "Gabriel", "pagamento": "Pago os dois condomínios", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS577160ce95", "caminho": ["PROJETOS INFRA", "PL DRENAGEM, TERRAPLANAGEM E PAVIMENTAÇÃO"], "grupo": "PROJETOS INFRA", "nome": "PL DRENAGEM, TERRAPLANAGEM E PAVIMENTAÇÃO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2026-12-10", "fim_projeto": "2026-12-31", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2026-12-10", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-12-17", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-12-31", "etapa": 3}], "atipico": false, "apelido": "Drenagem e Terraplanagem", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SSb569fc5d10", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal da Rede de Água"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal da Rede de Água", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2026-12-31", "fim_projeto": "2027-01-21", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2026-12-31", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-07", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-01-21", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Rede", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SSec77d45f5f", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal Estrutural Reservatório", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-12-17", "fim_projeto": "2027-02-04", "sub": [{"nome": "Contratação do projetista", "pct": null, "fim": "2026-12-17", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-14", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-21", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-04", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Estrutural", "empresa": "Dipawa", "projetista": "Fernandes", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SS3d73050825", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ABASTECIMENTO DE ÁGUA", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal Elétrico Reservatório", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-12-17", "fim_projeto": "2027-02-04", "sub": [{"nome": "Contratação do projetista", "pct": null, "fim": "2026-12-17", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-14", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-21", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-04", "etapa": 3}], "atipico": false, "apelido": "Abastecimento de água · Elétrico", "empresa": "Engemec", "projetista": "João/Diego", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ABASTECIMENTO DE ÁGUA"}, {"id": "SSb4e3760780", "caminho": ["PROJETOS INFRA", "PL SISTEMA DE ESGOTAMENTO SANITÁRIO", "Projeto Legal da Rede de Esgoto"], "grupo": "PROJETOS INFRA", "nome": "Projeto Legal da Rede de Esgoto", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do projeto", "prazo_plano": "2027-01-21", "fim_projeto": "2027-02-11", "sub": [{"nome": "Elaboração do projeto", "pct": null, "fim": "2027-01-21", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2027-01-28", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2027-02-11", "etapa": 3}], "atipico": false, "apelido": "Esgotamento SES", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Infra", "caminho_txt": "PL SISTEMA DE ESGOTAMENTO SANITÁRIO"}, {"id": "SSb0908469b9", "caminho": ["PROJETOS INFRA", "SONDAGEM POÇO PROFUNDO"], "grupo": "PROJETOS INFRA", "nome": "SONDAGEM POÇO PROFUNDO", "pct": 100, "etapa": 4, "etapa_nome": "Pronto para pagamento", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-09-22", "fim_projeto": "2026-09-22", "sub": [], "atipico": true, "apelido": "Poço Profundo", "empresa": "Geologia e Sondagens", "projetista": "Raimundo", "pagamento": "Pagar a outra", "obs": "Investigar com Luiza e Amanda", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SSd1b11c53f7", "caminho": ["PROJETOS INFRA", "PL CANTEIRO"], "grupo": "PROJETOS INFRA", "nome": "PL CANTEIRO", "pct": 30, "etapa": 1, "etapa_nome": "Projeto", "passo": "sem etapas detalhadas no Smartsheet", "prazo_plano": "2026-11-13", "fim_projeto": "2026-11-13", "sub": [], "atipico": true, "apelido": "PL CANTEIRO", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Infra", "caminho_txt": ""}, {"id": "SS1b5096d40f", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO ELÉTRICO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO ELÉTRICO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-20", "fim_projeto": "2026-11-10", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-10-20", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-10-27", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-03", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-10", "etapa": 3}], "atipico": false, "apelido": "Elétrico", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS3ed25091d2", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO HIDROSSANITÁRIO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO HIDROSSANITÁRIO", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-28", "fim_projeto": "2026-11-18", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-10-28", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-18", "etapa": 3}], "atipico": false, "apelido": "Hidrossanitário", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS90e947f79d", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO COBERTA"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO COBERTA", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-21", "fim_projeto": "2026-11-25", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-25", "etapa": 3}], "atipico": false, "apelido": "Coberta", "empresa": "Milatec", "projetista": "Igor", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS94e2aba683", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO OLÉ"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO OLÉ", "pct": null, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-11-05", "fim_projeto": "2026-12-02", "sub": [{"nome": "Revisão do projeto", "pct": null, "fim": "2026-11-05", "etapa": 1}, {"nome": "Atualização do projeto", "pct": null, "fim": "2026-11-16", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-23", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-12-02", "etapa": 3}], "atipico": false, "apelido": "Olé", "empresa": "Interno", "projetista": "DEV IMOB", "pagamento": "", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS3a1355a5bb", "caminho": ["PROJETOS HABITAÇÃO", "PROJETO DE FUNDAÇÃO"], "grupo": "PROJETOS HABITAÇÃO", "nome": "PROJETO DE FUNDAÇÃO", "pct": null, "etapa": 0, "etapa_nome": "Contratação", "passo": "Alinhamento com o projetista + orçamento", "prazo_plano": "2026-10-21", "fim_projeto": "2026-11-25", "sub": [{"nome": "Alinhamento com o projetista + orçamento", "pct": null, "fim": "2026-10-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": null, "fim": "2026-11-04", "etapa": 1}, {"nome": "Análise Crítica", "pct": null, "fim": "2026-11-11", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": null, "fim": "2026-11-25", "etapa": 3}], "atipico": false, "apelido": "Fundação", "empresa": "Otoch (orçamento)", "projetista": "Sérgio", "pagamento": "Verificar com VM e Jonas", "obs": "", "grupo_curto": "Habitação", "caminho_txt": ""}, {"id": "SS5cdcb7b52c", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "PROJETO E EXECUÇÃO REDE ADUTORA"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "PROJETO E EXECUÇÃO REDE ADUTORA", "pct": 71, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do doc de doação CAGECE", "prazo_plano": "2026-10-19", "fim_projeto": "2026-11-02", "sub": [{"nome": "Execução da rede adutora", "pct": 100, "fim": "2026-07-06", "etapa": 1}, {"nome": "Elaboração do doc de doação CAGECE", "pct": null, "fim": "2026-10-19", "etapa": 1}, {"nome": "Finalização do processo", "pct": null, "fim": "2026-11-02", "etapa": 3}], "atipico": false, "apelido": "Rede Adutora", "empresa": "", "projetista": "", "pagamento": "", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA"}, {"id": "SSf3ec7da912", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Civil da Rede de Água"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Civil da Rede de Água", "pct": 0, "etapa": 1, "etapa_nome": "Projeto", "passo": "Revisão do projeto", "prazo_plano": "2026-10-27", "fim_projeto": "2026-11-17", "sub": [{"nome": "Revisão do projeto", "pct": 0, "fim": "2026-10-27", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-11-03", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-11-17", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Projeto Civil", "empresa": "", "projetista": "", "pagamento": "Atualização do projeto civil — contratar", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS78a3722cd6", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Estrutural Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-10-27", "fim_projeto": "2026-12-15", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2026-10-27", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2026-11-24", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-12-01", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-12-15", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Estrutural", "empresa": "Dipawa", "projetista": "Fernandes", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS6cc7961dd4", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ÁGUA", "ELEVATÓRIA DE ÁGUA", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Elétrico Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2026-11-03", "fim_projeto": "2026-12-22", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2026-11-03", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2026-12-01", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2026-12-08", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2026-12-22", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Água · Elétrico", "empresa": "Engemec", "projetista": "João/Diego", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ÁGUA › ELEVATÓRIA DE ÁGUA"}, {"id": "SS343763a25d", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto da Elevatória de esgoto"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto da Elevatória de esgoto", "pct": 0, "etapa": 1, "etapa_nome": "Projeto", "passo": "Elaboração do Projeto", "prazo_plano": "2027-01-21", "fim_projeto": "2027-02-11", "sub": [{"nome": "Elaboração do Projeto", "pct": 0, "fim": "2027-01-21", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-01-28", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-02-11", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Projeto Civil", "empresa": "Infraurbi", "projetista": "Reginaldo", "pagamento": "Analisar pagamentos", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}, {"id": "SSeae3b7f3c1", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto Legal Estrutural Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Estrutural Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2027-01-21", "fim_projeto": "2027-03-11", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2027-01-21", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2027-02-18", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-02-25", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-03-11", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Estrutural", "empresa": "Orçar e contratar", "projetista": "", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}, {"id": "SS748f2d7e82", "caminho": ["PROJETOS NÃO-INCIDENTES", "N-INC SISTEMA DE ESGOTO", "Projeto Legal Elétrico Reservatório"], "grupo": "PROJETOS NÃO-INCIDENTES", "nome": "Projeto Legal Elétrico Reservatório", "pct": 0, "etapa": 0, "etapa_nome": "Contratação", "passo": "Contratação do projetista", "prazo_plano": "2027-01-28", "fim_projeto": "2027-03-18", "sub": [{"nome": "Contratação do projetista", "pct": 0, "fim": "2027-01-28", "etapa": 0}, {"nome": "Elaboração do projeto", "pct": 0, "fim": "2027-02-25", "etapa": 1}, {"nome": "Análise Crítica", "pct": 0, "fim": "2027-03-04", "etapa": 2}, {"nome": "Finalização Ajustes e projeto final", "pct": 0, "fim": "2027-03-18", "etapa": 3}], "atipico": false, "apelido": "Elevatória de Esgoto · Elétrico", "empresa": "Orçar e contratar", "projetista": "", "pagamento": "Não contratado", "obs": "", "grupo_curto": "Não Incidentes", "caminho_txt": "N-INC SISTEMA DE ESGOTO"}];
 const AVISOS={"atipicos": [{"projeto": "PL INCÊNDIO CONDOMÍNIO", "sub_etapas_fora_do_padrao": ["Alinhamento e reunião bombeiros"]}, {"projeto": "PROJETO E EXECUÇÃO REDE ADUTORA", "sub_etapas_fora_do_padrao": ["Alinhamento de pagamentos"]}], "orfaos": ["TOPOGRAFIA", "SONDAGEM INICIAL", "PL CANTEIRO"]};
 const AVISO_DIAS=5;
-const CHAVE='projetos_cond_prazos_v1';
+const CHAVE='ole_proj_cond';          // chave no banco do painel (kv_state)
+const LOCAL='proj_cond_overlay';      // reserva, se abrir fora do painel
+const VELHO_DIAS=14;                  // comentário sem atualizar vira amarelo
+const PAGAMENTOS=["Pago","Pago Adiantamento","Pago os dois condomínios","Analisar pagamentos",
+                  "Pagar a outra","Verificar com VM e Jonas","Não contratado","Orçar e contratar",""];
 const CORES={"PROJETOS INFRA":"#1D3461","PROJETOS HABITAÇÃO":"#0f7b6c","PROJETOS NÃO-INCIDENTES":"#8B2020"};
 const ORDEM=["PROJETOS INFRA","PROJETOS HABITAÇÃO","PROJETOS NÃO-INCIDENTES"];
-let filtroG='', soPrazo=false, busca='', fechados={}, promessas={}, editando=null;
+let filtroG='', soPrazo=false, busca='', fechados={}, OV={}, modo='api', editando=null, editandoPrazo=null;
 
 function hojeIso(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function diasAte(iso){ if(!iso) return null; const a=iso.split('-').map(Number), h=hojeIso().split('-').map(Number);
@@ -215,18 +245,40 @@ function diasAte(iso){ if(!iso) return null; const a=iso.split('-').map(Number),
 function br(iso){ if(!iso) return '—'; const p=iso.split('-'); return p[2]+'/'+p[1]; }
 function brLongo(iso){ if(!iso) return ''; const p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function carregar(){ try{ promessas=JSON.parse(localStorage.getItem(CHAVE)||'{}'); }catch(e){ promessas={}; } }
-function salvarP(){ try{ localStorage.setItem(CHAVE,JSON.stringify(promessas)); }catch(e){} }
+async function carregar(){
+  try{
+    const st=await fetch('/api/state',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+    OV=JSON.parse(st[CHAVE]||'{}'); modo='api';
+  }catch(e){
+    modo='local';
+    try{ OV=JSON.parse(localStorage.getItem(LOCAL)||'{}'); }catch(_){ OV={}; }
+    const m=document.getElementById('modo-local'); if(m) m.style.display='block';
+  }
+}
+async function salvar(){
+  if(modo==='local'){ try{ localStorage.setItem(LOCAL,JSON.stringify(OV)); return true; }catch(e){ return false; } }
+  try{
+    const r=await fetch('/api/state',{method:'POST',credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:CHAVE,value:JSON.stringify(OV)})});
+    return r.ok;
+  }catch(e){ return false; }
+}
+// valor do campo: o que a Carol editou tem prioridade sobre o de-para
+function val(p,campo){ const o=OV[p.id]||{}; const x=o[campo];
+  return (x!==undefined&&x!==null)?x:(p[campo]||''); }
+function setVal(p,campo,v){ OV[p.id]=OV[p.id]||{}; OV[p.id][campo]=v; }
+function prazoDe(p){ return (OV[p.id]||{}).prazo||{}; }
 
 function sitPlano(p){ if(p.etapa>=4) return 'ok'; const d=diasAte(p.prazo_plano);
   return d===null?'':d<0?'venc':d<=AVISO_DIAS?'perto':''; }
-function sitProm(p){ const z=promessas[p.id]; if(!z||!z.data) return '';
+function sitProm(p){ const z=prazoDe(p); if(!z||!z.data) return '';
   const d=diasAte(z.data); return d<0?'venc':d<=AVISO_DIAS?'perto':''; }
-function pgCls(p){ const t=(p.pagamento||'').toLowerCase();
+function pgCls(p){ const t=(val(p,'pagamento')||'').toLowerCase();
   return /pago/.test(t)?'pg-ok':/não contratado|nao contratado|contratar/.test(t)?'pg-nao':'pg-ver'; }
 function visivel(p){ const t=busca.trim().toLowerCase(); const s=sitPlano(p), sp=sitProm(p);
   return (!filtroG||p.grupo===filtroG) && (!soPrazo||s==='venc'||s==='perto'||sp==='venc'||sp==='perto') &&
-    (!t||(p.apelido+' '+p.nome+' '+p.empresa+' '+p.projetista+' '+p.passo).toLowerCase().includes(t)); }
+    (!t||(p.apelido+' '+p.nome+' '+val(p,'empresa')+' '+val(p,'projetista')+' '+p.passo+' '+((OV[p.id]||{}).coment||'')).toLowerCase().includes(t)); }
 
 function render(){
   const L=P.filter(visivel);
@@ -234,7 +286,7 @@ function render(){
   const prontos=L.filter(p=>p.etapa>=4).length;
   const semC=L.filter(p=>/não contratado|contratar/i.test(p.pagamento||'')).length;
   const infra=L.filter(p=>p.grupo==='PROJETOS INFRA');
-  const semProm=L.filter(p=>p.etapa<4&&!(promessas[p.id]&&promessas[p.id].data)).length;
+  const semProm=L.filter(p=>p.etapa<4&&!prazoDe(p).data).length;
   document.getElementById('kpis').innerHTML=
     kpi('Prazo do Smartsheet',venc.length,'<small> vencidos</small>',
         perto.length+' vencem em até '+AVISO_DIAS+' dias', venc.length?'vermelho':'alerta')+
@@ -245,7 +297,7 @@ function render(){
   const n=document.getElementById('nota');
   const partes=[];
   if(AVISOS.orfaos.length) partes.push('<b>'+AVISOS.orfaos.length+'</b> projeto(s) do Smartsheet ainda sem empresa/projetista no de-para: '+AVISOS.orfaos.map(esc).join(', '));
-  partes.push('As etapas <b>Pagamento</b>, <b>Órgão</b> e <b>Aprovado</b> não existem no Smartsheet — entram no próximo passo, junto com o aviso por e-mail. A data prometida ainda fica salva só neste navegador.');
+  partes.push('As etapas <b>Pagamento</b>, <b>Órgão</b> e <b>Aprovado</b> não existem no Smartsheet — entram no próximo passo, junto com o aviso por e-mail. A data prometida, o pagamento e o comentário ficam salvos no painel, para o time todo.');
   n.innerHTML=partes.join('<br>');
   let html='';
   ORDEM.forEach((g,gi)=>{
@@ -263,9 +315,12 @@ function render(){
 }
 function kpi(l,v,ex,sub,c){ return '<div class="kpi '+c+'"><b>'+l+'</b><span>'+v+(ex||'')+'</span><i>'+sub+'</i></div>'; }
 function cabecalho(){
-  return '<div class="cab"><span>Projeto</span><span>Empresa · projetista</span>'+
+  return '<div class="cab"><span>Projeto</span><span>Empresa · projetista<span class="selo">✎</span></span>'+
     '<span class="trilha-cab"><span></span>'+CURTAS.map((c,i)=>'<span>'+(i+1)+'<br>'+c+'</span>').join('')+'<span></span></span>'+
-    '<span>Etapa no Smartsheet</span><span>Prometido</span><span>Pagamento</span></div>';
+    '<span>Etapa no Smartsheet<span class="selo">🔒</span></span>'+
+    '<span>Prometido<span class="selo">✎</span></span>'+
+    '<span>Pagamento<span class="selo">✎</span></span>'+
+    '<span>Última conversa<span class="selo">✎</span></span></div>';
 }
 function linha(p){
   const sit=sitPlano(p), d=diasAte(p.prazo_plano);
@@ -280,19 +335,25 @@ function linha(p){
   return '<div class="linha '+sit+'">'+
     '<span class="nome">'+esc(p.apelido)+(p.obs?' <span class="ico" title="'+esc(p.obs)+'">🗒</span>':'')+
       (p.caminho_txt?'<small>'+esc(p.caminho_txt)+'</small>':'')+'</span>'+
-    '<span class="emp"><b>'+esc(p.empresa||'—')+'</b>'+(p.projetista?'<br>'+esc(p.projetista):'')+'</span>'+
+    '<span class="emp cel" data-id="'+p.id+'" data-campo="empresa">'+
+      '<b class="ed'+(val(p,'empresa')?'':' vazio')+'" onclick="editar(this)">'+esc(val(p,'empresa')||'+ empresa')+'</b>'+
+      '<br><span class="cel" data-id="'+p.id+'" data-campo="projetista">'+
+      '<span class="ed'+(val(p,'projetista')?'':' vazio')+'" onclick="editar(this)">'+esc(val(p,'projetista')||'+ projetista')+'</span></span></span>'+
     '<span class="trilha"><button class="nav" disabled>·</button>'+et.join('')+
       '<span class="passo-txt">'+(p.etapa+1)+'<br>'+esc(CURTAS[p.etapa])+'</span>'+
       '<button class="nav" disabled>·</button></span>'+
     '<span class="passo" title="'+esc(p.passo)+'"><b>'+esc(p.passo)+'</b>'+
       '<small>'+br(p.prazo_plano)+'</small> '+quando+'</span>'+
     chipPrazo(p)+
-    (p.pagamento?'<span class="pg '+pgCls(p)+'" title="'+esc(p.pagamento)+'">'+esc(p.pagamento)+'</span>':'<span></span>')+
+    '<span class="cel" data-id="'+p.id+'" data-campo="pagamento">'+
+      (val(p,'pagamento')?'<span class="pg '+pgCls(p)+' ed" onclick="editar(this)">'+esc(val(p,'pagamento'))+'</span>'
+                         :'<span class="ed vazio" onclick="editar(this)">+ pagamento</span>')+'</span>'+
+    comentCel(p)+
     '<span class="barra-m">'+seg.join('')+'</span>'+
   '</div>';
 }
 function chipPrazo(p){
-  const z=promessas[p.id]||{}, n=(z.historico||[]).length;
+  const z=prazoDe(p), n=(z.historico||[]).length;
   if(p.etapa>=4) return '<button class="prazo ok" onclick="abrirPrazo(\''+p.id+'\')">✓ pronto</button>';
   if(!z.data) return '<button class="prazo vazio" onclick="abrirPrazo(\''+p.id+'\')">+ sem promessa</button>';
   const d=diasAte(z.data);
@@ -300,13 +361,83 @@ function chipPrazo(p){
   return '<button class="prazo '+sitProm(p)+'" onclick="abrirPrazo(\''+p.id+'\')" title="'+esc(z.quem||'')+'">'+
     br(z.data)+(n?' <sup>↻'+n+'</sup>':'')+'<small>'+esc(z.quem||'')+' · '+q+'</small></button>';
 }
+function comentCel(p){
+  const o=OV[p.id]||{}, txt=o.coment||'', em=o.comentEm||'';
+  const d=em?diasAte(em):null, velho=(d!==null&&d<-VELHO_DIAS);
+  const corpo = txt
+    ? '<span class="data">'+br(em)+'</span> '+esc(txt)
+    : '<span class="ed vazio">+ comentário</span>';
+  return '<span class="cel" data-id="'+p.id+'" data-campo="coment">'+
+    '<span class="coment'+(velho?' velho':'')+'" onclick="editar(this)" title="'+esc(txt)+
+    (velho?' (sem atualizar há '+Math.abs(d)+' dias)':'')+'">'+corpo+'</span></span>';
+}
+
+// ── edição no lugar: Enter salva, Esc cancela, sair do campo salva ──
+function editar(el){
+  // se a célula que estava em edição sumiu (re-render), destrava
+  if(editando && !document.querySelector('.cel-edit')) editando=null;
+  if(editando) return;
+  const cel=el.closest('.cel'); if(!cel) return;
+  const id=cel.dataset.id, campo=cel.dataset.campo;
+  const p=P.find(x=>x.id===id); if(!p) return;
+  editando=id+'|'+campo;
+  const atual = campo==='coment' ? ((OV[id]||{}).coment||'') : val(p,campo);
+  const antes = cel.innerHTML;
+  cel.classList.add('cel-edit');
+  if(campo==='pagamento'){
+    cel.innerHTML='<select>'+PAGAMENTOS.map(o=>'<option value="'+esc(o)+'"'+(o===atual?' selected':'')+'>'+
+      (o||'— em branco —')+'</option>').join('')+'<option value="__outro">outro…</option></select>';
+  }else if(campo==='coment'){
+    cel.innerHTML='<textarea maxlength="140" placeholder="o que ficou combinado (máx. 140)">'+esc(atual)+'</textarea>';
+  }else{
+    cel.innerHTML='<input type="text" maxlength="60" value="'+esc(atual)+'">';
+  }
+  const campoEl=cel.querySelector('input,select,textarea');
+  campoEl.focus(); if(campoEl.select) campoEl.select();
+  let cancelado=false, fechado=false;
+  // fecha também ao clicar fora, caso o campo não chegue a perder o foco
+  const fora=(e)=>{ if(!cel.contains(e.target)) fechar(); };
+  setTimeout(()=>document.addEventListener('mousedown',fora,true),0);
+  const fechar=async()=>{
+    if(fechado) return; fechado=true;
+    document.removeEventListener('mousedown',fora,true);
+    if(cancelado){ editando=null; cel.classList.remove('cel-edit'); cel.innerHTML=antes; return; }
+    let novo=campoEl.value;
+    if(campo==='pagamento'&&novo==='__outro'){
+      novo=prompt('Situação do pagamento:',atual)||atual;
+    }
+    editando=null; cel.classList.remove('cel-edit');
+    if(novo===atual){ cel.innerHTML=antes; return; }
+    if(campo==='coment'){
+      OV[id]=OV[id]||{};
+      OV[id].coment=novo.trim();
+      OV[id].comentEm=novo.trim()?hojeIso():'';
+    }else{ setVal(p,campo,novo.trim()); }
+    cel.innerHTML='<span class="ok-flash">salvando…</span>';
+    const ok=await salvar();
+    render();
+    if(!ok){
+      const alvo=document.querySelector('.cel[data-id="'+id+'"][data-campo="'+campo+'"]');
+      if(alvo) alvo.innerHTML='<span class="erro-flash" onclick="salvarDeNovo()">não salvou — clique para tentar</span>';
+    }
+  };
+  campoEl.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&campo!=='coment'){ e.preventDefault(); campoEl.blur(); }
+    if(e.key==='Enter'&&campo==='coment'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); campoEl.blur(); }
+    if(e.key==='Escape'){ cancelado=true; campoEl.blur(); }
+  });
+  campoEl.addEventListener('blur',fechar,{once:true});
+  if(campo==='pagamento') campoEl.addEventListener('change',()=>campoEl.blur());
+}
+async function salvarDeNovo(){ const ok=await salvar(); render(); if(!ok) alert('Ainda não consegui salvar. Confira se o painel está aberto e logado.'); }
+
 function toggleGrupo(g){ fechados[g]=!fechados[g]; render(); }
 function abrirPrazo(id){
-  const p=P.find(x=>x.id===id); if(!p)return; editando=id;
-  const z=promessas[id]||{};
+  const p=P.find(x=>x.id===id); if(!p)return; editandoPrazo=id;
+  const z=prazoDe(p);
   document.getElementById('dlg-proj').textContent=p.apelido;
   document.getElementById('f-data').value=z.data||'';
-  document.getElementById('f-quem').value=z.quem||[p.projetista,p.empresa&&p.empresa!=='Interno'?'('+p.empresa+')':''].filter(Boolean).join(' ');
+  document.getElementById('f-quem').value=z.quem||[val(p,'projetista'),val(p,'empresa')&&val(p,'empresa')!=='Interno'?'('+val(p,'empresa')+')':''].filter(Boolean).join(' ');
   document.getElementById('f-em').value=z.em||hojeIso();
   const h=z.historico||[];
   document.getElementById('dlg-hist').innerHTML = h.length
@@ -316,19 +447,22 @@ function abrirPrazo(id){
   document.getElementById('dlg').classList.add('on');
   setTimeout(()=>document.getElementById('f-data').focus(),60);
 }
-function fecharPrazo(){ document.getElementById('dlg').classList.remove('on'); editando=null; }
-function salvarPrazo(){
+function fecharPrazo(){ document.getElementById('dlg').classList.remove('on'); editandoPrazo=null; }
+async function salvarPrazo(){
   const data=document.getElementById('f-data').value;
   if(!data){ alert('Escolha a data prometida.'); return; }
-  const z=promessas[editando]||{historico:[]};
-  const hist=(z.historico||[]).slice();
+  const id=editandoPrazo; const p=P.find(x=>x.id===id);
+  const z=prazoDe(p); const hist=(z.historico||[]).slice();
   if(z.data&&z.data!==data) hist.push({data:z.data,em:z.em||''});
-  promessas[editando]={data,quem:document.getElementById('f-quem').value.trim(),
+  OV[id]=OV[id]||{};
+  OV[id].prazo={data,quem:document.getElementById('f-quem').value.trim(),
     em:document.getElementById('f-em').value||hojeIso(),historico:hist};
-  salvarP(); fecharPrazo(); render();
+  fecharPrazo(); const ok=await salvar(); render();
+  if(!ok) alert('Não consegui salvar a data. Tente de novo com o painel aberto e logado.');
 }
-function limparPrazo(){ if(!confirm('Apagar a data prometida?'))return;
-  delete promessas[editando]; salvarP(); fecharPrazo(); render(); }
+async function limparPrazo(){ if(!confirm('Apagar a data prometida?'))return;
+  if(OV[editandoPrazo]) delete OV[editandoPrazo].prazo;
+  fecharPrazo(); await salvar(); render(); }
 
 document.querySelectorAll('.chip[data-g]').forEach(c=>c.onclick=()=>{
   document.querySelectorAll('.chip[data-g]').forEach(x=>x.classList.remove('on'));
@@ -338,6 +472,6 @@ document.getElementById('busca').oninput=e=>{busca=e.target.value;render();};
 document.getElementById('f-salvar').onclick=salvarPrazo;
 document.getElementById('f-limpar').onclick=limparPrazo;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharPrazo();});
-carregar(); render();
+carregar().then(render);
 </script>
 </body></html>
