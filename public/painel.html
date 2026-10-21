@@ -954,15 +954,15 @@
 
   <!-- TAB: EXECUTIVO -->
   <div class="tab-section" id="tab-marcos">
-    <iframe src="/marcos.html" title="Marcos e Metas" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
+    <iframe src="/marcos.html" title="Marcos e Metas" class="emb" style="width:100%;border:0;border-radius:12px;background:#f0f4f8;display:block"></iframe>
   </div>
 
   <div class="tab-section" id="tab-projetos">
-    <iframe src="/projetos.html" title="Projetos do Condomínio Morada dos Sabiás" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
+    <iframe src="/projetos.html" title="Projetos do Condomínio Morada dos Sabiás" class="emb" style="width:100%;border:0;border-radius:12px;background:#f0f4f8;display:block"></iframe>
   </div>
 
   <div class="tab-section" id="tab-fornecedores">
-    <iframe src="/fornecedores.html" title="Fornecedores e avaliação SIAC" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
+    <iframe src="/fornecedores.html" title="Fornecedores e avaliação SIAC" class="emb" style="width:100%;border:0;border-radius:12px;background:#f0f4f8;display:block"></iframe>
   </div>
 
   <div class="tab-section" id="tab-executivo">
@@ -6855,4 +6855,20 @@ window.loginsAdd=loginsAdd; window.loginsReset=loginsReset; window.loginsRemove=
 })();
 </script>
 
+
+<script>
+/* iframes das abas ocupam exatamente o que sobra da janela: evita a segunda barra de rolagem */
+function ajustaEmbeds(){
+  document.querySelectorAll('iframe.emb').forEach(f=>{
+    const sec = f.closest('.tab-section');
+    if(sec && sec.offsetParent === null) return;          // aba escondida: mede depois
+    const topo = f.getBoundingClientRect().top + window.scrollY;
+    f.style.height = Math.max(420, window.innerHeight - topo - 14) + 'px';
+  });
+}
+window.addEventListener('resize', ajustaEmbeds);
+window.addEventListener('load', ajustaEmbeds);
+document.addEventListener('click', ()=>setTimeout(ajustaEmbeds,0));
+setTimeout(ajustaEmbeds, 200);
+</script>
 </body></html>
