@@ -154,6 +154,17 @@
   .coment.velho .data{color:#8a5a00}
   .cab .selo{font-size:7.5px;font-weight:800;border-radius:4px;padding:1px 4px;margin-left:4px;
     background:rgba(255,255,255,.2);letter-spacing:.3px}
+  .passos{background:var(--surface);border:1px solid #cfd8e3;border-left:5px solid var(--navy);
+    border-radius:10px;margin-bottom:11px;overflow:hidden}
+  .passos>summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:700;color:var(--navy)}
+  .passos>summary::-webkit-details-marker{display:none}
+  .passos>summary::before{content:'▸';color:var(--muted);transition:transform .15s;display:inline-block}
+  .passos[open]>summary::before{transform:rotate(90deg)}
+  .passos ol{margin:0;padding:0 16px 12px 36px;font-size:12.5px;color:var(--ink);line-height:1.5}
+  .passos li{margin-bottom:5px}
+  .passos li b{color:var(--navy)}
+  .passos .rodape{padding:0 14px 12px 36px;font-size:11px;color:var(--muted)}
   .legenda{font-size:10.5px;color:var(--muted);margin:0 0 9px 2px}
   .legenda b{color:var(--navy)}
   .modo-local{background:#fdecea;border:1px solid #e8a5a0;color:#b91c1c;border-radius:9px;
@@ -204,6 +215,19 @@
 
   <div class="modo-local" id="modo-local">Sem conexão com o painel: suas edições estão sendo guardadas
     só neste navegador. Abra a aba dentro do painel (logada) para gravar para o time.</div>
+  <details class="passos">
+    <summary>Vai contratar um projetista? São 4 passos</summary>
+    <ol>
+      <li><b>Antes de contratar:</b> veja na aba <b>Fornecedores · SIAC</b> se ele já está qualificado.
+          Sem qualificação aprovada, não envie contrato.</li>
+      <li><b>No contrato:</b> escreva o que ele vai entregar — quais projetos, etapas, prazo e responsabilidades.</li>
+      <li><b>Durante o projeto:</b> registre aqui a data que ele prometeu e anote no comentário cada entrega e cada atraso.</li>
+      <li><b>Ao receber o projeto:</b> confira se veio conforme o combinado e registre o aceite ou a devolução.
+          A nota oficial sai no fechamento do semestre, na aba Fornecedores.</li>
+    </ol>
+    <div class="rodape">Qualificar antes e avaliar depois é exigência do SIAC (item 8.4) — quem aprova é a coordenação do Desenvolvimento Imobiliário.</div>
+  </details>
+
   <div class="legenda">🔒 <b>Etapa, data e %</b> vêm do Smartsheet (só leitura) · ✎ <b>empresa, projetista,
     pagamento, prometido e comentário</b> são do painel — clique para editar, salva sozinho.</div>
 
