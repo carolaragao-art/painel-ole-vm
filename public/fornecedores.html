@@ -113,6 +113,7 @@
   .sn button:hover{border-color:var(--navy)}
   .sn button.sim.on{background:var(--verde);color:#fff;border-color:var(--verde)}
   .sn button.nao.on{background:var(--brick);color:#fff;border-color:var(--brick)}
+  .sn button.na.on{background:#64748b;color:#fff;border-color:#64748b}
   .sn input{flex:1;min-width:130px;padding:5px 9px;border:1.5px solid var(--line);border-radius:8px;
     font-size:11.5px;font-family:inherit;outline:none;background:var(--surface)}
   .sn input:focus{border-color:var(--orange)}
@@ -483,8 +484,8 @@ const PERGUNTAS = [
    porque:'formalidade da contratação (SIAC 8.4.1.2)',
    campo:''},
   {id:'nbr', elim:false,
-   q:'Já fez projeto de habitação atendendo a NBR 15575?',
-   porque:'nosso contrato de projeto habitacional precisa citar essa norma',
+   q:'No que é da sua disciplina, o projeto atende às exigências da NBR 15575?',
+   porque:'só vale para o que entra na habitação — se o escopo dele não encosta nisso, marque não se aplica',
    campo:''},
   {id:'bim', elim:false,
    q:'Trabalha em BIM? Entrega o modelo (RVT/IFC) ou só PDF e DWG?',
@@ -550,6 +551,31 @@ function verifHtml(f,e){
             (e.qualif.validade? ', vale até '+brData(e.qualif.validade):'') : '')+'</div></div>'+
         (acao? '<div class="v-acao">'+acao+'</div>':'')+'</div>'+
     '</div>'+
+    '<details class="blk" style="border-top:none;padding:10px 0 0">'+
+      '<summary>O que é a qualificação, pelo SIAC</summary>'+
+      '<div class="inner" style="font-size:11.5px;color:var(--ink);line-height:1.55">'+
+        '<p><b>Qualificação (SIAC 2026, item 8.4.1.1)</b> — pré-avaliar e selecionar o fornecedor '+
+        '<b>antes</b> de contratar, por critérios definidos pela própria empresa, retendo informação '+
+        'documentada do resultado. Serviço de projeto está no escopo do item.</p>'+
+        '<p style="margin-top:7px">Na Olé V&amp;M a qualificação é formada por:</p>'+
+        '<ol style="margin:4px 0 0 18px">'+
+          '<li>registro profissional ativo no CREA ou CAU — <b>eliminatório</b></li>'+
+          '<li>emissão de nota fiscal — <b>eliminatório</b></li>'+
+          '<li>experiência declarada na disciplina</li>'+
+          '<li>atendimento à NBR 15575 no que couber ao escopo dele</li>'+
+          '<li>produção em BIM — diferencial, <b>não elimina</b></li>'+
+          '<li>prazo de entrega e de resposta a devolutiva</li>'+
+          '<li>revisões inclusas e regra de aditivo</li>'+
+          '<li>responsável técnico identificado</li>'+
+        '</ol>'+
+        '<p style="margin-top:7px"><b>Quem aprova:</b> coordenação do Desenvolvimento Imobiliário. '+
+        '<b>Validade:</b> 12 meses, ou nova verificação se o escopo mudar. '+
+        '<b>O que fica registrado:</b> as respostas, a data, quem aprovou e a ressalva, tudo no dossiê impresso.</p>'+
+        '<p style="margin-top:7px">O SIAC dispensa de nova qualificação quem já é qualificado em <b>PSQ ou SiMaC</b>, '+
+        'quem tem certificação <b>SBAC</b> por OCP acreditado pela CGCRE, ou quem detém <b>DATec</b>.</p>'+
+        '<p style="margin-top:7px;color:var(--muted)"><b>Não confundir com a avaliação (8.4.1.2)</b>, que é o '+
+        'desempenho depois da entrega — prazo, qualidade, devolutivas — e fica no passo 4.</p>'+
+      '</div></details>'+
     '<div class="bloco" style="padding-top:12px">'+
       '<h3 style="display:flex;align-items:center">1 · Perguntas da ligação'+
         '<button class="btn" style="margin-left:auto;font-size:10.5px;padding:4px 9px" data-copiar="1">📋 Copiar roteiro</button></h3>'+
@@ -566,6 +592,7 @@ function pergHtml(p,resp,txt){
     '<div class="sn">'+
       '<button class="sim'+(r==='sim'?' on':'')+'" data-resp="'+p.id+'" data-v="sim">Sim</button>'+
       '<button class="nao'+(r==='nao'?' on':'')+'" data-resp="'+p.id+'" data-v="nao">Não</button>'+
+      (p.elim? '' : '<button class="na'+(r==='na'?' on':'')+'" data-resp="'+p.id+'" data-v="na">Não se aplica</button>')+
       (p.campo? '<input placeholder="'+esc(p.campo)+'" value="'+esc(txt[p.id]||'')+'" data-resptxt="'+p.id+'">':'')+
     '</div></div>';
 }
