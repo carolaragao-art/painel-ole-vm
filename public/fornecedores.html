@@ -117,6 +117,8 @@
   .sn input{flex:1;min-width:130px;padding:5px 9px;border:1.5px solid var(--line);border-radius:8px;
     font-size:11.5px;font-family:inherit;outline:none;background:var(--surface)}
   .sn input:focus{border-color:var(--orange)}
+  .x-perg{float:right;border:0;background:none;color:var(--muted);font-size:15px;cursor:pointer;line-height:1;padding:0 2px}
+  .x-perg:hover{color:var(--brick)}
   .obrig{font-size:8.5px;font-weight:800;color:var(--brick);background:#fbe9e9;border-radius:20px;
     padding:1px 7px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:2px}
 
@@ -239,6 +241,7 @@
 
   <div class="barra">
     <input class="busca" id="busca" placeholder="Buscar fornecedor, disciplina ou responsável...">
+    <button class="btn primario" id="btn-novo">+ Fornecedor</button>
     <button class="btn" id="btn-inativos">👁 Inativos</button>
     <button class="btn" id="btn-regua">⚖ Régua</button>
   </div>
@@ -264,6 +267,30 @@
   </div>
 </div>
 
+<div class="modal" id="modal-novo" onclick="if(event.target===this)fecharNovo()">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h3>+ Novo fornecedor</h3>
+      <p>Entra na lista como <b>não verificado</b> — o passo 1 é fazer as perguntas.</p>
+    </div>
+    <div class="modal-corpo">
+      <div class="doc-linha"><input id="nf-razao" placeholder="empresa ou nome (obrigatório)">
+        <input id="nf-pessoa" placeholder="quem atende"></div>
+      <div class="doc-linha"><input id="nf-disc" placeholder="o que ele faz (ex.: projeto de incêndio)">
+        <select id="nf-tipo"><option value="PJ">PJ</option><option value="PF">PF</option></select></div>
+      <div class="doc-linha"><input id="nf-doc" placeholder="CNPJ ou CPF">
+        <input id="nf-fone" placeholder="telefone"></div>
+      <input class="busca" id="nf-email" style="width:100%;margin-top:8px" placeholder="e-mail">
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">A pasta dele no Drive recebe o próximo
+        código livre — o painel mostra o nome certo na ficha, em <b>00 Gestao do Setor › 11 Fornecedores</b>.</div>
+    </div>
+    <div class="modal-pe">
+      <button class="btn" onclick="fecharNovo()">Cancelar</button>
+      <button class="btn primario" onclick="salvarNovo()">Cadastrar</button>
+    </div>
+  </div>
+</div>
+
 <div id="imp"></div>
 
 <script>
@@ -275,6 +302,8 @@ let modo = 'api';
 let REGUA = JSON.parse(JSON.stringify(BASE.regua));
 let F = JSON.parse(JSON.stringify(BASE.fornecedores));
 let ESTADO = {};          // {idFornecedor: {qualif:{...}, avaliacoes:[...], rascunho:{...}}}
+let NOVOS = [];           // fornecedores cadastrados aqui pelo painel (além da carga inicial)
+let EXTRA = [];           // perguntas de verificação acrescentadas pela coordenação
 let aberto = null, busca = '', verInativos = false;
 
 /* ---------- persistência (nesta versão, só neste navegador) ---------- */
@@ -284,14 +313,19 @@ async function carregar(){
       .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
     const s = JSON.parse(st[CHAVE]||'{}');
     ESTADO = s.estado || {}; if(s.regua) REGUA = s.regua; modo='api';
+    NOVOS = s.novos || []; EXTRA = s.perguntas || [];
   }catch(e){
     modo='local';
-    try{ const s=JSON.parse(localStorage.getItem(LOCAL)||'{}'); ESTADO=s.estado||{}; if(s.regua) REGUA=s.regua; }
-    catch(_){ ESTADO={}; }
+    try{
+      const s=JSON.parse(localStorage.getItem(LOCAL)||'{}');
+      ESTADO=s.estado||{}; if(s.regua) REGUA=s.regua;
+      NOVOS = s.novos || []; EXTRA = s.perguntas || [];
+    }catch(_){ ESTADO={}; }
   }
+  F = F.concat(NOVOS);
 }
 async function salvar(){
-  const pacote = JSON.stringify({estado:ESTADO, regua:REGUA});
+  const pacote = JSON.stringify({estado:ESTADO, regua:REGUA, novos:NOVOS, perguntas:EXTRA});
   if(modo==='local'){ try{ localStorage.setItem(LOCAL,pacote); }catch(e){} return true; }
   try{
     const r = await fetch('/api/state',{method:'POST',credentials:'same-origin',
@@ -308,7 +342,7 @@ function est(id){
   if(!ESTADO[id]){
     const f = F.find(x=>x.id===id) || {};
     ESTADO[id] = {qualif:{status:'pendente'}, avaliacoes:[], rascunho:null,
-                  ativo: (f.projetos>0 || f.origem==='atual'),   // antigos sem projeto entram inativos
+                  ativo: (f.projetos>0 || f.origem==='atual' || f.origem==='novo'),   // antigos sem projeto entram inativos
                   doc:{tipo:'', link:'', data:'', req:{}},
                   contato:{}, pasta:''};
   }
@@ -528,8 +562,9 @@ function passosHtml(f,e){
      atual===4? 'Contratado. A nota do semestre '+semestreAtual()+' é no passo 4.' :
      'Tudo em dia neste semestre.')+'</div>';
 }
+function todasPerguntas(){ return PERGUNTAS.concat(EXTRA); }
 function veredito(resp){
-  const elim = PERGUNTAS.filter(p=>p.elim);
+  const elim = todasPerguntas().filter(p=>p.elim);
   const nao = elim.filter(p=>resp[p.id]==='nao');
   const sim = elim.filter(p=>resp[p.id]==='sim');
   if(nao.length) return {k:'nao', cls:'v-nao', txt:'Não pode ser contratado',
@@ -579,7 +614,8 @@ function verifHtml(f,e){
     '<div class="bloco" style="padding-top:12px">'+
       '<h3 style="display:flex;align-items:center">1 · Perguntas da ligação'+
         '<button class="btn" style="margin-left:auto;font-size:10.5px;padding:4px 9px" data-copiar="1">📋 Copiar roteiro</button></h3>'+
-      PERGUNTAS.map(p=>pergHtml(p,resp,txt)).join('')+
+      todasPerguntas().map(p=>pergHtml(p,resp,txt)).join('')+
+      '<button class="btn" style="margin-top:8px;font-size:11.5px;padding:5px 11px" data-addperg="1">+ acrescentar pergunta</button>'+
       '<input class="busca" style="width:100%;margin-top:10px" data-ressalva="1" '+
         'placeholder="alguma ressalva? (ex.: só entrega em DWG, prazo apertado)" value="'+esc(e.qualif.ressalva||'')+'">'+
     '</div>';
@@ -587,7 +623,8 @@ function verifHtml(f,e){
 function pergHtml(p,resp,txt){
   const r = resp[p.id];
   return '<div class="perg">'+
-    '<div class="q">“'+esc(p.q)+'”'+(p.elim?'<span class="obrig">obrigatório</span>':'')+'</div>'+
+    '<div class="q">“'+esc(p.q)+'”'+(p.elim?'<span class="obrig">obrigatório</span>':'')+
+      (p.extra? '<button class="x-perg" data-removeperg="'+p.id+'" title="tirar esta pergunta">×</button>':'')+'</div>'+
     '<div class="porque">'+esc(p.porque)+'</div>'+
     '<div class="sn">'+
       '<button class="sim'+(r==='sim'?' on':'')+'" data-resp="'+p.id+'" data-v="sim">Sim</button>'+
@@ -621,7 +658,7 @@ function registrarQualif(status){
 function copiarRoteiro(){
   const f = F.find(x=>x.id===aberto);
   const linhas = ['Perguntas para '+f.razao+' ('+f.disciplina+'):',''].concat(
-    PERGUNTAS.map((p,i)=>(i+1)+'. '+p.q+(p.elim?'  [obrigatório]':'')));
+    todasPerguntas().map((p,i)=>(i+1)+'. '+p.q+(p.elim?'  [obrigatório]':'')));
   const texto = linhas.join('\n');
   const area = document.createElement('textarea');
   area.value = texto; area.style.position='fixed'; area.style.opacity='0';
@@ -778,6 +815,58 @@ function concluirAval(){
   recarregaFicha();
 }
 
+/* ---------- cadastrar fornecedor novo ---------- */
+function proximoCodigo(){
+  let maior = 0;
+  F.forEach(f=>{ const n = parseInt(String(f.id).replace(/\D/g,''),10); if(n>maior) maior=n; });
+  return maior+1;
+}
+function semAcento(s){
+  return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^A-Za-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+function abrirNovo(){
+  ['nf-razao','nf-pessoa','nf-disc','nf-doc','nf-fone','nf-email'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('modal-novo').classList.add('on');
+  document.getElementById('nf-razao').focus();
+}
+function fecharNovo(){ document.getElementById('modal-novo').classList.remove('on'); }
+function salvarNovo(){
+  const v = i => document.getElementById(i).value.trim();
+  const razao = v('nf-razao');
+  if(!razao){ alert('Escreva o nome da empresa ou da pessoa.'); return; }
+  const n = proximoCodigo(), cod = 'F'+String(n).padStart(2,'0');
+  const f = {
+    id: 'f'+String(n).padStart(2,'0'),
+    razao: razao, nome: v('nf-pessoa') || razao,
+    disciplina: v('nf-disc') || 'a definir',
+    tipo: document.getElementById('nf-tipo').value,
+    doc: v('nf-doc'), email: v('nf-email'), fone: v('nf-fone'),
+    origem: 'novo', projetos: 0, aval2023: null,
+    pasta: cod+' '+semAcento(razao)
+  };
+  NOVOS.push(f); F.push(f);
+  est(f.id).ativo = true;
+  salvar(); fecharNovo(); render();
+  alert('Cadastrado. Crie a pasta "'+f.pasta+'" em 00 Gestao do Setor › 11 Fornecedores e cole o link na ficha.');
+  abrirFicha(f.id);
+}
+
+/* ---------- acrescentar pergunta à verificação ---------- */
+function addPergunta(){
+  const q = (prompt('Qual pergunta você quer acrescentar?\n(ela vale para todos os fornecedores)')||'').trim();
+  if(!q) return;
+  const porque = (prompt('O que essa resposta mostra? (opcional)')||'').trim();
+  const elim = confirm('Essa pergunta é obrigatória?\n\nOK = responder "Não" reprova o fornecedor.\nCancelar = é só informativa.');
+  EXTRA.push({id:'x'+Date.now().toString(36), elim:elim, q:q, porque:porque, campo:'', extra:true});
+  salvar(); recarregaFicha();
+}
+function removePergunta(id){
+  if(!confirm('Tirar esta pergunta da verificação de todos os fornecedores?')) return;
+  EXTRA = EXTRA.filter(p=>p.id!==id);
+  salvar(); recarregaFicha();
+}
+
 /* ---------- régua ---------- */
 function abrirRegua(){
   document.getElementById('regua-corpo').innerHTML =
@@ -822,7 +911,7 @@ function imprimirDossie(id){
         '</td><td><b>Validade:</b> '+brData(e.qualif.validade)+'</td></tr>'+
       '<tr><td><b>Período avaliado:</b> '+(ult? ult.semestre : '—')+'</td><td><b>Data da avaliação:</b> '+(ult? brData(ult.concluidaEm):'—')+'</td></tr></table>'+
     '<table><tr><th colspan="3">Verificação do fornecedor (qualificação)</th></tr>'+
-      PERGUNTAS.map(p=>{
+      todasPerguntas().map(p=>{
         const r = (e.qualif.resp||{})[p.id];
         return '<tr><td>'+esc(p.q)+(p.elim?' <b>(obrigatório)</b>':'')+'</td>'+
           '<td style="text-align:center;width:52px">'+(r==='sim'?'Sim':r==='nao'?'Não':'—')+'</td>'+
@@ -852,12 +941,14 @@ document.getElementById('ficha').addEventListener('change', e => {
   else if(t.dataset.obs)     { est(aberto).obs = t.value; salvar(); }
 });
 document.getElementById('ficha').addEventListener('click', e => {
-  const t = e.target.closest('[data-resp],[data-reg],[data-copiar],[data-passo]');
+  const t = e.target.closest('[data-resp],[data-reg],[data-copiar],[data-passo],[data-addperg],[data-removeperg]');
   if(!t) return;
   if(t.dataset.resp)        setResp(t.dataset.resp, t.dataset.v);
   else if(t.dataset.reg)    registrarQualif(t.dataset.reg);
   else if(t.dataset.copiar) copiarRoteiro();
   else if(t.dataset.passo)  irParaPasso(+t.dataset.passo);
+  else if(t.dataset.addperg) addPergunta();
+  else if(t.dataset.removeperg) removePergunta(t.dataset.removeperg);
 });
 function irParaPasso(n){
   const ficha = document.getElementById('ficha');
@@ -867,13 +958,14 @@ function irParaPasso(n){
 }
 document.getElementById('busca').oninput = e => { busca = e.target.value; render(); };
 document.getElementById('btn-regua').onclick = abrirRegua;
+document.getElementById('btn-novo').onclick = abrirNovo;
 document.getElementById('btn-inativos').onclick = function(){
   verInativos = !verInativos;
   this.textContent = verInativos ? '👁 Ocultar inativos' : '👁 Mostrar inativos';
   this.classList.toggle('primario', verInativos);
   render();
 };
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ fecharFicha(); fecharRegua(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ fecharFicha(); fecharRegua(); fecharNovo(); } });
 carregar().then(render);
 </script>
 </body></html>
