@@ -64,6 +64,17 @@
   .faixa small{display:block;font-size:10px;color:var(--muted);font-weight:500}
   .pend{font-size:10.5px;font-weight:700;color:#8a5a00;background:#fdf6e6;border-radius:20px;padding:3px 9px}
   .vazio{color:#b8c3cf;font-size:11px}
+  .tag-inat{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);
+    background:#eef1f4;border-radius:20px;padding:1px 7px;margin-left:6px}
+  tr.inativo td{opacity:.62}
+  .doc-linha{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .doc-linha select,.doc-linha input{width:100%;padding:7px 9px;border:1.5px solid var(--line);
+    border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--ink)}
+  .doc-linha select:focus,.doc-linha input:focus{border-color:var(--orange)}
+  .req{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:var(--ink);padding:3px 0}
+  .req input{width:15px;height:15px;accent-color:var(--navy);margin-top:1px;flex-shrink:0}
+  .req span{line-height:1.3}
+  .doc-ok{font-size:11px;font-weight:700;margin-top:6px}
 
   /* ficha lateral */
   .fundo{display:none;position:fixed;inset:0;background:rgba(15,31,61,.45);z-index:40}
@@ -189,6 +200,7 @@
 
   <div class="barra">
     <input class="busca" id="busca" placeholder="Buscar fornecedor, disciplina ou responsável...">
+    <button class="btn" id="btn-inativos">👁 Mostrar inativos</button>
     <button class="btn" id="btn-regua">⚖ Régua de avaliação</button>
     <button class="btn" onclick="window.print()">🖨 Imprimir dossiê</button>
   </div>
@@ -229,7 +241,7 @@ let modo = 'api';
 let REGUA = JSON.parse(JSON.stringify(BASE.regua));
 let F = JSON.parse(JSON.stringify(BASE.fornecedores));
 let ESTADO = {};          // {idFornecedor: {qualif:{...}, avaliacoes:[...], rascunho:{...}}}
-let aberto = null, busca = '';
+let aberto = null, busca = '', verInativos = false;
 
 /* ---------- persistência (nesta versão, só neste navegador) ---------- */
 async function carregar(){
@@ -258,7 +270,17 @@ async function salvar(){
     return false;
   }
 }
-function est(id){ ESTADO[id] = ESTADO[id] || {qualif:{status:'pendente'}, avaliacoes:[], rascunho:null}; return ESTADO[id]; }
+function est(id){
+  if(!ESTADO[id]){
+    const f = F.find(x=>x.id===id) || {};
+    ESTADO[id] = {qualif:{status:'pendente'}, avaliacoes:[], rascunho:null,
+                  ativo: (f.projetos>0 || f.origem==='atual'),   // antigos sem projeto entram inativos
+                  doc:{tipo:'', link:'', data:'', req:{}}};
+  }
+  if(ESTADO[id].ativo===undefined) ESTADO[id].ativo = true;
+  if(!ESTADO[id].doc) ESTADO[id].doc = {tipo:'', link:'', data:'', req:{}};
+  return ESTADO[id];
+}
 
 /* ---------- utilidades ---------- */
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -298,7 +320,8 @@ function pillQualif(q){
 /* ---------- lista ---------- */
 function visiveis(){
   const t = busca.trim().toLowerCase();
-  return F.filter(f => !t || (f.nome+' '+f.razao+' '+f.disciplina).toLowerCase().includes(t))
+  return F.filter(f => (verInativos || est(f.id).ativo))
+          .filter(f => !t || (f.nome+' '+f.razao+' '+f.disciplina).toLowerCase().includes(t))
           .sort((a,b)=> a.razao.localeCompare(b.razao,'pt-BR'));   // nunca por nota
 }
 function render(){
@@ -308,7 +331,7 @@ function render(){
   const semAval = L.filter(f=>!est(f.id).avaliacoes.some(a=>a.semestre===semestreAtual())).length;
   const ativos = L.filter(f=>f.projetos>0).length;
   document.getElementById('kpis').innerHTML =
-    kpi('Fornecedores', L.length, ativos+' com projeto em andamento', '') +
+    kpi(verInativos?'Fornecedores':'Fornecedores ativos', L.length, ativos+' com projeto em andamento', '') +
     kpi('Qualificados', qual, semQ+' ainda sem qualificação', semQ?'alerta':'') +
     kpi('Avaliação '+semestreAtual(), L.length-semAval, semAval+' pendentes no semestre', semAval?'alerta':'') +
     kpi('Base anterior', F.filter(f=>f.aval2023).length, 'notas de 2023, só leitura', 'cinza');
@@ -326,17 +349,20 @@ function kpi(l,v,s,c){ return '<div class="kpi '+c+'"><b>'+l+'</b><span>'+v+'</s
 function linha(f){
   const e = est(f.id), ult = ultimaAval(f.id);
   const pend = [];
-  if(e.qualif.status==='pendente') pend.push('Qualificar');
-  if(!e.avaliacoes.some(a=>a.semestre===semestreAtual()) && f.projetos>0) pend.push('Avaliar '+semestreAtual());
+  if(e.ativo){
+    if(e.qualif.status==='pendente') pend.push('Qualificar');
+    if(!e.avaliacoes.some(a=>a.semestre===semestreAtual()) && f.projetos>0) pend.push('Avaliar '+semestreAtual());
+  }
   const faixa = ult ? faixaDe(ult.nota, ult.reprovou) : null;
-  return '<tr onclick="abrirFicha(\''+f.id+'\')">'+
-    '<td class="forn"><b>'+esc(f.razao)+'</b><small>'+esc(f.nome)+' · '+esc(f.disciplina)+'</small></td>'+
+  return '<tr class="'+(e.ativo?'':'inativo')+'" onclick="abrirFicha(\''+f.id+'\')">'+
+    '<td class="forn"><b>'+esc(f.razao)+(e.ativo?'':'<span class="tag-inat">inativo</span>')+'</b><small>'+esc(f.nome)+' · '+esc(f.disciplina)+'</small></td>'+
     '<td>'+pillQualif(e.qualif)+'</td>'+
     '<td>'+(ult
       ? '<span class="faixa" style="color:'+corFaixa(faixa.k)+'">'+faixa.txt+'<small>'+ult.semestre+'</small></span>'
       : '<span class="vazio">sem avaliação na régua nova</span>')+'</td>'+
     '<td>'+(f.projetos? f.projetos : '<span class="vazio">—</span>')+'</td>'+
-    '<td>'+(pend.length? pend.map(p=>'<span class="pend">'+p+'</span>').join(' ') : '<span class="vazio">em dia</span>')+'</td>'+
+    '<td>'+(pend.length? pend.map(p=>'<span class="pend">'+p+'</span>').join(' ')
+            : '<span class="vazio">'+(e.ativo?'em dia':'não contratamos hoje')+'</span>')+'</td>'+
   '</tr>';
 }
 
@@ -363,6 +389,12 @@ function fichaHtml(f,e){
       '<h2>'+esc(f.razao)+'</h2><div class="disc">'+esc(f.nome)+' · '+esc(f.disciplina)+'</div></div>'+
     '<div class="f-corpo">'+
 
+    '<div class="bloco"><h3>Situação</h3>'+
+      '<label class="req" style="font-size:12.5px"><input type="checkbox"'+(e.ativo?' checked':'')+
+      ' data-ativo="1"><span><b>Fornecedor ativo</b> — contratamos dele hoje. '+
+      'Desmarque quem não trabalha mais com a gente: ele sai da fila de qualificação e de avaliação, '+
+      'mas continua no cadastro como histórico.</span></label></div>'+
+
     '<div class="bloco"><h3>Cadastro</h3><div class="dados">'+
       campo('Tipo', f.tipo) + campo('CNPJ / CPF', f.doc||'—') +
       campo('E-mail', f.email||'—') + campo('Telefone', f.fone||'—') +
@@ -379,6 +411,8 @@ function fichaHtml(f,e){
         '</select></div>'+
       '<div style="font-size:11.5px;color:var(--muted)">O checklist de evidências (CREA/CAU e ART, acervo, regularidade, NBR 15575 e <b>BIM como diferencial que não elimina</b>) entra no próximo passo, com aprovação registrada da coordenação.</div>'+
     '</div>'+
+
+    '<div class="bloco"><h3>Documento de contratação</h3>'+ docHtml(f,e) +'</div>'+
 
     '<div class="bloco"><h3>Avaliação '+r.semestre+'</h3>'+
       '<div class="nota-box">'+
@@ -407,6 +441,43 @@ function fichaHtml(f,e){
   '</div>';
 }
 function campo(r,v){ return '<div><span>'+r+'</span>'+esc(v)+'</div>'; }
+
+// O SIAC (8.4.3.4) pede "documentos de contratação" — proposta aprovada ou ordem de
+// serviço valem, desde que digam o que foi contratado e tenham o aceite registrado.
+const REQS = [
+  ['objeto','Diz o objeto e o escopo (quais projetos e etapas)'],
+  ['respons','Define responsabilidades das partes'],
+  ['espec','Traz as especificações técnicas'],
+  ['nbr','Cita o atendimento à ABNT NBR 15575 (habitacional)'],
+  ['aceite','Tem o aceite/aprovação registrado (e-mail, assinatura ou PO)']
+];
+function docHtml(f,e){
+  const d = e.doc, marcados = REQS.filter(([k])=>d.req[k]).length;
+  return '<div class="doc-linha">'+
+      '<select data-doc="tipo">'+
+        ['','Contrato assinado','Proposta aprovada','Ordem de serviço','E-mail de aprovação','Ainda não há documento']
+        .map(o=>'<option value="'+esc(o)+'"'+(d.tipo===o?' selected':'')+'>'+(o||'— tipo do documento —')+'</option>').join('')+
+      '</select>'+
+      '<input type="date" value="'+esc(d.data||'')+'" data-doc="data" title="data do documento">'+
+    '</div>'+
+    '<input class="busca" style="width:100%;margin-bottom:8px" placeholder="cole aqui o link do arquivo no Drive" '+
+      'value="'+esc(d.link||'')+'" data-doc="link">'+
+    (d.link? '<a href="'+esc(d.link)+'" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--navy)">abrir documento ↗</a>':'')+
+    '<div style="font-size:11px;color:var(--muted);margin:8px 0 4px">O que o documento precisa ter (SIAC 8.4.3.4):</div>'+
+    REQS.map(([k,txt])=>'<label class="req"><input type="checkbox"'+(d.req[k]?' checked':'')+
+      ' data-req="'+k+'"><span>'+txt+'</span></label>').join('')+
+    '<div class="doc-ok" style="color:'+(marcados===REQS.length?'var(--verde)':'#8a5a00')+'">'+
+      (marcados===REQS.length? '✓ Documento completo para o SIAC'
+        : marcados+' de '+REQS.length+' itens — complete no próximo pedido ou aditivo')+'</div>';
+}
+function setDoc(campo,v){ const e=est(aberto); e.doc[campo]=v; salvar(); recarregaFicha(); }
+function setReq(k,v){ const e=est(aberto); e.doc.req[k]=v; salvar(); recarregaFicha(); }
+function mudarAtivo(v){ est(aberto).ativo=v; salvar(); recarregaFicha(); }
+function recarregaFicha(){
+  const sc = document.getElementById('ficha').scrollTop;
+  document.getElementById('ficha').innerHTML = fichaHtml(F.find(x=>x.id===aberto), est(aberto));
+  document.getElementById('ficha').scrollTop = sc;
+}
 function critHtml(c,r){
   const v = r.notas[c.id];
   const precisaJust = v!==undefined && (v<=4 || v>=9);
@@ -541,8 +612,20 @@ function imprimirDossie(id){
   window.print();
 }
 
+document.getElementById('ficha').addEventListener('change', e => {
+  const t = e.target;
+  if(t.dataset.doc)       setDoc(t.dataset.doc, t.value);
+  else if(t.dataset.req)  setReq(t.dataset.req, t.checked);
+  else if(t.dataset.ativo) mudarAtivo(t.checked);
+});
 document.getElementById('busca').oninput = e => { busca = e.target.value; render(); };
 document.getElementById('btn-regua').onclick = abrirRegua;
+document.getElementById('btn-inativos').onclick = function(){
+  verInativos = !verInativos;
+  this.textContent = verInativos ? '👁 Ocultar inativos' : '👁 Mostrar inativos';
+  this.classList.toggle('primario', verInativos);
+  render();
+};
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ fecharFicha(); fecharRegua(); } });
 carregar().then(render);
 </script>
