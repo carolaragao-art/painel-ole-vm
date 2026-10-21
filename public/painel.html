@@ -948,11 +948,16 @@
     <div class="nav-tab" onclick="showTab('kanban')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="18"/><rect x="9" y="3" width="6" height="12"/><rect x="15" y="3" width="6" height="15"/></svg>Kanban</div>
     <div class="nav-tab" onclick="showTab('backlog')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Projetos &amp; Backlog</div>
     <div class="nav-tab" onclick="showTab('procs')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l9 5H3z"/></svg>Processos · Órgãos</div>
+    <div class="nav-tab" onclick="showTab('projetos')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h11M3 12h7M3 19h14"/><circle cx="18" cy="5" r="2"/><circle cx="14" cy="12" r="2"/><circle cx="21" cy="19" r="2"/></svg>Projetos · Condomínio</div>
   </div>
 
   <!-- TAB: EXECUTIVO -->
   <div class="tab-section" id="tab-marcos">
     <iframe src="/marcos.html" title="Marcos e Metas" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
+  </div>
+
+  <div class="tab-section" id="tab-projetos">
+    <iframe src="/projetos.html" title="Projetos do Condomínio Morada dos Sabiás" style="width:100%;height:calc(100vh - 210px);min-height:640px;border:0;border-radius:12px;background:#f0f4f8"></iframe>
   </div>
 
   <div class="tab-section" id="tab-executivo">
@@ -3572,7 +3577,7 @@ function showTab(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-' + name);
   if (tabEl) tabEl.classList.add('active');
-  const map = {marcos:0,executivo:1,graficos:2,areas:3,atualizacao:4,sprint:5,kanban:6,backlog:7,procs:8};
+  const map = {marcos:0,executivo:1,graficos:2,areas:3,atualizacao:4,sprint:5,kanban:6,backlog:7,procs:8,projetos:9};
   const tabs = document.querySelectorAll('.nav-tab');
   if (map[name] !== undefined && tabs[map[name]]) tabs[map[name]].classList.add('active');
   if (name === 'graficos') {
@@ -6119,7 +6124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // [ajuste] Abre a última aba usada (padrão: Marcos & Metas, a 1ª página)
   var _ultimaAba = 'marcos';
   try { _ultimaAba = localStorage.getItem('ole_ultima_aba') || 'marcos'; } catch (e) {}
-  if (['marcos','executivo','graficos','areas','atualizacao','sprint','kanban','backlog','procs'].indexOf(_ultimaAba) === -1) _ultimaAba = 'marcos';
+  if (['marcos','executivo','graficos','areas','atualizacao','sprint','kanban','backlog','procs','projetos'].indexOf(_ultimaAba) === -1) _ultimaAba = 'marcos';
   showTab(_ultimaAba);
   // [ajuste] Atualiza o mês exibido conforme a data de hoje
   atualizarMesAtual();
