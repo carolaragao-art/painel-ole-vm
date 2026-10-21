@@ -6858,7 +6858,10 @@ window.loginsAdd=loginsAdd; window.loginsReset=loginsReset; window.loginsRemove=
 
 <script>
 /* iframes das abas ocupam exatamente o que sobra da janela: evita a segunda barra de rolagem */
+let embOk = false;
 function ajustaEmbeds(){
+  if(window.innerHeight < 200) return;            // aba em segundo plano: mede quando aparecer
+  embOk = true;
   document.querySelectorAll('iframe.emb').forEach(f=>{
     const sec = f.closest('.tab-section');
     if(sec && sec.offsetParent === null) return;          // aba escondida: mede depois
@@ -6869,6 +6872,8 @@ function ajustaEmbeds(){
 window.addEventListener('resize', ajustaEmbeds);
 window.addEventListener('load', ajustaEmbeds);
 document.addEventListener('click', ()=>setTimeout(ajustaEmbeds,0));
-setTimeout(ajustaEmbeds, 200);
+document.addEventListener('visibilitychange', ajustaEmbeds);
+const tent = setInterval(()=>{ ajustaEmbeds(); if(embOk) clearInterval(tent); }, 400);
+setTimeout(()=>clearInterval(tent), 20000);
 </script>
 </body></html>
