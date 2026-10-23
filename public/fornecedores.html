@@ -122,6 +122,33 @@
   .obrig{font-size:8.5px;font-weight:800;color:var(--brick);background:#fbe9e9;border-radius:20px;
     padding:1px 7px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:2px}
 
+  .chip-st{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:3px 10px;
+    border-radius:20px;background:rgba(255,255,255,.16);color:#fff}
+  .chip-st.st-ok{background:var(--verde-cl);color:#2c4406}
+  .chip-st.st-nao{background:#f0b9b4;color:#6b1414}
+  .contato-linha{display:flex;align-items:center;gap:10px;padding:7px 20px;background:#f7f9fb;
+    border-bottom:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+  .contato-linha span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .contato-linha a{color:var(--navy);font-weight:600;text-decoration:none}
+  .contato-linha button{border:1px solid var(--line);background:var(--surface);border-radius:7px;
+    font-size:10.5px;padding:3px 9px;cursor:pointer;font-family:inherit;color:var(--navy)}
+  .contato-edit{padding:12px 20px;border-bottom:1px solid var(--line);background:#fcfdfe}
+  .abas{display:flex;margin:14px 0 4px;border-bottom:2px solid var(--line)}
+  .aba{flex:1;text-align:center;padding:9px 6px;font-size:12px;font-weight:700;color:var(--muted);
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+  .aba:hover{color:var(--ink)}
+  .aba.feito{color:var(--verde)}
+  .aba.agora{color:var(--navy);border-bottom-color:var(--orange)}
+  .aviso-aba{background:#fffbeb;border:1px solid var(--gold);border-radius:10px;padding:9px 12px;
+    margin-top:12px;font-size:11.5px;color:#7a5200}
+  .vazio-aba{text-align:center;padding:26px 16px;color:var(--muted);font-size:12px;line-height:1.5}
+  .vazio-aba b{color:var(--ink);font-size:13px;display:block;margin-bottom:6px}
+  .link-aba{color:var(--navy);cursor:pointer;border-bottom:1px solid var(--navy)}
+  .explica{border-top:1px solid var(--line);padding:12px 0 0;margin-top:4px}
+  .explica-bt{border:0;background:none;font-family:inherit;font-size:10.5px;font-weight:800;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.7px;cursor:pointer;padding:0}
+  .explica-bt:hover{color:var(--navy)}
+
   /* trilha dos 4 passos: verificar, qualificar, contratar, avaliar */
   .passos{display:flex;gap:0;margin:14px 0 2px;border:1px solid var(--line);border-radius:10px;
     overflow:hidden;background:var(--surface)}
@@ -305,6 +332,7 @@ let ESTADO = {};          // {idFornecedor: {qualif:{...}, avaliacoes:[...], ras
 let NOVOS = [];           // fornecedores cadastrados aqui pelo painel (além da carga inicial)
 let EXTRA = [];           // perguntas de verificação acrescentadas pela coordenação
 let aberto = null, busca = '', verInativos = false;
+let abaAberta = 'qualif', verContato = false, verExplica = false;
 
 /* ---------- persistência (nesta versão, só neste navegador) ---------- */
 async function carregar(){
@@ -437,16 +465,12 @@ function abrirFicha(id){
   aberto = id;
   const f = F.find(x=>x.id===id), e = est(id);
   if(!e.rascunho) e.rascunho = {semestre: semestreAtual(), notas:{}, just:{}, bim:false};
+  abaAberta = abaSugerida(f,e);   // contratado abre direto em Avaliar
+  verContato = false;
   document.getElementById('ficha').innerHTML = fichaHtml(f,e);
   document.getElementById('ficha').classList.add('on');
   document.getElementById('fundo').classList.add('on');
   document.getElementById('ficha').scrollTop = 0;
-  // já abre o bloco do passo em que este fornecedor está
-  const p = passoAtual(f,e);
-  if(p===3 || p===4){
-    const blk = document.getElementById(p===3? 'blk-doc':'blk-aval');
-    if(blk) blk.open = true;
-  }
 }
 function fecharFicha(){
   document.getElementById('ficha').classList.remove('on');
@@ -454,29 +478,49 @@ function fecharFicha(){
   aberto = null; render();
 }
 function fichaHtml(f,e){
+  const st = resumoStatus(f,e);
+  const quem = (e.contato.pessoa!==undefined? e.contato.pessoa : f.nome) || '—';
+  const fone = (e.contato.fone!==undefined? e.contato.fone : f.fone) || '';
+  const mail = (e.contato.email!==undefined? e.contato.email : f.email) || '';
   return '<div class="f-top"><button class="x" onclick="fecharFicha()">×</button>'+
-      '<h2>'+esc(f.razao)+'</h2><div class="disc">'+esc(f.nome)+' · '+esc(f.disciplina)+'</div></div>'+
+      '<h2>'+esc(f.razao)+'</h2><div class="disc">'+esc(f.nome)+' · '+esc(f.disciplina)+'</div>'+
+      '<div class="chip-st '+st.cls+'">'+esc(st.txt)+'</div>'+
+    '</div>'+
+    '<div class="contato-linha">'+
+      '<span>'+esc(quem)+(fone? ' · '+esc(fone):'')+(mail? ' · '+esc(mail):'')+'</span>'+
+      (e.pasta? '<a href="'+esc(e.pasta)+'" target="_blank" rel="noopener">pasta ↗</a>':'')+
+      '<button data-contato="1">'+(verContato?'fechar':'editar')+'</button>'+
+    '</div>'+
+    (verContato? '<div class="contato-edit">'+ cadastroHtml(f,e) +'</div>' : '')+
     '<div class="f-corpo">'+
-
-    passosHtml(f,e)+
-    verifHtml(f,e)+
-
-    '<details class="blk" id="blk-contato"><summary>Contato e pasta no Drive'+
-      '<em>'+esc((e.contato.pessoa!==undefined?e.contato.pessoa:f.nome)||'—')+'</em></summary>'+
-      '<div class="inner">'+ cadastroHtml(f,e) +'</div></details>'+
-
-    '<details class="blk" id="blk-doc"><summary>3 · Contratação'+
-      '<em>'+esc(e.doc.tipo||'sem documento')+'</em></summary>'+
-      '<div class="inner">'+ docHtml(f,e) +'</div></details>'+
-
-    '<details class="blk" id="blk-aval"><summary>4 · Avaliar o fornecedor (a cada semestre)'+
-      '<em>'+(ultimaAval(f.id)? num(ultimaAval(f.id).nota)+' em '+ultimaAval(f.id).semestre : 'ainda não avaliado')+'</em></summary>'+
-      '<div class="inner">'+ avalHtml(f,e) +'</div></details>'+
-
-    '<div class="bloco" style="border-bottom:none"><div class="acoes-ficha">'+
-      '<button class="btn" onclick="imprimirDossie(\''+f.id+'\')">🖨 Dossiê para auditoria</button>'+
-    '</div></div>'+
-  '</div>';
+      abasHtml(f,e)+
+      (abaAberta==='qualif'   ? qualifHtml(f,e) : '')+
+      (abaAberta==='contrato' ? contratoHtml(f,e) : '')+
+      (abaAberta==='aval'     ? avalTabHtml(f,e) : '')+
+      '<div class="bloco" style="border-bottom:none"><div class="acoes-ficha">'+
+        '<button class="btn" onclick="imprimirDossie(\''+f.id+'\')">🖨 Dossiê para auditoria</button>'+
+      '</div></div>'+
+    '</div>';
+}
+function contratoHtml(f,e){
+  return (qualificado(e)? '' :
+      '<div class="aviso-aba">Este fornecedor ainda não está qualificado. '+
+      'Dá para registrar o documento mesmo assim, mas a qualificação vem antes (SIAC 8.4.1.1) — '+
+      '<b data-aba="qualif" class="link-aba">voltar para Qualificar</b>.</div>')+
+    '<div class="bloco" style="padding-top:12px">'+ docHtml(f,e) +'</div>';
+}
+function avalTabHtml(f,e){
+  if(!contratado(e)){
+    return '<div class="vazio-aba">'+
+      '<b>Nada para avaliar ainda.</b>'+
+      '<p>A avaliação mede o desempenho de quem já entregou — prazo, qualidade do projeto, '+
+      'resposta a devolutiva. Enquanto não houver contrato, proposta aprovada ou ordem de serviço '+
+      'registrada, não há semestre para avaliar.</p>'+
+      '<p style="margin-top:8px"><b data-aba="contrato" class="link-aba">Registrar a contratação</b></p>'+
+      (e.avaliacoes.length || f.aval2023 ? '<div style="margin-top:14px;text-align:left">'+histHtml(f,e)+'</div>':'')+
+    '</div>';
+  }
+  return avalHtml(f,e);
 }
 function avalHtml(f,e){
   const r = e.rascunho, calc = calcula(r.notas), faixa = faixaDe(calc.nota, calc.reprovou);
@@ -538,29 +582,46 @@ const PERGUNTAS = [
    porque:'responsabilidades definidas (SIAC 8.4.3.4)',
    campo:'nome do responsável'}
 ];
-/* Em que passo este fornecedor está: 1 verificar · 2 qualificar · 3 contratar · 4 avaliar */
-function passoAtual(f,e){
-  const v = veredito(e.qualif.resp||{});
-  if(v.k==='pend') return 1;
-  if(e.qualif.status==='pendente') return 2;
-  if(e.qualif.status==='nao') return 2;
-  if(!e.doc.tipo || e.doc.tipo==='Ainda não há documento') return 3;
-  if(!e.avaliacoes.some(a=>a.semestre===semestreAtual())) return 4;
-  return 5;
+/* As três etapas da vida do fornecedor. Qualificar e contratar acontecem uma vez;
+   avaliar se repete todo semestre — por isso quem já está contratado abre direto em Avaliar. */
+function qualificado(e){ return e.qualif.status==='qualificado' || e.qualif.status==='ressalva'; }
+function contratado(e){ return !!e.doc.tipo && e.doc.tipo!=='Ainda não há documento'; }
+function avaliadoNoSemestre(e){ return e.avaliacoes.some(a=>a.semestre===semestreAtual()); }
+function abaSugerida(f,e){
+  if(!qualificado(e)) return 'qualif';
+  if(!contratado(e))  return 'contrato';
+  return 'aval';
 }
-function passosHtml(f,e){
-  const atual = passoAtual(f,e);
-  const P = [['Verificar','as perguntas'],['Qualificar','registrar'],['Contratar','proposta ou OS'],['Avaliar','nota do semestre']];
-  return '<div class="passos">'+ P.map((p,i)=>{
-    const n = i+1, cls = n<atual? 'feito' : n===atual? 'agora' : '';
-    return '<div class="passo '+cls+'" data-passo="'+n+'"><b>'+(n<atual?'✓':n)+'</b>'+p[0]+'</div>';
-  }).join('')+'</div>'+
-  '<div style="font-size:10.5px;color:var(--muted);margin-bottom:2px">'+
-    (atual===1? 'Faça as perguntas abaixo antes de pedir proposta.' :
-     atual===2? 'Verificado — falta registrar a qualificação no botão acima.' :
-     atual===3? 'Qualificado. Agora guarde a proposta, OS ou contrato no passo 3.' :
-     atual===4? 'Contratado. A nota do semestre '+semestreAtual()+' é no passo 4.' :
-     'Tudo em dia neste semestre.')+'</div>';
+function fimDoSemestre(){
+  const d = new Date();
+  return d.getMonth()<6 ? new Date(d.getFullYear(),5,30) : new Date(d.getFullYear(),11,31);
+}
+function prazoAval(){
+  const hojeD = new Date(), fim = fimDoSemestre();
+  const dias = Math.round((fim - hojeD)/86400000);
+  return dias>=0 ? 'vence em '+dias+' dia'+(dias===1?'':'s') : 'vencida';
+}
+// uma linha, sempre visível no topo: onde este fornecedor está, sem precisar abrir nada
+function resumoStatus(f,e){
+  if(e.qualif.status==='nao') return {cls:'st-nao', txt:'Não pode ser contratado'};
+  if(!qualificado(e)){
+    const v = veredito(e.qualif.resp||{});
+    return {cls:'st-pend', txt: v.k==='ok' ? 'Verificado · falta registrar a qualificação' : 'Falta verificar'};
+  }
+  if(!contratado(e)) return {cls:'st-pend', txt:'Qualificado · falta registrar a contratação'};
+  if(!avaliadoNoSemestre(e)) return {cls:'st-pend', txt:'Contratado · avaliação '+semestreAtual()+' '+prazoAval()};
+  const u = ultimaAval(f.id);
+  return {cls:'st-ok', txt:'Avaliado em '+u.semestre+' · nota '+num(u.nota)};
+}
+function abasHtml(f,e){
+  const A = [
+    ['qualif',  'Qualificar', qualificado(e)],
+    ['contrato','Contratar',  contratado(e)],
+    ['aval',    'Avaliar',    avaliadoNoSemestre(e)]
+  ];
+  return '<div class="abas">'+ A.map(a=>
+    '<div class="aba'+(abaAberta===a[0]?' agora':'')+(a[2]?' feito':'')+'" data-aba="'+a[0]+'">'+
+      (a[2]?'✓ ':'')+a[1]+'</div>').join('')+'</div>';
 }
 function todasPerguntas(){ return PERGUNTAS.concat(EXTRA); }
 function veredito(resp){
@@ -573,7 +634,7 @@ function veredito(resp){
     det:sim.length+' de '+elim.length+' pontos obrigatórios confirmados'};
   return {k:'ok', cls:'v-ok', txt:'Pode ser contratado', det:'os '+elim.length+' pontos obrigatórios estão confirmados'};
 }
-function verifHtml(f,e){
+function qualifHtml(f,e){
   const resp = e.qualif.resp || {}, txt = e.qualif.txt || {}, v = veredito(resp);
   const jaRegistrado = e.qualif.status!=='pendente' && e.qualif.em;
   let acao = '';
@@ -586,9 +647,17 @@ function verifHtml(f,e){
             (e.qualif.validade? ', vale até '+brData(e.qualif.validade):'') : '')+'</div></div>'+
         (acao? '<div class="v-acao">'+acao+'</div>':'')+'</div>'+
     '</div>'+
-    '<details class="blk" style="border-top:none;padding:10px 0 0">'+
-      '<summary>O que é a qualificação, pelo SIAC</summary>'+
-      '<div class="inner" style="font-size:11.5px;color:var(--ink);line-height:1.55">'+
+    '<div class="bloco" style="padding-top:12px">'+
+      '<h3 style="display:flex;align-items:center">Perguntas da ligação'+
+        '<button class="btn" style="margin-left:auto;font-size:10.5px;padding:4px 9px" data-copiar="1">📋 Copiar roteiro</button></h3>'+
+      todasPerguntas().map(p=>pergHtml(p,resp,txt)).join('')+
+      '<button class="btn" style="margin-top:8px;font-size:11.5px;padding:5px 11px" data-addperg="1">+ acrescentar pergunta</button>'+
+      '<input class="busca" style="width:100%;margin-top:10px" data-ressalva="1" '+
+        'placeholder="alguma ressalva? (ex.: só entrega em DWG, prazo apertado)" value="'+esc(e.qualif.ressalva||'')+'">'+
+    '</div>'+
+    '<div class="explica">'+
+      '<button class="explica-bt" data-explica="1">'+(verExplica?'▾':'▸')+' O que é a qualificação, pelo SIAC</button>'+
+      (verExplica? '<div style="font-size:11.5px;color:var(--ink);line-height:1.55;padding-top:8px">':'<div style="display:none">')+
         '<p><b>Qualificação (SIAC 2026, item 8.4.1.1)</b> — pré-avaliar e selecionar o fornecedor '+
         '<b>antes</b> de contratar, por critérios definidos pela própria empresa, retendo informação '+
         'documentada do resultado. Serviço de projeto está no escopo do item.</p>'+
@@ -610,14 +679,7 @@ function verifHtml(f,e){
         'quem tem certificação <b>SBAC</b> por OCP acreditado pela CGCRE, ou quem detém <b>DATec</b>.</p>'+
         '<p style="margin-top:7px;color:var(--muted)"><b>Não confundir com a avaliação (8.4.1.2)</b>, que é o '+
         'desempenho depois da entrega — prazo, qualidade, devolutivas — e fica no passo 4.</p>'+
-      '</div></details>'+
-    '<div class="bloco" style="padding-top:12px">'+
-      '<h3 style="display:flex;align-items:center">1 · Perguntas da ligação'+
-        '<button class="btn" style="margin-left:auto;font-size:10.5px;padding:4px 9px" data-copiar="1">📋 Copiar roteiro</button></h3>'+
-      todasPerguntas().map(p=>pergHtml(p,resp,txt)).join('')+
-      '<button class="btn" style="margin-top:8px;font-size:11.5px;padding:5px 11px" data-addperg="1">+ acrescentar pergunta</button>'+
-      '<input class="busca" style="width:100%;margin-top:10px" data-ressalva="1" '+
-        'placeholder="alguma ressalva? (ex.: só entrega em DWG, prazo apertado)" value="'+esc(e.qualif.ressalva||'')+'">'+
+      '</div>'+
     '</div>';
 }
 function pergHtml(p,resp,txt){
@@ -653,6 +715,7 @@ function registrarQualif(status){
     const d = new Date(); d.setFullYear(d.getFullYear()+1);
     q.validade = d.toISOString().slice(0,10);
   } else { q.validade = ''; }
+  if(q.status!=='nao') abaAberta = 'contrato';   // qualificou, o proximo passo e contratar
   salvar(); recarregaFicha();
 }
 function copiarRoteiro(){
@@ -941,21 +1004,18 @@ document.getElementById('ficha').addEventListener('change', e => {
   else if(t.dataset.obs)     { est(aberto).obs = t.value; salvar(); }
 });
 document.getElementById('ficha').addEventListener('click', e => {
-  const t = e.target.closest('[data-resp],[data-reg],[data-copiar],[data-passo],[data-addperg],[data-removeperg]');
+  const t = e.target.closest('[data-resp],[data-reg],[data-copiar],[data-aba],[data-addperg],[data-removeperg],[data-contato],[data-explica]');
   if(!t) return;
   if(t.dataset.resp)        setResp(t.dataset.resp, t.dataset.v);
   else if(t.dataset.reg)    registrarQualif(t.dataset.reg);
   else if(t.dataset.copiar) copiarRoteiro();
-  else if(t.dataset.passo)  irParaPasso(+t.dataset.passo);
+  else if(t.dataset.aba)    { abaAberta = t.dataset.aba; recarregaFicha(); document.getElementById('ficha').scrollTo({top:0,behavior:'smooth'}); }
+  else if(t.dataset.contato){ verContato = !verContato; recarregaFicha(); }
+  else if(t.dataset.explica){ verExplica = !verExplica; recarregaFicha(); }
   else if(t.dataset.addperg) addPergunta();
   else if(t.dataset.removeperg) removePergunta(t.dataset.removeperg);
 });
-function irParaPasso(n){
-  const ficha = document.getElementById('ficha');
-  if(n<=2){ ficha.scrollTo({top:0,behavior:'smooth'}); return; }
-  const el = document.getElementById(n===3? 'blk-doc' : 'blk-aval');
-  if(el){ el.open = true; el.scrollIntoView({behavior:'smooth', block:'start'}); }
-}
+
 document.getElementById('busca').oninput = e => { busca = e.target.value; render(); };
 document.getElementById('btn-regua').onclick = abrirRegua;
 document.getElementById('btn-novo').onclick = abrirNovo;
