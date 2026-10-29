@@ -9,3 +9,5 @@ npm-debug.log*
 .vercel
 
 desktop.ini
+__pycache__/
+*.pyc

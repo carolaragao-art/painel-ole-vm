@@ -80,6 +80,8 @@ def preparar_arvore(xlsx_bytes, baseline_txt):
     os.makedirs(DIR_XLSX, exist_ok=True)
 
     for nome in os.listdir(ORIGEM):
+        if os.path.isdir(os.path.join(ORIGEM, nome)):
+            continue                       # ignora __pycache__ e afins
         if nome == "logo-olevm.png":
             shutil.copy(os.path.join(ORIGEM, nome), os.path.join(DIR_GESTAO, nome))
         else:
