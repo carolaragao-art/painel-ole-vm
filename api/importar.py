@@ -31,6 +31,8 @@ DIR_GESTAO = os.path.join(BASE, "00 Gestao do Setor", "Ole VM Gestao")
 DIR_ROTINA = os.path.join(DIR_GESTAO, "rotina-smartsheet")
 DIR_XLSX = os.path.join(BASE, "00 Gestao do Setor", "06 Smartsheet")
 
+TABELA = "rotina_painel"      # separada do kv_state de propósito (ver ler_chave)
+
 CHAVE_MARCOS = "pagina_marcos"
 CHAVE_PROJETOS = "pagina_projetos"
 CHAVE_BASELINE = "marcos_baseline"
@@ -58,16 +60,41 @@ def conectar():
     )
 
 
+def preparar_tabela(cur):
+    """Tabela só da rotina. O kv_state não serve: a página inicial injeta TODAS as
+    chaves dele dentro de uma tag <script>, e um HTML com </script> ali quebra o
+    painel inteiro (aconteceu em 29/10/2026)."""
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS %s ("
+        "  k text PRIMARY KEY,"
+        "  v text,"
+        "  updated_at timestamptz DEFAULT now())" % TABELA
+    )
+    # migração automática do que já estava no kv_state
+    for k in (CHAVE_BASELINE, "import_token"):
+        cur.execute("SELECT v FROM %s WHERE k = %%s" % TABELA, (k,))
+        if cur.fetchone():
+            continue
+        cur.execute("SELECT v FROM kv_state WHERE k = %s", (k,))
+        linha = cur.fetchone()
+        if linha and linha[0]:
+            gravar_chave(cur, k, linha[0])
+
+
 def ler_chave(cur, k):
-    cur.execute("SELECT v FROM kv_state WHERE k = %s", (k,))
+    cur.execute("SELECT v FROM %s WHERE k = %%s" % TABELA, (k,))
+    linha = cur.fetchone()
+    if linha:
+        return linha[0]
+    cur.execute("SELECT v FROM kv_state WHERE k = %s", (k,))   # reserva
     linha = cur.fetchone()
     return linha[0] if linha else None
 
 
 def gravar_chave(cur, k, v):
     cur.execute(
-        "INSERT INTO kv_state (k, v, updated_at) VALUES (%s, %s, now()) "
-        "ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v, updated_at = now()",
+        "INSERT INTO %s (k, v, updated_at) VALUES (%%s, %%s, now()) "
+        "ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v, updated_at = now()" % TABELA,
         (k, v),
     )
 
@@ -158,6 +185,8 @@ class handler(BaseHTTPRequestHandler):
 
             con = conectar()
             cur = con.cursor()
+            preparar_tabela(cur)
+            con.commit()
             # o segredo vive no banco (chave import_token); a variável de ambiente
             # continua valendo, se um dia for configurada na Vercel.
             esperado = os.environ.get("IMPORT_TOKEN", "") or (ler_chave(cur, "import_token") or "")

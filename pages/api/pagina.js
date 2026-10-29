@@ -24,7 +24,9 @@ export default async function handler(req, res) {
   let origem = 'banco';
   try {
     await ensureSchema();
-    const r = await pool.query('SELECT v FROM kv_state WHERE k = $1', [alvo.chave]);
+    // tabela própria: estas páginas NÃO podem viver no kv_state, que a rota "/"
+    // injeta inteiro dentro de uma tag <script> (um </script> no HTML quebra tudo).
+    const r = await pool.query('SELECT v FROM rotina_painel WHERE k = $1', [alvo.chave]);
     if (r.rows.length && r.rows[0].v) html = r.rows[0].v;
   } catch (e) {
     console.error('pagina: falha ao ler do banco', e.message);

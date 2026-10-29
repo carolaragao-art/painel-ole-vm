@@ -39,9 +39,13 @@ export async function getServerSideProps(ctx) {
     return { props: {} };
   }
 
+  // Escapa "</" ao serializar: qualquer valor que contenha "</script>" fecharia a
+  // tag no meio e jogaria o JSON cru na tela. Já aconteceu em 29/10/2026.
+  const seguro = (v) => JSON.stringify(v).replace(/<\//g, '<\\/');
+
   const inject =
-    '\n<script>window.__OLE_STATE__=' + JSON.stringify(state) +
-    ';window.__OLE_USER__=' + JSON.stringify(session.user || '') + ';</script>' +
+    '\n<script>window.__OLE_STATE__=' + seguro(state) +
+    ';window.__OLE_USER__=' + seguro(session.user || '') + ';</script>' +
     '\n<script src="/ole-bridge.js"></script>\n';
 
   const out = /<head[^>]*>/i.test(html)
