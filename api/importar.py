@@ -148,13 +148,20 @@ class handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            esperado = os.environ.get("IMPORT_TOKEN", "")
             enviado = ""
             if "?" in self.path:
                 from urllib.parse import parse_qs
                 enviado = (parse_qs(self.path.split("?", 1)[1]).get("token") or [""])[0]
             enviado = enviado or self.headers.get("x-token", "")
-            if not esperado or enviado != esperado:
+
+            con = conectar()
+            cur = con.cursor()
+            # o segredo vive no banco (chave import_token); a variável de ambiente
+            # continua valendo, se um dia for configurada na Vercel.
+            esperado = os.environ.get("IMPORT_TOKEN", "") or (ler_chave(cur, "import_token") or "")
+            if not esperado or not enviado or enviado != esperado:
+                cur.close()
+                con.close()
                 return self.responder(401, {"erro": "token invalido"})
 
             tamanho = int(self.headers.get("Content-Length") or 0)
@@ -162,10 +169,10 @@ class handler(BaseHTTPRequestHandler):
                 return self.responder(400, {"erro": "corpo vazio ou pequeno demais"})
             bruto = self.rfile.read(tamanho)
             if bruto[:2] != b"PK":
+                cur.close()
+                con.close()
                 return self.responder(400, {"erro": "o corpo nao parece um .xlsx"})
 
-            con = conectar()
-            cur = con.cursor()
             baseline = ler_chave(cur, CHAVE_BASELINE)
             # trava de segurança: sem baseline, o parse registraria a data de hoje
             # como meta de todos os marcos e apagaria o histórico de desvio.
