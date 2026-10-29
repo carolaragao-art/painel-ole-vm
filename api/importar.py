@@ -167,6 +167,15 @@ class handler(BaseHTTPRequestHandler):
             con = conectar()
             cur = con.cursor()
             baseline = ler_chave(cur, CHAVE_BASELINE)
+            # trava de segurança: sem baseline, o parse registraria a data de hoje
+            # como meta de todos os marcos e apagaria o histórico de desvio.
+            if not baseline:
+                cur.close()
+                con.close()
+                return self.responder(409, {
+                    "erro": "baseline das metas ausente no banco",
+                    "detalhe": "grave a chave marcos_baseline antes de importar",
+                })
 
             preparar_arvore(bruto, baseline)
             r = processar(bruto)
