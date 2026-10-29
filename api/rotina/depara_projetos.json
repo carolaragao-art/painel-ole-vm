@@ -1,0 +1,142 @@
+{
+ "pl incendio condominio": {
+  "apelido": "Incêndio",
+  "empresa": "Rabelo Engenharia",
+  "projetista": "Fernando",
+  "pagamento": "Pago Adiantamento",
+  "obs": ""
+ },
+ "pl rede eletrica e iluminacao": {
+  "apelido": "Rede Elétrica",
+  "empresa": "Fácil Eletrificações",
+  "projetista": "Gabriel",
+  "pagamento": "Pago os dois condomínios",
+  "obs": ""
+ },
+ "pl drenagem, terraplanagem e pavimentacao": {
+  "apelido": "Drenagem e Terraplanagem",
+  "empresa": "Infraurbi",
+  "projetista": "Reginaldo",
+  "pagamento": "Analisar pagamentos",
+  "obs": ""
+ },
+ "pl sistema de abastecimento de agua > projeto legal da rede de agua": {
+  "apelido": "Abastecimento de água · Rede",
+  "empresa": "Infraurbi",
+  "projetista": "Reginaldo",
+  "pagamento": "Analisar pagamentos",
+  "obs": ""
+ },
+ "pl sistema de abastecimento de agua > projeto legal estrutural reservatorio": {
+  "apelido": "Abastecimento de água · Estrutural",
+  "empresa": "Dipawa",
+  "projetista": "Fernandes",
+  "pagamento": "Não contratado",
+  "obs": ""
+ },
+ "pl sistema de abastecimento de agua > projeto legal eletrico reservatorio": {
+  "apelido": "Abastecimento de água · Elétrico",
+  "empresa": "Engemec",
+  "projetista": "João/Diego",
+  "pagamento": "Não contratado",
+  "obs": ""
+ },
+ "pl sistema de esgotamento sanitario > projeto legal da rede de esgoto": {
+  "apelido": "Esgotamento SES",
+  "empresa": "Infraurbi",
+  "projetista": "Reginaldo",
+  "pagamento": "Analisar pagamentos",
+  "obs": ""
+ },
+ "sondagem poco profundo": {
+  "apelido": "Poço Profundo",
+  "empresa": "Geologia e Sondagens",
+  "projetista": "Raimundo",
+  "pagamento": "Pagar a outra",
+  "obs": "Investigar com Luiza e Amanda"
+ },
+ "projeto eletrico": {
+  "apelido": "Elétrico",
+  "empresa": "Interno",
+  "projetista": "DEV IMOB",
+  "pagamento": "",
+  "obs": ""
+ },
+ "projeto hidrossanitario": {
+  "apelido": "Hidrossanitário",
+  "empresa": "Interno",
+  "projetista": "DEV IMOB",
+  "pagamento": "",
+  "obs": ""
+ },
+ "projeto coberta": {
+  "apelido": "Coberta",
+  "empresa": "Milatec",
+  "projetista": "Igor",
+  "pagamento": "",
+  "obs": ""
+ },
+ "projeto ole": {
+  "apelido": "Olé",
+  "empresa": "Interno",
+  "projetista": "DEV IMOB",
+  "pagamento": "",
+  "obs": ""
+ },
+ "projeto de fundacao": {
+  "apelido": "Fundação",
+  "empresa": "Otoch (orçamento)",
+  "projetista": "Sérgio",
+  "pagamento": "Verificar com VM e Jonas",
+  "obs": ""
+ },
+ "n-inc sistema de agua > projeto e execucao rede adutora": {
+  "apelido": "Rede Adutora",
+  "empresa": "",
+  "projetista": "",
+  "pagamento": "",
+  "obs": ""
+ },
+ "n-inc sistema de agua > elevatoria de agua > projeto civil da rede de agua": {
+  "apelido": "Elevatória de Água · Projeto Civil",
+  "empresa": "",
+  "projetista": "",
+  "pagamento": "Atualização do projeto civil — contratar",
+  "obs": ""
+ },
+ "n-inc sistema de agua > elevatoria de agua > projeto legal estrutural reservatorio": {
+  "apelido": "Elevatória de Água · Estrutural",
+  "empresa": "Dipawa",
+  "projetista": "Fernandes",
+  "pagamento": "Não contratado",
+  "obs": ""
+ },
+ "n-inc sistema de agua > elevatoria de agua > projeto legal eletrico reservatorio": {
+  "apelido": "Elevatória de Água · Elétrico",
+  "empresa": "Engemec",
+  "projetista": "João/Diego",
+  "pagamento": "Não contratado",
+  "obs": ""
+ },
+ "n-inc sistema de esgoto > projeto da elevatoria de esgoto": {
+  "apelido": "Elevatória de Esgoto · Projeto Civil",
+  "empresa": "Infraurbi",
+  "projetista": "Reginaldo",
+  "pagamento": "Analisar pagamentos",
+  "obs": ""
+ },
+ "n-inc sistema de esgoto > projeto legal estrutural reservatorio": {
+  "apelido": "Elevatória de Esgoto · Estrutural",
+  "empresa": "Orçar e contratar",
+  "projetista": "",
+  "pagamento": "Não contratado",
+  "obs": ""
+ },
+ "n-inc sistema de esgoto > projeto legal eletrico reservatorio": {
+  "apelido": "Elevatória de Esgoto · Elétrico",
+  "empresa": "Orçar e contratar",
+  "projetista": "",
+  "pagamento": "Não contratado",
+  "obs": ""
+ }
+}
