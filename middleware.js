@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 // Gate de acesso: exige cookie de sessão para ver o painel.
 // A verificação forte da assinatura acontece nas rotas de API (runtime node).
 // Aqui só checamos a presença/forma do cookie para redirecionar ao login.
-const PUBLIC_PATHS = ['/login', '/api/login', '/api/logout', '/api/alerta-certs', '/ole-bridge.js', '/favicon.ico', '/logo.png'];
+// /api/ping e /api/importar são servidos por funções Python; a importação valida
+// o próprio token no corpo da requisição, por isso não passam pelo cookie de sessão.
+const PUBLIC_PATHS = ['/login', '/api/login', '/api/logout', '/api/alerta-certs', '/api/ping', '/api/importar', '/ole-bridge.js', '/favicon.ico', '/logo.png'];
 
 export function middleware(req) {
   const { pathname } = req.nextUrl;
