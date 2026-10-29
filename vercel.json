@@ -1,5 +1,14 @@
 {
   "crons": [
-    { "path": "/api/alerta-certs", "schedule": "0 11 * * *" }
-  ]
+    {
+      "path": "/api/alerta-certs",
+      "schedule": "0 11 * * *"
+    }
+  ],
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.12",
+      "maxDuration": 60
+    }
+  }
 }
