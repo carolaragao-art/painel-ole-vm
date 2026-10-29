@@ -510,6 +510,21 @@ document.querySelectorAll('.chip[data-g]').forEach(c=>c.onclick=()=>{
   c.classList.add('on'); filtroG=c.dataset.g; render();});
 document.getElementById('chip-prazo').onclick=function(){ soPrazo=!soPrazo; this.classList.toggle('on',soPrazo); render(); };
 document.getElementById('busca').oninput=e=>{busca=e.target.value;render();};
+// Aviso de dado velho (mesma regra do Marcos & Metas)
+(function(){
+  var p = "27/10/2026".split("/");          // dd/mm/aaaa
+  if (p.length !== 3) return;
+  var dias = Math.floor((new Date() - new Date(p[2]+"-"+p[1]+"-"+p[0]))/86400000);
+  if (dias < 7) return;
+  var el = document.createElement("div");
+  el.className = "nota";
+  el.style.cssText = "background:#fdecea;border-color:#D93025;border-left-color:#D93025;"+
+    "color:#8B2020;font-weight:600;display:block";
+  el.textContent = "⚠ Cronograma do Smartsheet de 27/10/2026 — " + dias +
+    " dias atrás. A atualização automática pode ter falhado.";
+  var lista = document.getElementById("lista");
+  lista.parentNode.insertBefore(el, lista);
+})();
 document.getElementById('link-nota').onclick=function(ev){
   ev.preventDefault();
   const n=document.getElementById('nota');
