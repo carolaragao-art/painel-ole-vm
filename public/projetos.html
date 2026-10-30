@@ -218,7 +218,7 @@
     <div class="rodape">Qualificar antes e avaliar depois é exigência do SIAC (item 8.4) — quem aprova é a coordenação do Desenvolvimento Imobiliário.</div>
   </details>
 
-  <div class="legenda">🔒 <b>Etapa, data e %</b> vêm do Smartsheet de <b>29/10/2026</b> (só leitura) ·
+  <div class="legenda">🔒 <b>Etapa, data e %</b> vêm do Smartsheet de <b>30/10/2026</b> (só leitura) ·
     ✎ <b>empresa, projetista, pagamento, prometido e comentário</b> são do painel — clique para editar,
     salva sozinho · <a href="#" id="link-nota" style="color:var(--navy)">o que mais é bom saber</a></div>
 
@@ -321,7 +321,7 @@ function render(){
   const comPct=L.filter(p=>p.pct!==null&&p.pct!==undefined).length;
   partes.push('<b>'+comPct+' de '+L.length+'</b> projetos têm % apontado no Smartsheet. Enquanto a sub-etapa não for marcada como concluída, a etapa mostrada é a <b>próxima prevista</b>, não progresso — e linha sem % aparece como “sem apontamento”, nunca como 0%.');
   partes.push('As etapas <b>Pagamento</b>, <b>Órgão</b> e <b>Aprovado</b> não existem no Smartsheet — entram no próximo passo, junto com o aviso por e-mail. A data prometida, o pagamento e o comentário ficam salvos no painel, para o time todo.');
-  partes.push('Fonte do cronograma: <b>OLE VM - DEV IMOB_AUTO_2026-10-29_0859.xlsx</b>. Empresa, projetista e pagamento vieram da '+
+  partes.push('Fonte do cronograma: <b>OLE VM - DEV IMOB_AUTO_2026-10-30_0601.xlsx</b>. Empresa, projetista e pagamento vieram da '+
     'Lista Projetos.xlsx, migrados uma vez.');
   n.innerHTML=partes.join('<br>');
   let html='';
@@ -512,7 +512,7 @@ document.getElementById('chip-prazo').onclick=function(){ soPrazo=!soPrazo; this
 document.getElementById('busca').oninput=e=>{busca=e.target.value;render();};
 // Aviso de dado velho (mesma regra do Marcos & Metas)
 (function(){
-  var p = "29/10/2026".split("/");          // dd/mm/aaaa
+  var p = "30/10/2026".split("/");          // dd/mm/aaaa
   if (p.length !== 3) return;
   var dias = Math.floor((new Date() - new Date(p[2]+"-"+p[1]+"-"+p[0]))/86400000);
   if (dias < 7) return;
@@ -520,7 +520,7 @@ document.getElementById('busca').oninput=e=>{busca=e.target.value;render();};
   el.className = "nota";
   el.style.cssText = "background:#fdecea;border-color:#D93025;border-left-color:#D93025;"+
     "color:#8B2020;font-weight:600;display:block";
-  el.textContent = "⚠ Cronograma do Smartsheet de 29/10/2026 — " + dias +
+  el.textContent = "⚠ Cronograma do Smartsheet de 30/10/2026 — " + dias +
     " dias atrás. A atualização automática pode ter falhado.";
   var lista = document.getElementById("lista");
   lista.parentNode.insertBefore(el, lista);
