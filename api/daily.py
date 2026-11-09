@@ -76,51 +76,88 @@ def linha_atv(x, com_data=False):
             f"{x['atividade']}{pct}{data}</li>")
 
 
+def prioridade_projeto(p):
+    p = (p or "").upper()
+    if "SABI" in p or "CONDOMÍNIO MORADA" in p:
+        return 0
+    if "RIAMBURGO" in p:
+        return 1
+    if "CAUCAIA II" in p:
+        return 4
+    if "CAUCAIA" in p:
+        return 2
+    if "PS3 - 408" in p:
+        return 3
+    if "TESTE" in p or "PS3 - CONDOM" in p:
+        return 5
+    return 9
+
+
 def monta_daily(atv, marcos, hoje):
+    """Daily agrupada por PROJETO (pedido da Carol, 09/11/2026)."""
     hj = hoje.isoformat()
     ontem = (hoje - timedelta(days=1)).isoformat()
-    tudo = sum(atv["atividades"].values(), [])
-    de_hoje = [x for x in tudo if foco(x) and x.get("termino") == hj]
-    novas_atr = [x for x in tudo if foco(x) and x.get("termino") == ontem
-                 and (x.get("pct") or 0) < 100]
+    sem_fim = (hoje + timedelta(days=(6 - hoje.weekday()))).isoformat()
+    tudo = [x for x in sum(atv["atividades"].values(), []) if foco(x)]
     ms = [m for m in marcos["marcos"]
           if not any(f in (m.get("ugb") or "").upper() for f in FORA)
           and (m.get("projeto") or "") not in PROJ_FORA]
-    sem_fim = (hoje + timedelta(days=(6 - hoje.weekday()))).isoformat()
-    marcos_sem = [m for m in ms if m.get("meta") and hj <= m["meta"] <= sem_fim
-                  and (m.get("pct") or 0) < 100]
-    entregas_sem = [x for x in tudo if foco(x) and x.get("termino")
-                    and hj < x["termino"] <= sem_fim and (x.get("pct") or 0) < 100]
+
+    blocos = {}
+
+    def bloco(proj):
+        return blocos.setdefault(proj, {"hoje": [], "semana": [], "atrasou": [], "marcos": []})
+
+    n_hoje = n_atr = 0
+    for x in tudo:
+        t, pct = x.get("termino"), (x.get("pct") or 0)
+        if t == hj:
+            bloco(x["projeto"])["hoje"].append(x)
+            n_hoje += 1
+        elif t == ontem and pct < 100:
+            bloco(x["projeto"])["atrasou"].append(x)
+            n_atr += 1
+        elif t and hj < t <= sem_fim and pct < 100:
+            bloco(x["projeto"])["semana"].append(x)
+    for m in ms:
+        if m.get("meta") and hj <= m["meta"] <= sem_fim and (m.get("pct") or 0) < 100:
+            bloco(m["projeto"])["marcos"].append(m)
 
     corpo = [f"<h2 style='color:#1D3461;border-bottom:3px solid #E8622A;"
              f"padding-bottom:6px'>Daily DI · {hoje.strftime('%d/%m/%Y')}</h2>"]
-    if de_hoje:
-        corpo.append("<h3 style='color:#1D3461'>📌 Vence hoje</h3><ul>"
-                     + "".join(linha_atv(x) for x in sorted(de_hoje, key=lambda z: z["projeto"]))
-                     + "</ul>")
-    else:
-        corpo.append("<p>📌 Nenhuma atividade com vencimento hoje nos 3 setores.</p>")
-    if novas_atr:
-        corpo.append("<h3 style='color:#dc2626'>⚠ Viraram atrasadas ontem</h3><ul>"
-                     + "".join(linha_atv(x) for x in novas_atr) + "</ul>")
-    if entregas_sem:
-        corpo.append("<h3 style='color:#1D3461'>📅 Entregas da semana</h3><ul>"
-                     + "".join(f"<li><b>{br(x['termino'])}</b> · <b>{x['projeto']}</b> · "
-                               f"{x['setor'].title()}: {x['atividade']}"
-                               f"{' (' + str(x['pct']) + '%)' if x.get('pct') else ''}</li>"
-                               for x in sorted(entregas_sem,
-                                               key=lambda z: (z['termino'], z['projeto'])))
-                     + "</ul>")
-    if marcos_sem:
-        corpo.append("<h3 style='color:#1D3461'>🎯 Marcos desta semana</h3><ul>"
-                     + "".join(f"<li><b>{m['marco']}</b> ({m['projeto']}) — "
-                               f"{br(m['meta'])} · {m.get('pct', 0)}%</li>"
-                               for m in sorted(marcos_sem, key=lambda z: z["meta"])) + "</ul>")
-    corpo.append("<p><a href='https://painel-ole-vm.vercel.app/' "
+    if not blocos:
+        corpo.append("<p>Sem vencimentos hoje nem na semana, nos 3 setores.</p>")
+
+    def li(x, pref=""):
+        pct = f" ({x['pct']}%)" if x.get("pct") else ""
+        return f"<li>{pref}{x['setor'].title()}: {x['atividade']}{pct}</li>"
+
+    for proj in sorted(blocos, key=lambda p: (prioridade_projeto(p), p)):
+        b = blocos[proj]
+        corpo.append(
+            f"<h3 style='background:#1D3461;color:#fff;padding:7px 12px;"
+            f"border-radius:6px;margin:18px 0 6px'>{proj}</h3>")
+        itens = []
+        for x in b["hoje"]:
+            itens.append(li(x, "<b style='color:#E8622A'>HOJE</b> · "))
+        for x in b["atrasou"]:
+            itens.append(li(x, "<b style='color:#dc2626'>⚠ ATRASOU ONTEM</b> · "))
+        for x in sorted(b["semana"], key=lambda z: z["termino"]):
+            itens.append(li(x, f"<b>{br(x['termino'])}</b> · "))
+        if itens:
+            corpo.append("<ul style='margin:4px 0 6px'>" + "".join(itens) + "</ul>")
+        if b["marcos"]:
+            corpo.append("<p style='margin:2px 0 4px'>" + " ".join(
+                f"<span style='border:1.5px solid #E8A020;border-radius:12px;"
+                f"padding:2px 10px;font-size:13px'>🎯 {m['marco']} · "
+                f"<b>{br(m['meta'])}</b> · {m.get('pct', 0)}%</span>"
+                for m in sorted(b["marcos"], key=lambda z: z["meta"])) + "</p>")
+
+    corpo.append("<p style='margin-top:14px'><a href='https://painel-ole-vm.vercel.app/' "
                  "style='color:#1D3461;font-weight:bold'>Abrir o painel →</a></p>")
-    assunto = f"Daily DI · {hoje.strftime('%d/%m')} — " + (
-        f"{len(de_hoje)} para hoje" + (f" · {len(novas_atr)} novas atrasadas" if novas_atr else ""))
-    return assunto, "".join(corpo), bool(de_hoje or novas_atr or marcos_sem)
+    assunto = f"Daily DI · {hoje.strftime('%d/%m')} — {n_hoje} para hoje" + (
+        f" · {n_atr} novas atrasadas" if n_atr else "")
+    return assunto, "".join(corpo), bool(blocos)
 
 
 def monta_segunda(atv, marcos, hoje):
