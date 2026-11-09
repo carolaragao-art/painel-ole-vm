@@ -69,10 +69,17 @@ def foco(x):
     return True
 
 
+def grupo_de(x):
+    """Nível entre o setor e a atividade (ex.: 'DVT de esgoto') — pedido da
+    Carol em 09/11/2026 para localizar a atividade dentro do processo."""
+    g = (x.get("grupo") or "").strip()
+    return f" <span style='color:#64748b'>· {g}</span>" if g else ""
+
+
 def linha_atv(x, com_data=False):
     pct = f" ({x['pct']}%)" if x.get("pct") else ""
     data = f" — venceu {br(x['termino'])}" if com_data else ""
-    return (f"<li><b>{x['projeto']}</b> · {x['setor'].title()}: "
+    return (f"<li><b>{x['projeto']}</b> · {x['setor'].title()}{grupo_de(x)}: "
             f"{x['atividade']}{pct}{data}</li>")
 
 
@@ -130,7 +137,7 @@ def monta_daily(atv, marcos, hoje):
 
     def li(x, pref=""):
         pct = f" ({x['pct']}%)" if x.get("pct") else ""
-        return f"<li>{pref}{x['setor'].title()}: {x['atividade']}{pct}</li>"
+        return f"<li>{pref}{x['setor'].title()}{grupo_de(x)}: {x['atividade']}{pct}</li>"
 
     for proj in sorted(blocos, key=lambda p: (prioridade_projeto(p), p)):
         b = blocos[proj]
