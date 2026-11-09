@@ -89,6 +89,8 @@ def monta_daily(atv, marcos, hoje):
     sem_fim = (hoje + timedelta(days=(6 - hoje.weekday()))).isoformat()
     marcos_sem = [m for m in ms if m.get("meta") and hj <= m["meta"] <= sem_fim
                   and (m.get("pct") or 0) < 100]
+    entregas_sem = [x for x in tudo if foco(x) and x.get("termino")
+                    and hj < x["termino"] <= sem_fim and (x.get("pct") or 0) < 100]
 
     corpo = [f"<h2 style='color:#1D3461;border-bottom:3px solid #E8622A;"
              f"padding-bottom:6px'>Daily DI · {hoje.strftime('%d/%m/%Y')}</h2>"]
@@ -101,6 +103,14 @@ def monta_daily(atv, marcos, hoje):
     if novas_atr:
         corpo.append("<h3 style='color:#dc2626'>⚠ Viraram atrasadas ontem</h3><ul>"
                      + "".join(linha_atv(x) for x in novas_atr) + "</ul>")
+    if entregas_sem:
+        corpo.append("<h3 style='color:#1D3461'>📅 Entregas da semana</h3><ul>"
+                     + "".join(f"<li><b>{br(x['termino'])}</b> · <b>{x['projeto']}</b> · "
+                               f"{x['setor'].title()}: {x['atividade']}"
+                               f"{' (' + str(x['pct']) + '%)' if x.get('pct') else ''}</li>"
+                               for x in sorted(entregas_sem,
+                                               key=lambda z: (z['termino'], z['projeto'])))
+                     + "</ul>")
     if marcos_sem:
         corpo.append("<h3 style='color:#1D3461'>🎯 Marcos desta semana</h3><ul>"
                      + "".join(f"<li><b>{m['marco']}</b> ({m['projeto']}) — "
