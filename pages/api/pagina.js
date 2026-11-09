@@ -11,7 +11,6 @@ const { pool, ensureSchema } = require('../../lib/db');
 const MAPA = {
   marcos: { chave: 'pagina_marcos', arquivo: 'marcos.html' },
   projetos: { chave: 'pagina_projetos', arquivo: 'projetos.html' },
-  semana: { chave: 'pagina_semana', arquivo: 'semana.html' },
 };
 
 export default async function handler(req, res) {

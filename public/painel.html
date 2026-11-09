@@ -947,7 +947,6 @@
   <!-- NAV TABS -->
   <div class="nav-tabs" id="nav-grupos">
     <div class="nav-tab" data-grupo="marcos" onclick="abrirGrupo('marcos')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Marcos &amp; Metas</div>
-    <div class="nav-tab" data-grupo="semana" onclick="abrirGrupo('semana')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Gestão à Vista</div>
     <div class="nav-tab" data-grupo="exec" onclick="abrirGrupo('exec')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Painel Executivo</div>
     <div class="nav-tab" data-grupo="sprint" onclick="abrirGrupo('sprint')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Sprint</div>
     <div class="nav-tab" data-grupo="procs" onclick="abrirGrupo('procs')"><svg class="nt-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l9 5H3z"/></svg>Processos · Órgãos</div>
@@ -959,10 +958,6 @@
   <!-- TAB: EXECUTIVO -->
   <div class="tab-section" id="tab-marcos">
     <iframe src="/marcos.html" title="Marcos e Metas" class="emb" style="width:100%;border:0;border-radius:12px;background:#f0f4f8;display:block"></iframe>
-  </div>
-
-  <div class="tab-section" id="tab-semana">
-    <iframe src="/semana.html" title="Gestão à Vista — Semana" class="emb" style="width:100%;border:0;border-radius:12px;background:#f0f4f8;display:block"></iframe>
   </div>
 
   <div class="tab-section" id="tab-projetos">
@@ -3588,7 +3583,6 @@ function buildLineDataFromUpdates() {
 // o resto são telas soltas. showTab(nome) continua sendo a API usada pelo painel inteiro.
 const NAV = {
   marcos: {nome:'Marcos & Metas', abas:[['marcos','Marcos & Metas']]},
-  semana: {nome:'Gestão à Vista', abas:[['semana','Gestão à Vista']]},
   exec:   {nome:'Painel Executivo', abas:[['executivo','Visão geral'],['graficos','Gráficos'],
                                           ['areas','Áreas'],['atualizacao','Atualização Mensal']]},
   sprint: {nome:'Sprint', abas:[['sprint','Sprint Semanal'],['kanban','Kanban'],
