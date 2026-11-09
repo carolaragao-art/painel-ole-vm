@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """E-mails da rotina — crons da Vercel (vercel.json), horário de Fortaleza.
 
-/api/daily  (todo dia ~07:30) -> DAILY_TO: o que vence hoje, o que atrasou
+/api/daily  (PAUSADA desde 09/11/2026; era todo dia ~07:30) -> DAILY_TO: o que vence hoje, o que atrasou
             ontem e as entregas da semana, por projeto, nos setores
             Prospecção/Legalização/Novos Produtos.
 /api/weekly (segunda ~18:00, rito da Sprint) -> WEEKLY_TO: placar das metas,
@@ -21,6 +21,9 @@ from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 
 FORTALEZA = timezone(timedelta(hours=-3))
+# Daily pausada pela Carol em 09/11/2026. Para religar: True aqui + cron
+# {"path": "/api/daily", "schedule": "30 10 * * *"} de volta no vercel.json.
+DAILY_ATIVA = False
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
 WEEKLY_TO = os.environ.get(
     "WEEKLY_TO", "desenvolvimentoimobole@vianaemoura.com.br, filipecholanda@olecasas.com.br")
@@ -341,6 +344,9 @@ class handler(BaseHTTPRequestHandler):
 
             hoje = datetime.now(FORTALEZA).date()
             saida = {"hoje": hoje.isoformat(), "modo": self.MODO, "dry": dry, "envios": []}
+
+            if self.MODO == "daily" and not DAILY_ATIVA:
+                return self.responder(200, {"modo": "daily", "desativada": True, "envios": []})
 
             if self.MODO == "weekly":
                 pares = [(WEEKLY_TO,) + monta_weekly(atv, marcos, hoje)]
