@@ -158,6 +158,7 @@ def processar(xlsx_bytes):
         "projetos_html": ler("projetos.html"),
         "baseline": ler("marcos_baseline.json"),
         "marcos_json": ler("marcos.json"),
+        "atividades_json": ler("atividades.json"),
         "log": saida.getvalue(),
     }
 
@@ -221,6 +222,9 @@ class handler(BaseHTTPRequestHandler):
             gravar_chave(cur, CHAVE_MARCOS, r["marcos_html"])
             gravar_chave(cur, CHAVE_PROJETOS, r["projetos_html"])
             gravar_chave(cur, CHAVE_BASELINE, r["baseline"])
+            # dados crus para os e-mails automaticos (api/daily.py)
+            gravar_chave(cur, "dados_marcos", r["marcos_json"])
+            gravar_chave(cur, "dados_atividades", r["atividades_json"])
             marcos = json.loads(r["marcos_json"])
             status = {
                 "em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
