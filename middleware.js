@@ -5,7 +5,9 @@ import { NextResponse } from 'next/server';
 // Aqui só checamos a presença/forma do cookie para redirecionar ao login.
 // /api/ping e /api/importar são servidos por funções Python; a importação valida
 // o próprio token no corpo da requisição, por isso não passam pelo cookie de sessão.
-const PUBLIC_PATHS = ['/login', '/api/login', '/api/logout', '/api/alerta-certs', '/api/ping', '/api/importar', '/ole-bridge.js', '/favicon.ico', '/logo.png'];
+// /api/daily e /api/weekly são chamadas pelo cron da Vercel (sem cookie) e
+// validam o cron/token por conta própria.
+const PUBLIC_PATHS = ['/login', '/api/login', '/api/logout', '/api/alerta-certs', '/api/ping', '/api/importar', '/api/daily', '/api/weekly', '/ole-bridge.js', '/favicon.ico', '/logo.png'];
 
 export function middleware(req) {
   const { pathname } = req.nextUrl;
