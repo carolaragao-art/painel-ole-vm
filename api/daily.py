@@ -22,7 +22,8 @@ from email.mime.text import MIMEText
 
 FORTALEZA = timezone(timedelta(hours=-3))
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
-WEEKLY_TO = os.environ.get("WEEKLY_TO", DAILY_TO)
+WEEKLY_TO = os.environ.get(
+    "WEEKLY_TO", "desenvolvimentoimobole@vianaemoura.com.br, filipecholanda@olecasas.com.br")
 # Engenharia de Produto entrou em 09/11/2026 (está com o DI); Engenharia de Custo não.
 FOCO = ("PROSP", "LEGAL", "NOVOS", "ENGENHARIA DE PRODUTO")
 FORA = ("MACROFLUXO", "MODELO")
