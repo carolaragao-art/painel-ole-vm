@@ -145,6 +145,9 @@ def main():
 
         ugb = trilha.get(0, "")
         projeto = trilha.get(1, "")
+        # UGB/PROJETO MODELO e gabarito do sprint (Carol, 09/11/2026): sem prazo real
+        if "MODELO" in (str(ugb) + " " + str(projeto)).upper():
+            continue
         setor = trilha.get(2, "(direto no projeto)") if it["indent"] > 2 else "(direto no projeto)"
         grupo = " > ".join(trilha[k] for k in sorted(trilha) if 2 < k < it["indent"])
 

@@ -24,7 +24,7 @@ FORTALEZA = timezone(timedelta(hours=-3))
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
 SEMANAL_TO = os.environ.get("SEMANAL_TO", "carolaragao@olecasas.com.br")
 FOCO = ("PROSP", "LEGAL", "NOVOS")
-FORA = ("MACROFLUXO",)
+FORA = ("MACROFLUXO", "MODELO")
 PROJ_FORA = ("PS4 - T+1",)
 
 MA = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
