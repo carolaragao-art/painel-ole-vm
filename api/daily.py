@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Dailys por e-mail — cron da Vercel (vercel.json), todo dia ~07:30 Fortaleza.
+"""E-mails da rotina — crons da Vercel (vercel.json), horário de Fortaleza.
 
-Diário  -> caixa do setor (DAILY_TO): atividades que vencem hoje e as que
-           viraram atrasadas, nos setores Prospecção/Legalização/Novos Produtos.
-Segunda -> caixa do setor (WEEKLY_TO): Weekly da Sprint — placar das metas,
-           entregas da semana e marcos do mês por projeto, riscos.
-Segunda -> e-mail da Carol (SEMANAL_TO): marcos que precisam de atenção
-           (vencidos, com desvio ou andando devagar) e atrasados por projeto,
-           para o replanejamento.
+/api/daily  (todo dia ~07:30) -> DAILY_TO: o que vence hoje, o que atrasou
+            ontem e as entregas da semana, por projeto, nos setores
+            Prospecção/Legalização/Novos Produtos.
+/api/weekly (segunda ~18:00, rito da Sprint) -> WEEKLY_TO: placar das metas,
+            entregas da semana e marcos do mês por projeto, riscos.
 
 Dados: chaves dados_atividades / dados_marcos gravadas por api/importar.py a
 cada export. Envio: SMTP Gmail com SMTP_USER/SMTP_PASSWORD (senha de app).
-Teste sem enviar: GET /api/daily?dry=1&token=<IMPORT_TOKEN>.
+Teste sem enviar: GET /api/daily?dry=1&token=<IMPORT_TOKEN> (idem /api/weekly).
 """
 from http.server import BaseHTTPRequestHandler
 import json
@@ -24,7 +22,6 @@ from email.mime.text import MIMEText
 
 FORTALEZA = timezone(timedelta(hours=-3))
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
-SEMANAL_TO = os.environ.get("SEMANAL_TO", "carolaragao@olecasas.com.br")
 WEEKLY_TO = os.environ.get("WEEKLY_TO", DAILY_TO)
 FOCO = ("PROSP", "LEGAL", "NOVOS")
 FORA = ("MACROFLUXO", "MODELO")
@@ -170,51 +167,6 @@ def monta_daily(atv, marcos, hoje):
     return assunto, "".join(corpo), bool(blocos)
 
 
-def monta_segunda(atv, marcos, hoje):
-    hj = hoje.isoformat()
-    ms = [m for m in marcos["marcos"]
-          if not any(f in (m.get("ugb") or "").upper() for f in FORA)]
-    vencidos = [m for m in ms if m.get("meta") and m["meta"] < hj and (m.get("pct") or 0) < 100]
-    horizonte = (hoje + timedelta(days=30)).isoformat()
-    atencao = [m for m in ms if m.get("meta") and hj <= m["meta"] <= horizonte
-               and (m.get("pct") or 0) < 50]
-    desvios = [m for m in ms if (m.get("desvio_dias") or 0) > 0 and (m.get("pct") or 0) < 100]
-    atrasadas = [x for x in atv["atividades"].get("atrasadas", []) if foco(x)]
-
-    def li_marco(m, extra=""):
-        return (f"<li><b>{m['marco']}</b> ({m['projeto']} · {m['setor'].title()}) — "
-                f"meta {br(m['meta'])} · {m.get('pct', 0)}%{extra}</li>")
-
-    corpo = [f"<h2 style='color:#1D3461;border-bottom:3px solid #E8622A;"
-             f"padding-bottom:6px'>Replanejamento semanal · {hoje.strftime('%d/%m/%Y')}</h2>"]
-    if vencidos:
-        corpo.append("<h3 style='color:#dc2626'>⚠ Marcos vencidos</h3><ul>"
-                     + "".join(li_marco(m) for m in sorted(vencidos, key=lambda z: z["meta"])) + "</ul>")
-    if desvios:
-        corpo.append("<h3 style='color:#d97706'>↔ Marcos com desvio vs dia 0</h3><ul>"
-                     + "".join(li_marco(m, f" · <b>+{m['desvio_dias']}d</b>")
-                               for m in sorted(desvios, key=lambda z: -z["desvio_dias"])) + "</ul>")
-    if atencao:
-        corpo.append("<h3 style='color:#1D3461'>👀 Vencem em até 30 dias com menos de 50%</h3><ul>"
-                     + "".join(li_marco(m) for m in sorted(atencao, key=lambda z: z["meta"])) + "</ul>")
-    if atrasadas:
-        por_proj = {}
-        for x in atrasadas:
-            por_proj.setdefault(x["projeto"], []).append(x)
-        corpo.append("<h3 style='color:#dc2626'>📋 Atividades atrasadas por projeto</h3>")
-        for p in sorted(por_proj, key=lambda k: -len(por_proj[k])):
-            corpo.append(f"<p style='margin:8px 0 2px'><b>{p}</b> ({len(por_proj[p])})</p><ul>"
-                         + "".join(f"<li>{x['atividade']} — {x['setor'].title()} · "
-                                   f"venceu {br(x['termino'])} · {x.get('pct', 0)}%</li>"
-                                   for x in sorted(por_proj[p], key=lambda z: z["termino"]))
-                         + "</ul>")
-    corpo.append("<p><a href='https://painel-ole-vm.vercel.app/' "
-                 "style='color:#1D3461;font-weight:bold'>Abrir o painel →</a></p>")
-    assunto = (f"Replanejamento DI · semana de {hoje.strftime('%d/%m')} — "
-               f"{len(vencidos)} vencido(s), {len(atrasadas)} atrasada(s)")
-    return assunto, "".join(corpo)
-
-
 COR_SETOR = {"PROSP": "#E8622A", "LEGAL": "#5B2D86", "NOVOS": "#1e5aa8"}
 NOME_SETOR = {"PROSP": "Prospecção", "LEGAL": "Legalização", "NOVOS": "Novos Produtos"}
 
@@ -351,6 +303,8 @@ def enviar(destino, assunto, html):
 
 
 class handler(BaseHTTPRequestHandler):
+    MODO = "daily"      # api/weekly.py herda esta classe com MODO = "weekly"
+
     def responder(self, codigo, dados):
         corpo = json.dumps(dados, ensure_ascii=False).encode("utf-8")
         self.send_response(codigo)
@@ -380,33 +334,20 @@ class handler(BaseHTTPRequestHandler):
                 return self.responder(409, {"erro": "dados ausentes — rode um import antes"})
 
             hoje = datetime.now(FORTALEZA).date()
-            saida = {"hoje": hoje.isoformat(), "dry": dry, "envios": []}
+            saida = {"hoje": hoje.isoformat(), "modo": self.MODO, "dry": dry, "envios": []}
 
-            assunto, html, tem = monta_daily(atv, marcos, hoje)
-            if tem:
-                if dry:
-                    saida["envios"].append({"para": DAILY_TO, "assunto": assunto})
-                else:
-                    ok, info = enviar(DAILY_TO, assunto, html)
-                    saida["envios"].append({"para": DAILY_TO, "assunto": assunto,
-                                            "ok": ok, "info": info})
+            if self.MODO == "weekly":
+                pares = [(WEEKLY_TO,) + monta_weekly(atv, marcos, hoje)]
+            else:
+                assunto, html, tem = monta_daily(atv, marcos, hoje)
+                pares = [(DAILY_TO, assunto, html)] if tem else []
 
-            if hoje.weekday() == 0:  # segunda-feira: weekly da sprint para o setor
-                assunto3, html3 = monta_weekly(atv, marcos, hoje)
+            for para, assunto, html in pares:
                 if dry:
-                    saida["envios"].append({"para": WEEKLY_TO, "assunto": assunto3})
+                    saida["envios"].append({"para": para, "assunto": assunto})
                 else:
-                    ok, info = enviar(WEEKLY_TO, assunto3, html3)
-                    saida["envios"].append({"para": WEEKLY_TO, "assunto": assunto3,
-                                            "ok": ok, "info": info})
-
-            if hoje.weekday() == 0:  # segunda-feira
-                assunto2, html2 = monta_segunda(atv, marcos, hoje)
-                if dry:
-                    saida["envios"].append({"para": SEMANAL_TO, "assunto": assunto2})
-                else:
-                    ok, info = enviar(SEMANAL_TO, assunto2, html2)
-                    saida["envios"].append({"para": SEMANAL_TO, "assunto": assunto2,
+                    ok, info = enviar(para, assunto, html)
+                    saida["envios"].append({"para": para, "assunto": assunto,
                                             "ok": ok, "info": info})
 
             self.responder(200, saida)
