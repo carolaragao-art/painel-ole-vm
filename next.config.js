@@ -4,7 +4,7 @@ const nextConfig = {
   // Garante que o painel.html seja incluído no bundle da função da rota "/"
   outputFileTracingIncludes: {
     '/': ['./public/painel.html'],
-    '/api/pagina': ['./public/marcos.html', './public/projetos.html'],
+    '/api/pagina': ['./public/marcos.html', './public/projetos.html', './public/semana.html'],
   },
   // marcos.html e projetos.html passam a vir do banco (gravados por /api/importar).
   // "beforeFiles" faz a versão dinâmica ganhar do arquivo estático de public/,
@@ -14,6 +14,7 @@ const nextConfig = {
       beforeFiles: [
         { source: '/marcos.html', destination: '/api/pagina?nome=marcos' },
         { source: '/projetos.html', destination: '/api/pagina?nome=projetos' },
+        { source: '/semana.html', destination: '/api/pagina?nome=semana' },
       ],
     };
   },

@@ -127,7 +127,7 @@ def preparar_arvore(xlsx_bytes, baseline_txt):
 def rodar(nome_modulo, chamar_main=False):
     """Importa o script do zero (o código de topo precisa rodar a cada chamada)."""
     for m in list(sys.modules):
-        if m in ("parse_excel", "build_marcos", "build_projetos", "projetos_cond"):
+        if m in ("parse_excel", "build_marcos", "build_projetos", "projetos_cond", "build_semana"):
             del sys.modules[m]
     importlib.invalidate_caches()
     mod = importlib.import_module(nome_modulo)
@@ -146,6 +146,7 @@ def processar(xlsx_bytes):
         rodar("parse_excel", chamar_main=True)
         rodar("build_marcos")                      # gera no import
         rodar("build_projetos", chamar_main=True)
+        rodar("build_semana")                      # gera no import (gestao a vista)
     finally:
         sys.stdout, sys.argv, sys.path = antigo_stdout, antigo_argv, antigo_path
 
@@ -156,6 +157,7 @@ def processar(xlsx_bytes):
     return {
         "marcos_html": ler("marcos.html"),
         "projetos_html": ler("projetos.html"),
+        "semana_html": ler("semana.html"),
         "baseline": ler("marcos_baseline.json"),
         "marcos_json": ler("marcos.json"),
         "atividades_json": ler("atividades.json"),
@@ -221,6 +223,7 @@ class handler(BaseHTTPRequestHandler):
 
             gravar_chave(cur, CHAVE_MARCOS, r["marcos_html"])
             gravar_chave(cur, CHAVE_PROJETOS, r["projetos_html"])
+            gravar_chave(cur, "pagina_semana", r["semana_html"])
             gravar_chave(cur, CHAVE_BASELINE, r["baseline"])
             # dados crus para os e-mails automaticos (api/daily.py)
             gravar_chave(cur, "dados_marcos", r["marcos_json"])
