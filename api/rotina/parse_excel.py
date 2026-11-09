@@ -229,10 +229,12 @@ def main():
         vistos = sum(1 for m in marcos if m["id"] == mid or m["id"].startswith(mid + "#"))
         if vistos:
             mid = f"{mid}#{vistos + 1}"
+        # trilha entre o setor e o marco (ex.: "DVT de esgoto") — Carol, 09/11/2026
+        grupo_m = " > ".join(trilha_m[k] for k in sorted(trilha_m) if 2 < k < it["indent"])
         marcos.append({
             "id": mid,
             "marco": it["name"],
-            "ugb": ugb, "projeto": projeto, "setor": setor,
+            "ugb": ugb, "projeto": projeto, "setor": setor, "grupo": grupo_m,
             "inicio": it["ini"].isoformat() if it["ini"] else "",
             "termino_atual": it["fim"].isoformat() if it["fim"] else "",
             "pct": round(it["pct"]), "status": it["status"],

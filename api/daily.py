@@ -3,6 +3,8 @@
 
 Diário  -> caixa do setor (DAILY_TO): atividades que vencem hoje e as que
            viraram atrasadas, nos setores Prospecção/Legalização/Novos Produtos.
+Segunda -> caixa do setor (WEEKLY_TO): Weekly da Sprint — placar das metas,
+           entregas da semana e marcos do mês por projeto, riscos.
 Segunda -> e-mail da Carol (SEMANAL_TO): marcos que precisam de atenção
            (vencidos, com desvio ou andando devagar) e atrasados por projeto,
            para o replanejamento.
@@ -23,6 +25,7 @@ from email.mime.text import MIMEText
 FORTALEZA = timezone(timedelta(hours=-3))
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
 SEMANAL_TO = os.environ.get("SEMANAL_TO", "carolaragao@olecasas.com.br")
+WEEKLY_TO = os.environ.get("WEEKLY_TO", DAILY_TO)
 FOCO = ("PROSP", "LEGAL", "NOVOS")
 FORA = ("MACROFLUXO", "MODELO")
 PROJ_FORA = ("PS4 - T+1",)
@@ -212,6 +215,124 @@ def monta_segunda(atv, marcos, hoje):
     return assunto, "".join(corpo)
 
 
+COR_SETOR = {"PROSP": "#E8622A", "LEGAL": "#5B2D86", "NOVOS": "#1e5aa8"}
+NOME_SETOR = {"PROSP": "Prospecção", "LEGAL": "Legalização", "NOVOS": "Novos Produtos"}
+
+
+def chip_setor(s):
+    s = (s or "").upper()
+    k = next((k for k in COR_SETOR if k in s), None)
+    return ("<span style='background:%s;color:#fff;border-radius:10px;padding:1px 9px;"
+            "font-size:11px;font-weight:600'>%s</span>"
+            % (COR_SETOR.get(k, "#64748b"), NOME_SETOR.get(k, s.title())))
+
+
+def monta_weekly(atv, marcos, hoje):
+    """Weekly da Sprint (aprovada pela Carol em 09/11/2026): placar das metas,
+    entregas da semana por projeto, marcos do mês e riscos."""
+    hj = hoje.isoformat()
+    dom = (hoje + timedelta(days=(6 - hoje.weekday()))).isoformat()
+    prox = hoje.replace(day=28) + timedelta(days=4)
+    fim_mes = (prox - timedelta(days=prox.day)).isoformat()
+    meses = ["", "janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
+             "agosto", "setembro", "outubro", "novembro", "dezembro"]
+
+    tudo = [x for x in sum(atv["atividades"].values(), []) if foco(x)]
+    ms = [m for m in marcos["marcos"]
+          if not any(f in (m.get("ugb") or "").upper() for f in FORA)
+          and (m.get("projeto") or "") not in PROJ_FORA]
+    pend = [m for m in ms if (m.get("pct") or 0) < 100]
+    concluidos = len(ms) - len(pend)
+    no_prazo = [m for m in pend if (m.get("desvio_dias") or 0) <= 0]
+    em_desvio = [m for m in pend if (m.get("desvio_dias") or 0) > 0]
+    vencidos = [m for m in pend if m.get("meta") and m["meta"] < hj]
+
+    semana = [x for x in tudo if x.get("termino") and hj <= x["termino"] <= dom
+              and (x.get("pct") or 0) < 100]
+    atrasadas = [x for x in tudo if x.get("termino") and x["termino"] < hj
+                 and (x.get("pct") or 0) < 100]
+    sem_proj, atr_proj = {}, {}
+    for x in semana:
+        sem_proj.setdefault(x["projeto"], []).append(x)
+    for x in atrasadas:
+        atr_proj[x["projeto"]] = atr_proj.get(x["projeto"], 0) + 1
+    marcos_mes = sorted([m for m in pend if (
+        (m.get("meta") and hj <= m["meta"] <= fim_mes) or
+        (m.get("termino_atual") and hj <= m["termino_atual"] <= fim_mes))],
+        key=lambda z: z.get("meta") or z.get("termino_atual") or "9")
+
+    H = ["<h2 style='color:#1D3461;border-bottom:3px solid #E8622A;padding-bottom:6px'>"
+         "Weekly DI · Sprint da semana %s a %s</h2>" % (br(hj), br(dom))]
+
+    H.append("<h3 style='color:#1D3461;margin:16px 0 6px'>🏆 Placar das metas (dia 0 = 14/09)</h3>"
+             "<table style='border-collapse:collapse;width:100%;font-size:13.5px'><tr>")
+    for n, rot, fundo, cor in ((concluidos, "concluídos", "#dcfce7", "#16a34a"),
+                               (len(no_prazo), "no prazo", "#eff6ff", "#1e5aa8"),
+                               (len(em_desvio), "em desvio", "#fef3c7", "#b45309"),
+                               (len(vencidos), "meta vencida", "#fee2e2", "#dc2626")):
+        H.append("<td style='padding:8px;background:%s;text-align:center'>"
+                 "<b style='font-size:22px;color:%s'>%d</b><br>%s</td>" % (fundo, cor, n, rot))
+    H.append("</tr></table>")
+
+    H.append("<h3 style='color:#1D3461;margin:18px 0 6px'>🏃 Sprint da semana — %d entregas</h3>"
+             % len(semana))
+    if not sem_proj:
+        H.append("<p>Sem entregas programadas para esta semana nos 3 setores.</p>")
+    for proj in sorted(sem_proj, key=lambda p: (prioridade_projeto(p), p)):
+        atr = atr_proj.get(proj, 0)
+        badge = (" <span style='background:#fee2e2;color:#dc2626;border-radius:10px;"
+                 "padding:1px 9px;font-size:11px;font-weight:700'>%d atrasada(s)</span>" % atr
+                 if atr else "")
+        H.append("<h4 style='background:#1D3461;color:#fff;padding:6px 12px;border-radius:6px;"
+                 "margin:14px 0 4px;font-size:14px'>%s%s</h4><ul style='margin:4px 0 6px'>"
+                 % (proj, badge))
+        for x in sorted(sem_proj[proj], key=lambda z: z["termino"]):
+            pct = " (%d%%)" % x["pct"] if x.get("pct") else ""
+            H.append("<li style='margin:3px 0'><b>%s</b> · %s%s %s%s</li>"
+                     % (br(x["termino"]), chip_setor(x["setor"]), grupo_de(x),
+                        x["atividade"], pct))
+        H.append("</ul>")
+
+    H.append("<h3 style='color:#1D3461;margin:18px 0 6px'>🎯 Marcos de %s</h3>"
+             % meses[hoje.month])
+    if not marcos_mes:
+        H.append("<p>Nenhum marco pendente para o resto do mês.</p>")
+    mm_proj = {}
+    for m in marcos_mes:
+        mm_proj.setdefault(m["projeto"], []).append(m)
+    for proj in sorted(mm_proj, key=lambda p: (prioridade_projeto(p), p)):
+        H.append("<h4 style='background:#1D3461;color:#fff;padding:6px 12px;border-radius:6px;"
+                 "margin:14px 0 4px;font-size:14px'>%s</h4><ul style='margin:4px 0 6px'>" % proj)
+        for m in mm_proj[proj]:
+            desv = m.get("desvio_dias") or 0
+            H.append("<li style='margin:3px 0'>🎯 %s%s <b>%s</b> · meta <b>%s</b> · "
+                     "término atual %s · %d%% · <b style='color:%s'>%s</b></li>"
+                     % (chip_setor(m.get("setor")), grupo_de(m), m["marco"],
+                        br(m.get("meta")), br(m.get("termino_atual")), m.get("pct") or 0,
+                        "#dc2626" if desv > 0 else "#16a34a",
+                        "+%dd vs meta" % desv if desv > 0 else "no prazo"))
+        H.append("</ul>")
+
+    if vencidos or atrasadas:
+        H.append("<h3 style='color:#1D3461;margin:18px 0 6px'>⚠️ Riscos da sprint</h3><ul>")
+        for m in sorted(vencidos, key=lambda z: z["meta"])[:6]:
+            H.append("<li style='margin:3px 0'><b style='color:#dc2626'>%s</b> · %s — meta era "
+                     "%s, término atual %s (%d%%)</li>"
+                     % (m["marco"], m["projeto"], br(m["meta"]),
+                        br(m.get("termino_atual")), m.get("pct") or 0))
+        if atr_proj:
+            H.append("<li style='margin:3px 0'>Atrasadas por projeto: " + " · ".join(
+                "<b>%s</b> (%d)" % kv for kv in sorted(atr_proj.items(), key=lambda kv: -kv[1]))
+                + "</li>")
+        H.append("</ul>")
+
+    H.append("<p style='margin-top:14px'><a href='https://painel-ole-vm.vercel.app/' "
+             "style='color:#1D3461;font-weight:bold'>Abrir o painel →</a></p>")
+    assunto = ("Weekly DI · sprint %s–%s — %d entregas · %d marcos no mês"
+               % (br(hj), br(dom), len(semana), len(marcos_mes)))
+    return assunto, "".join(H)
+
+
 def enviar(destino, assunto, html):
     user = os.environ.get("SMTP_USER") or os.environ.get("GMAIL_USER")
     pwd = os.environ.get("SMTP_PASSWORD") or os.environ.get("GMAIL_APP_PASSWORD")
@@ -268,6 +389,15 @@ class handler(BaseHTTPRequestHandler):
                 else:
                     ok, info = enviar(DAILY_TO, assunto, html)
                     saida["envios"].append({"para": DAILY_TO, "assunto": assunto,
+                                            "ok": ok, "info": info})
+
+            if hoje.weekday() == 0:  # segunda-feira: weekly da sprint para o setor
+                assunto3, html3 = monta_weekly(atv, marcos, hoje)
+                if dry:
+                    saida["envios"].append({"para": WEEKLY_TO, "assunto": assunto3})
+                else:
+                    ok, info = enviar(WEEKLY_TO, assunto3, html3)
+                    saida["envios"].append({"para": WEEKLY_TO, "assunto": assunto3,
                                             "ok": ok, "info": info})
 
             if hoje.weekday() == 0:  # segunda-feira
