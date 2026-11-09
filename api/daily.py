@@ -23,7 +23,8 @@ from email.mime.text import MIMEText
 FORTALEZA = timezone(timedelta(hours=-3))
 DAILY_TO = os.environ.get("DAILY_TO", "desenvolvimentoimobole@vianaemoura.com.br")
 WEEKLY_TO = os.environ.get("WEEKLY_TO", DAILY_TO)
-FOCO = ("PROSP", "LEGAL", "NOVOS")
+# Engenharia de Produto entrou em 09/11/2026 (está com o DI); Engenharia de Custo não.
+FOCO = ("PROSP", "LEGAL", "NOVOS", "ENGENHARIA DE PRODUTO")
 FORA = ("MACROFLUXO", "MODELO")
 PROJ_FORA = ("PS4 - T+1",)
 
@@ -66,7 +67,16 @@ def foco(x):
         return False
     if (x.get("projeto") or "") in PROJ_FORA:
         return False
+    # Engenharia do Caucaia fica de fora por enquanto (Carol, 09/11/2026)
+    if "ENGENHARIA" in s and "CAUCAIA" in (x.get("projeto") or "").upper():
+        return False
     return True
+
+
+def setor_txt(s):
+    s = (s or "").upper()
+    k = next((k for k in NOME_SETOR if k in s), None)
+    return NOME_SETOR[k] if k else s.title()
 
 
 def grupo_de(x):
@@ -74,13 +84,6 @@ def grupo_de(x):
     Carol em 09/11/2026 para localizar a atividade dentro do processo."""
     g = (x.get("grupo") or "").strip()
     return f" <span style='color:#64748b'>· {g}</span>" if g else ""
-
-
-def linha_atv(x, com_data=False):
-    pct = f" ({x['pct']}%)" if x.get("pct") else ""
-    data = f" — venceu {br(x['termino'])}" if com_data else ""
-    return (f"<li><b>{x['projeto']}</b> · {x['setor'].title()}{grupo_de(x)}: "
-            f"{x['atividade']}{pct}{data}</li>")
 
 
 def prioridade_projeto(p):
@@ -137,7 +140,7 @@ def monta_daily(atv, marcos, hoje):
 
     def li(x, pref=""):
         pct = f" ({x['pct']}%)" if x.get("pct") else ""
-        return f"<li>{pref}{x['setor'].title()}{grupo_de(x)}: {x['atividade']}{pct}</li>"
+        return f"<li>{pref}{setor_txt(x['setor'])}{grupo_de(x)}: {x['atividade']}{pct}</li>"
 
     for proj in sorted(blocos, key=lambda p: (prioridade_projeto(p), p)):
         b = blocos[proj]
@@ -167,8 +170,10 @@ def monta_daily(atv, marcos, hoje):
     return assunto, "".join(corpo), bool(blocos)
 
 
-COR_SETOR = {"PROSP": "#E8622A", "LEGAL": "#5B2D86", "NOVOS": "#1e5aa8"}
-NOME_SETOR = {"PROSP": "Prospecção", "LEGAL": "Legalização", "NOVOS": "Novos Produtos"}
+COR_SETOR = {"PROSP": "#E8622A", "LEGAL": "#5B2D86", "NOVOS": "#1e5aa8",
+             "ENGENHARIA DE PRODUTO": "#0f766e"}
+NOME_SETOR = {"PROSP": "Prospecção", "LEGAL": "Legalização", "NOVOS": "Novos Produtos",
+              "ENGENHARIA DE PRODUTO": "Eng. de Produto"}
 
 
 def chip_setor(s):
