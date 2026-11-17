@@ -723,6 +723,13 @@
   .sp-bar-track { position:relative; }
   .sp-bar-media { position:absolute; top:-3px; bottom:-3px; width:0; border-left:2px dashed var(--navy);
                   opacity:.55; z-index:2; }
+  /* rótulo da média: aparece uma vez, no alto da linha tracejada */
+  .sp-media-row  { display:flex; align-items:center; gap:10px; margin-bottom:2px; }
+  .sp-media-row .vao { width:130px; flex-shrink:0; }
+  .sp-media-row .pista { flex:1; position:relative; height:14px; }
+  .sp-media-row .fim   { width:36px; flex-shrink:0; }
+  .sp-media-tag { position:absolute; top:0; font-size:10.5px; font-weight:700; color:var(--navy);
+                  white-space:nowrap; opacity:.85; }
   /* busca no histórico */
   .sp-busca-box { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:14px 0 0; }
   .sp-busca-box input[type=text] { flex:1; min-width:200px; padding:8px 12px; border:1.5px solid var(--border);
@@ -4731,22 +4738,50 @@ function spArrastadas() {
     .sort((a, b) => b.sprints - a.sprints);
 }
 
+// Opções do filtro por projeto: só o que realmente aparece no histórico,
+// com o mesmo rótulo usado nos outros filtros do painel.
+function spOpcoesProjetoHist() {
+  const usados = {};
+  spHistorico.forEach(h => (h.tasks || []).forEach(t => {
+    const k = (t.epicId == null || t.epicId === '') ? 'sem' : String(t.epicId);
+    usados[k] = (usados[k] || 0) + 1;
+  }));
+  const contagem = {};
+  spEpics.forEach(e => { contagem[e.nome] = (contagem[e.nome] || 0) + 1; });
+  const opcoes = spEpics
+    .filter(e => usados[String(e.id)])
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .map(e => '<option value="' + e.id + '">' + spEsc(e.nome) +
+      (contagem[e.nome] > 1 ? ' · ' + spSetor(e.setor).label : '') + '</option>').join('');
+  return '<option value="">Todos os projetos</option>' + opcoes +
+    (usados.sem ? '<option value="sem">Sem projeto</option>' : '');
+}
+window.spOpcoesProjetoHist = spOpcoesProjetoHist;
+
 function spBuscarHistorico() {
   const campo = document.getElementById('sp-busca-hist');
   const incluir = document.getElementById('sp-busca-todas');
   const alvo = document.getElementById('sp-busca-res');
   if (!campo || !alvo) return;
   const termo = campo.value.trim().toLowerCase();
-  if (termo.length < 2) { alvo.innerHTML = ''; return; }
+  const fEpic = (document.getElementById('sp-busca-epic') || {}).value || '';
+  // com projeto escolhido, lista tudo dele; sem projeto, exige 2 letras
+  if (termo.length < 2 && !fEpic) { alvo.innerHTML = ''; return; }
   const soConc = !(incluir && incluir.checked);
   const achados = [];
   spHistorico.forEach(h => (h.tasks || []).forEach(t => {
     if (soConc && t.status !== 'conc') return;
+    if (fEpic) {
+      const k = (t.epicId == null || t.epicId === '') ? 'sem' : String(t.epicId);
+      if (k !== fEpic) return;
+    }
     const texto = ((t.titulo || '') + ' ' + (t.resp || '') + ' ' + (t.obs || '')).toLowerCase();
-    if (texto.indexOf(termo) >= 0) achados.push({ t: t, sprint: h.spNum, data: h.date });
+    if (termo.length >= 2 && texto.indexOf(termo) < 0) return;
+    achados.push({ t: t, sprint: h.spNum, data: h.date });
   }));
   if (!achados.length) {
     alvo.innerHTML = '<div style="font-size:12.5px;color:var(--text-muted);padding:10px 0">Nada encontrado' +
+      (fEpic ? ' neste projeto' : '') +
       (soConc ? ' entre as concluídas. Marque "incluir não concluídas" para ampliar.' : '.') + '</div>';
     return;
   }
@@ -4798,6 +4833,7 @@ function spRenderHistorico() {
         <span class="sp-hr-selo" title="A melhor marca aparece sempre com o total, para não virar corrida por quantidade">🏆 Melhor marca: <b>${st.recorde.conc} de ${st.recorde.total}</b> (${st.recorde.pct}%) · Sprint ${st.recorde.num}${st.recorde.idade>0?`, há ${st.recorde.idade} sprints`:''}</span>
         ${arr.length?`<button class="sp-hr-arrast" onclick="spVerArrastadas()">${arr.length} tarefa${arr.length>1?'s':''} arrastada${arr.length>1?'s':''} há 3+ sprints</button>`:''}
       </div>`:''}
+      ${st?`<div class="sp-media-row"><span class="vao"></span><div class="pista"><span class="sp-media-tag" style="${st.mediaPct>65?`right:${100-st.mediaPct}%;padding-right:6px`:`left:${st.mediaPct}%;padding-left:6px`}">┆ nossa média ${st.mediaPct}%</span></div><span class="fim"></span></div>`:''}
       ${shown.map(h=>`<div class="sp-bar-row"><span class="sp-bar-label">Sprint ${h.spNum}</span><div class="sp-bar-track">${st?`<span class="sp-bar-media" style="left:${st.mediaPct}%" title="média das últimas ${st.janela} sprints: ${st.mediaPct}%"></span>`:''}<div class="sp-bar-fill" style="width:${h.pct}%;background:${spPerfColor(h.pct)}">${h.pct>12?h.pct+'%':''}</div></div><span class="sp-bar-pct">${h.pct}%</span></div>`).join('')}
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:11px;color:var(--text-muted)">
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16a34a;vertical-align:-1px"></span> Excelente (≥75%)</span>
@@ -4810,6 +4846,10 @@ function spRenderHistorico() {
       <div class="sp-busca-box">
         <input type="text" id="sp-busca-hist" placeholder="🔎 Buscar tarefa concluída em sprints anteriores..."
                oninput="spBuscaLimite=20;spBuscarHistorico()">
+        <select id="sp-busca-epic" onchange="spBuscaLimite=20;spBuscarHistorico()"
+                style="padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12.5px;background:var(--surface);color:var(--text);max-width:210px">
+          ${spOpcoesProjetoHist()}
+        </select>
         <label><input type="checkbox" id="sp-busca-todas" onchange="spBuscaLimite=20;spBuscarHistorico()"> incluir não concluídas</label>
       </div>
       <div id="sp-busca-res"></div>
