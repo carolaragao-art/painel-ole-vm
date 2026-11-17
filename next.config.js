@@ -17,6 +17,12 @@ const nextConfig = {
       ],
     };
   },
+  // /painel.html é o arquivo cru em public/: abre sem o estado do banco e mostra
+  // o que estiver no localStorage daquele navegador — dado velho, sem aviso.
+  // O painel de verdade é a raiz, que injeta o estado e a ponte com o Postgres.
+  async redirects() {
+    return [{ source: '/painel.html', destination: '/', permanent: false }];
+  },
 };
 
 module.exports = nextConfig;
