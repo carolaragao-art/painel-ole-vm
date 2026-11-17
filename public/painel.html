@@ -4716,15 +4716,18 @@ function spStatsHistorico() {
   };
 }
 
-// Tarefas ainda abertas que já apareceram em 3+ sprints encerradas
+// Tarefas ainda abertas que já apareceram em 3+ sprints encerradas.
+// Casamento pelo TÍTULO, não pelo _numId: ao encerrar a sprint o id é
+// renumerado, então por id nada casa (conferido com os dados reais em 17/11).
+function spChaveTarefa(t) { return (t.titulo || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 function spArrastadas() {
   const vezes = {};
   spHistorico.forEach(h => (h.tasks || []).forEach(t => {
-    if (t.status !== 'conc' && t._numId != null) vezes[t._numId] = (vezes[t._numId] || 0) + 1;
+    if (t.status !== 'conc') { const k = spChaveTarefa(t); if (k) vezes[k] = (vezes[k] || 0) + 1; }
   }));
   return spTasks
-    .filter(t => t.status !== 'conc' && (vezes[t._numId] || 0) >= 3)
-    .map(t => ({ titulo: t.titulo, resp: t.resp, sprints: vezes[t._numId] + 1 }))
+    .filter(t => t.status !== 'conc' && (vezes[spChaveTarefa(t)] || 0) >= 3)
+    .map(t => ({ titulo: t.titulo, resp: t.resp, sprints: vezes[spChaveTarefa(t)] + 1 }))
     .sort((a, b) => b.sprints - a.sprints);
 }
 
