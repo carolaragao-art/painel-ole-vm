@@ -728,8 +728,12 @@
   .sp-media-row .vao { width:130px; flex-shrink:0; }
   .sp-media-row .pista { flex:1; position:relative; height:14px; }
   .sp-media-row .fim   { width:36px; flex-shrink:0; }
+  /* a etiqueta carrega a própria tracejada como borda: assim ela nasce exatamente
+     na mesma coordenada da linha das barras, sem depender de um caractere */
   .sp-media-tag { position:absolute; top:0; font-size:10.5px; font-weight:700; color:var(--navy);
-                  white-space:nowrap; opacity:.85; }
+                  white-space:nowrap; opacity:.85; height:16px; line-height:16px;
+                  border-left:2px dashed var(--navy); padding-left:6px; }
+  .sp-media-tag.esq { border-left:0; border-right:2px dashed var(--navy); padding-left:0; padding-right:6px; }
   /* busca no histórico */
   .sp-busca-box { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:14px 0 0; }
   .sp-busca-box input[type=text] { flex:1; min-width:200px; padding:8px 12px; border:1.5px solid var(--border);
@@ -4833,7 +4837,7 @@ function spRenderHistorico() {
         <span class="sp-hr-selo" title="A melhor marca aparece sempre com o total, para não virar corrida por quantidade">🏆 Melhor marca: <b>${st.recorde.conc} de ${st.recorde.total}</b> (${st.recorde.pct}%) · Sprint ${st.recorde.num}${st.recorde.idade>0?`, há ${st.recorde.idade} sprints`:''}</span>
         ${arr.length?`<button class="sp-hr-arrast" onclick="spVerArrastadas()">${arr.length} tarefa${arr.length>1?'s':''} arrastada${arr.length>1?'s':''} há 3+ sprints</button>`:''}
       </div>`:''}
-      ${st?`<div class="sp-media-row"><span class="vao"></span><div class="pista"><span class="sp-media-tag" style="${st.mediaPct>65?`right:${100-st.mediaPct}%;padding-right:6px`:`left:${st.mediaPct}%;padding-left:6px`}">┆ nossa média ${st.mediaPct}%</span></div><span class="fim"></span></div>`:''}
+      ${st?`<div class="sp-media-row"><span class="vao"></span><div class="pista"><span class="sp-media-tag${st.mediaPct>65?' esq':''}" style="${st.mediaPct>65?`right:${100-st.mediaPct}%`:`left:${st.mediaPct}%`}">nossa média ${st.mediaPct}%</span></div><span class="fim"></span></div>`:''}
       ${shown.map(h=>`<div class="sp-bar-row"><span class="sp-bar-label">Sprint ${h.spNum}</span><div class="sp-bar-track">${st?`<span class="sp-bar-media" style="left:${st.mediaPct}%" title="média das últimas ${st.janela} sprints: ${st.mediaPct}%"></span>`:''}<div class="sp-bar-fill" style="width:${h.pct}%;background:${spPerfColor(h.pct)}">${h.pct>12?h.pct+'%':''}</div></div><span class="sp-bar-pct">${h.pct}%</span></div>`).join('')}
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:11px;color:var(--text-muted)">
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16a34a;vertical-align:-1px"></span> Excelente (≥75%)</span>
