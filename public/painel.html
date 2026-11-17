@@ -708,6 +708,32 @@
   .sp-bar-track { flex:1; height:18px; background:var(--border); border-radius:99px; overflow:hidden; }
   .sp-bar-fill  { height:100%; border-radius:99px; display:flex; align-items:center; padding-left:8px; font-size:11px; font-weight:600; color:#fff; }
   .sp-bar-pct   { font-size:12px; font-weight:700; color:var(--navy); width:36px; flex-shrink:0; }
+  /* resumo do histórico: uma linha só (o % médio é derivado, não vira cartão) */
+  .sp-hr-resumo { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:13px;
+                  color:var(--text); margin-bottom:12px; }
+  .sp-hr-resumo b { font-size:17px; color:var(--navy); }
+  .sp-hr-resumo .det { color:var(--text-muted); font-size:12.5px; }
+  .sp-hr-selo { display:inline-flex; align-items:center; gap:6px; background:var(--surface2);
+                border:1px solid var(--border); border-radius:99px; padding:3px 11px; font-size:12px;
+                color:var(--text-muted); }
+  .sp-hr-selo b { color:var(--navy); font-size:12.5px; }
+  .sp-hr-arrast { border:0; background:none; font-family:inherit; font-size:12px; cursor:pointer;
+                  color:var(--ole-orange); font-weight:600; padding:0; text-decoration:underline; }
+  /* linha da média dentro da barra */
+  .sp-bar-track { position:relative; }
+  .sp-bar-media { position:absolute; top:-3px; bottom:-3px; width:0; border-left:2px dashed var(--navy);
+                  opacity:.55; z-index:2; }
+  /* busca no histórico */
+  .sp-busca-box { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:14px 0 0; }
+  .sp-busca-box input[type=text] { flex:1; min-width:200px; padding:8px 12px; border:1.5px solid var(--border);
+    border-radius:10px; font-family:inherit; font-size:13px; background:var(--surface); color:var(--text); outline:none; }
+  .sp-busca-box input[type=text]:focus { border-color:var(--ole-orange); }
+  .sp-busca-box label { font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .sp-res { padding:8px 0; border-bottom:1px solid var(--border); }
+  .sp-res:last-child { border-bottom:0; }
+  .sp-res .t { font-size:13px; color:var(--text); font-weight:500; }
+  .sp-res .m { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .sp-res .m .nao { color:var(--ole-orange); font-weight:600; }
 
   .sp-encerrar-btn { background:var(--ole-orange); color:#fff; border:none; padding:9px 20px; border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; }
   .sp-encerrar-btn:hover { background:#d0521a; }
@@ -4665,22 +4691,125 @@ function spPerfColor(pct){
 }
 
 // ── Histórico ────────────────────────────────────────────────
+// ── Histórico: média móvel, melhor marca, tarefas arrastadas e busca ──────
+// Desenho revisado com especialista de UX + gestão (17/11/2026):
+//  · média das ÚLTIMAS 8 sprints, não das 24 — a de 24 mistura regimes e vira
+//    meta que o time nunca encosta;
+//  · a melhor marca nunca aparece sozinha ("42 concluídas" incentiva fatiar
+//    tarefa): sempre o par "42 de 58 (72%)" mais a idade;
+//  · "tarefas arrastadas" explica POR QUE o % é baixo e aponta ação.
+const SP_JANELA = 8;
+
+function spStatsHistorico() {
+  if (!spHistorico.length) return null;
+  const h = spHistorico.slice(0, SP_JANELA);          // [0] é a mais recente
+  const med = a => a.reduce((x, y) => x + y, 0) / a.length;
+  let rec = spHistorico[0];
+  spHistorico.forEach(x => { if ((x.conc || 0) > (rec.conc || 0)) rec = x; });
+  const semanas = spHistorico.indexOf(rec);
+  return {
+    janela: h.length,
+    mediaTarefas: Math.round(med(h.map(x => (x.tasks || []).length))),
+    mediaConc: Math.round(med(h.map(x => x.conc || 0))),
+    mediaPct: Math.round(med(h.map(x => x.pct || 0))),
+    recorde: { num: rec.spNum, conc: rec.conc, total: (rec.tasks || []).length, pct: rec.pct, idade: semanas }
+  };
+}
+
+// Tarefas ainda abertas que já apareceram em 3+ sprints encerradas
+function spArrastadas() {
+  const vezes = {};
+  spHistorico.forEach(h => (h.tasks || []).forEach(t => {
+    if (t.status !== 'conc' && t._numId != null) vezes[t._numId] = (vezes[t._numId] || 0) + 1;
+  }));
+  return spTasks
+    .filter(t => t.status !== 'conc' && (vezes[t._numId] || 0) >= 3)
+    .map(t => ({ titulo: t.titulo, resp: t.resp, sprints: vezes[t._numId] + 1 }))
+    .sort((a, b) => b.sprints - a.sprints);
+}
+
+function spBuscarHistorico() {
+  const campo = document.getElementById('sp-busca-hist');
+  const incluir = document.getElementById('sp-busca-todas');
+  const alvo = document.getElementById('sp-busca-res');
+  if (!campo || !alvo) return;
+  const termo = campo.value.trim().toLowerCase();
+  if (termo.length < 2) { alvo.innerHTML = ''; return; }
+  const soConc = !(incluir && incluir.checked);
+  const achados = [];
+  spHistorico.forEach(h => (h.tasks || []).forEach(t => {
+    if (soConc && t.status !== 'conc') return;
+    const texto = ((t.titulo || '') + ' ' + (t.resp || '') + ' ' + (t.obs || '')).toLowerCase();
+    if (texto.indexOf(termo) >= 0) achados.push({ t: t, sprint: h.spNum, data: h.date });
+  }));
+  if (!achados.length) {
+    alvo.innerHTML = '<div style="font-size:12.5px;color:var(--text-muted);padding:10px 0">Nada encontrado' +
+      (soConc ? ' entre as concluídas. Marque "incluir não concluídas" para ampliar.' : '.') + '</div>';
+    return;
+  }
+  const mostrar = spBuscaLimite || 20;
+  const lista = achados.slice(0, mostrar).map(a => {
+    const feita = a.t.status === 'conc';
+    const quando = a.t.prazoRealizado ? ' · concluída ' + spDataBR(a.t.prazoRealizado) : '';
+    return '<div class="sp-res"><div class="t">' + spEsc(a.t.titulo) + '</div>' +
+      '<div class="m">' + spEsc(a.t.resp || '—') + ' · Sprint ' + a.sprint +
+      (feita ? quando : ' · <span class="nao">não concluída</span>') + '</div></div>';
+  }).join('');
+  const resto = achados.length - mostrar;
+  alvo.innerHTML = '<div style="font-size:11.5px;color:var(--text-muted);margin:10px 0 2px">' +
+      achados.length + ' resultado' + (achados.length > 1 ? 's' : '') + '</div>' + lista +
+    (resto > 0 ? '<button class="sp-hr-arrast" style="margin-top:8px" onclick="spVerMaisBusca()">ver mais ' +
+      Math.min(resto, 20) + '</button>' : '');
+}
+let spBuscaLimite = 20;
+function spVerMaisBusca() { spBuscaLimite += 20; spBuscarHistorico(); }
+function spEsc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function spDataBR(iso) { const p = String(iso).slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] : String(iso); }
+function spVerArrastadas() {
+  const l = spArrastadas();
+  const alvo = document.getElementById('sp-busca-res');
+  if (!alvo) return;
+  const campo = document.getElementById('sp-busca-hist'); if (campo) campo.value = '';
+  alvo.innerHTML = '<div style="font-size:11.5px;color:var(--text-muted);margin:10px 0 2px">' +
+    l.length + ' tarefa(s) aberta(s) há 3 sprints ou mais — decidir: concluir, repactuar ou tirar da sprint</div>' +
+    l.map(x => '<div class="sp-res"><div class="t">' + spEsc(x.titulo) + '</div><div class="m">' +
+      spEsc(x.resp || '—') + ' · <span class="nao">' + x.sprints + ' sprints em aberto</span></div></div>').join('');
+}
+window.spBuscarHistorico = spBuscarHistorico;
+window.spVerMaisBusca = spVerMaisBusca;
+window.spVerArrastadas = spVerArrastadas;
+
 function spRenderHistorico() {
   const sec=document.getElementById('sp-grafico-section');
   const c=document.getElementById('sp-hist-container');
   if(spHistorico.length && sec) {
     // Mais recente primeiro (spHistorico[0] é a última encerrada)
     const shown=spHistorico.slice(0,8);
+    const st = spStatsHistorico();
+    const arr = spArrastadas();
     sec.innerHTML=`<div class="table-wrap" style="padding:16px 20px;margin-bottom:16px">
       <div class="section-title" style="margin-bottom:12px;border-bottom-color:var(--ole-orange)">📊 Desempenho por sprint</div>
-      ${shown.map(h=>`<div class="sp-bar-row"><span class="sp-bar-label">Sprint ${h.spNum}</span><div class="sp-bar-track"><div class="sp-bar-fill" style="width:${h.pct}%;background:${spPerfColor(h.pct)}">${h.pct>12?h.pct+'%':''}</div></div><span class="sp-bar-pct">${h.pct}%</span></div>`).join('')}
+      ${st?`<div class="sp-hr-resumo">
+        <span>Últimas ${st.janela} sprints:</span><b>${st.mediaPct}%</b><span>em média</span>
+        <span class="det">— ${st.mediaConc} de ${st.mediaTarefas} tarefas por sprint</span>
+        <span class="sp-hr-selo" title="A melhor marca aparece sempre com o total, para não virar corrida por quantidade">🏆 Melhor marca: <b>${st.recorde.conc} de ${st.recorde.total}</b> (${st.recorde.pct}%) · Sprint ${st.recorde.num}${st.recorde.idade>0?`, há ${st.recorde.idade} sprints`:''}</span>
+        ${arr.length?`<button class="sp-hr-arrast" onclick="spVerArrastadas()">${arr.length} tarefa${arr.length>1?'s':''} arrastada${arr.length>1?'s':''} há 3+ sprints</button>`:''}
+      </div>`:''}
+      ${shown.map(h=>`<div class="sp-bar-row"><span class="sp-bar-label">Sprint ${h.spNum}</span><div class="sp-bar-track">${st?`<span class="sp-bar-media" style="left:${st.mediaPct}%" title="média das últimas ${st.janela} sprints: ${st.mediaPct}%"></span>`:''}<div class="sp-bar-fill" style="width:${h.pct}%;background:${spPerfColor(h.pct)}">${h.pct>12?h.pct+'%':''}</div></div><span class="sp-bar-pct">${h.pct}%</span></div>`).join('')}
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:11px;color:var(--text-muted)">
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16a34a;vertical-align:-1px"></span> Excelente (≥75%)</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#65a30d;vertical-align:-1px"></span> Muito bom (60–74%)</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#d97706;vertical-align:-1px"></span> Bom (45–59%)</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#ea580c;vertical-align:-1px"></span> Em evolução (30–44%)</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#dc2626;vertical-align:-1px"></span> Atenção (&lt;30%)</span>
+        <span style="margin-left:auto">┆ média das últimas ${st?st.janela:8} sprints</span>
       </div>
+      <div class="sp-busca-box">
+        <input type="text" id="sp-busca-hist" placeholder="🔎 Buscar tarefa concluída em sprints anteriores..."
+               oninput="spBuscaLimite=20;spBuscarHistorico()">
+        <label><input type="checkbox" id="sp-busca-todas" onchange="spBuscaLimite=20;spBuscarHistorico()"> incluir não concluídas</label>
+      </div>
+      <div id="sp-busca-res"></div>
     </div>`;
   } else if(sec) { sec.innerHTML=''; }
   if(!c) return;
