@@ -129,6 +129,8 @@
     border-radius:20px; padding:1px 8px; white-space:nowrap; }
   @media print { .dm-fundo { display:none !important; } }
   .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+  .repac-pill{background:#eef2f7;color:#475569;border:1px solid #cbd5e1;border-radius:20px;
+    padding:1px 8px;font-size:10px;font-weight:700;white-space:nowrap}
   /* Metas já atingidas: recolhidas por padrão */
   .feitas-head { display:flex; align-items:center; gap:10px; padding:10px 20px; border-top:1px solid var(--border);
     background:#f0fdf4; cursor:pointer; user-select:none; font-size:13px; color:#166534; }
@@ -270,7 +272,7 @@ if (window.self !== window.top) {
   alvo.insertBefore(bar, alvo.firstChild);
 }
 const DADOS = {
-  "gerado_em": "2026-11-18T14:33:06",
+  "gerado_em": "2026-11-18T14:51:48",
   "hoje": "2026-11-18",
   "marcos": [
     {
@@ -288,6 +290,8 @@ const DADOS = {
       "linha": 5,
       "meta": "2026-09-24",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 71
     },
     {
@@ -305,6 +309,8 @@ const DADOS = {
       "linha": 47,
       "meta": "2026-12-01",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 2
     },
     {
@@ -322,6 +328,8 @@ const DADOS = {
       "linha": 65,
       "meta": "2027-01-19",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 38
     },
     {
@@ -337,9 +345,11 @@ const DADOS = {
       "status": null,
       "responsavel": null,
       "linha": 73,
-      "meta": "2026-10-23",
+      "meta": "2026-12-31",
       "meta_registrada_em": "2026-09-14",
-      "desvio_dias": 69
+      "meta_original": "2026-10-23",
+      "repactuado_em": "2026-11-18",
+      "desvio_dias": 0
     },
     {
       "id": "UGB ITA|PS3 - CONDOMÍNIO TESTE|APROVAÇÃO BOMBEIROS",
@@ -356,6 +366,8 @@ const DADOS = {
       "linha": 160,
       "meta": "2027-01-13",
       "meta_registrada_em": "2026-09-28",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 34
     },
     {
@@ -373,6 +385,8 @@ const DADOS = {
       "linha": 167,
       "meta": "2027-02-04",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 42
     },
     {
@@ -390,6 +404,8 @@ const DADOS = {
       "linha": 174,
       "meta": "2027-02-04",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 42
     },
     {
@@ -407,6 +423,8 @@ const DADOS = {
       "linha": 185,
       "meta": "2027-03-30",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 16
     },
     {
@@ -424,6 +442,8 @@ const DADOS = {
       "linha": 521,
       "meta": "2026-09-23",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 1
     },
     {
@@ -441,6 +461,8 @@ const DADOS = {
       "linha": 527,
       "meta": "2026-10-07",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 15
     },
     {
@@ -458,6 +480,8 @@ const DADOS = {
       "linha": 533,
       "meta": "2026-10-09",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 28
     },
     {
@@ -475,6 +499,8 @@ const DADOS = {
       "linha": 539,
       "meta": "2026-09-29",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -5
     },
     {
@@ -492,6 +518,8 @@ const DADOS = {
       "linha": 544,
       "meta": "2026-11-03",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 37
     },
     {
@@ -509,6 +537,8 @@ const DADOS = {
       "linha": 549,
       "meta": "2026-11-13",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 5
     },
     {
@@ -526,6 +556,8 @@ const DADOS = {
       "linha": 561,
       "meta": "2026-10-21",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -5
     },
     {
@@ -543,6 +575,8 @@ const DADOS = {
       "linha": 588,
       "meta": "2026-12-04",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -4
     },
     {
@@ -560,6 +594,8 @@ const DADOS = {
       "linha": 616,
       "meta": "2027-01-12",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -577,6 +613,8 @@ const DADOS = {
       "linha": 620,
       "meta": "2027-02-11",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -592,9 +630,11 @@ const DADOS = {
       "status": null,
       "responsavel": null,
       "linha": 672,
-      "meta": "2026-10-13",
+      "meta": "2026-12-03",
       "meta_registrada_em": "2026-09-14",
-      "desvio_dias": 51
+      "meta_original": "2026-10-13",
+      "repactuado_em": "2026-11-18",
+      "desvio_dias": 0
     },
     {
       "id": "UGB ITA|CONDOMÍNIO MORADA DOS SABIÁS (COND I E II)|PROJETO DE CONDOMÍNIO I",
@@ -611,6 +651,8 @@ const DADOS = {
       "linha": 677,
       "meta": "2026-09-22",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 17
     },
     {
@@ -628,6 +670,8 @@ const DADOS = {
       "linha": 704,
       "meta": "2026-12-01",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 34
     },
     {
@@ -645,6 +689,8 @@ const DADOS = {
       "linha": 876,
       "meta": "2027-05-17",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 63
     },
     {
@@ -662,6 +708,8 @@ const DADOS = {
       "linha": 912,
       "meta": "2027-03-04",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -679,6 +727,8 @@ const DADOS = {
       "linha": 932,
       "meta": "2027-05-11",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 10
     },
     {
@@ -696,6 +746,8 @@ const DADOS = {
       "linha": 1002,
       "meta": "2026-12-07",
       "meta_registrada_em": "2026-11-09",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": 0
     },
     {
@@ -713,6 +765,8 @@ const DADOS = {
       "linha": 1021,
       "meta": "2027-03-02",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -730,6 +784,8 @@ const DADOS = {
       "linha": 1043,
       "meta": "2027-04-06",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -745,9 +801,11 @@ const DADOS = {
       "status": null,
       "responsavel": null,
       "linha": 1060,
-      "meta": "2026-10-30",
+      "meta": "2026-11-26",
       "meta_registrada_em": "2026-09-14",
-      "desvio_dias": 27
+      "meta_original": "2026-10-30",
+      "repactuado_em": "2026-11-18",
+      "desvio_dias": 0
     },
     {
       "id": "UGB CAUCAIA|CAUCAIA I|PROJETOS LEGAIS",
@@ -764,6 +822,8 @@ const DADOS = {
       "linha": 1073,
       "meta": "2027-07-14",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -781,6 +841,8 @@ const DADOS = {
       "linha": 1215,
       "meta": "2027-11-01",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -798,6 +860,8 @@ const DADOS = {
       "linha": 1236,
       "meta": "2027-06-24",
       "meta_registrada_em": "2026-09-28",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     },
     {
@@ -815,6 +879,8 @@ const DADOS = {
       "linha": 1256,
       "meta": "2027-09-07",
       "meta_registrada_em": "2026-09-14",
+      "meta_original": "",
+      "repactuado_em": "",
       "desvio_dias": -6
     }
   ]
@@ -974,6 +1040,7 @@ function abrirMes(ym){
     const[st,rot]=estado(m); const dv=m.desvio_dias;
     return'<div class="dm-item"><span class="dm-dia">'+brc(m.meta)+'</span>'+
       '<span class="dm-txt"><b>'+esc(m.marco)+'</b><span class="dm-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
+      (m.repactuado_em?'<span class="repac-pill" title="meta original '+brc(m.meta_original)+' · repactuada em '+brc(m.repactuado_em)+'">↻ repactuada</span>':'')+
       '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
       '<span class="pct-pill '+(m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none")+'">'+m.pct+'%</span>'+
       '<span class="status-pill st-'+st+'">'+rot+'</span>'+
@@ -1039,6 +1106,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")fecharMes();});
       return'<div class="marco-row'+(ehPrior?" prior":"")+'"><span class="marco-dia">'+brc(m.meta)+'</span>'+
         '<span class="marco-info"><span class="marco-nome">'+(ehPrior?'<span class="prior-star" title="Projeto prioritário">★</span> ':'')+esc(m.marco)+'</span><br>'+
         '<span class="marco-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
+        (m.repactuado_em?'<span class="repac-pill" title="meta original '+brc(m.meta_original)+' · repactuada em '+brc(m.repactuado_em)+'">↻ repactuada</span>':'')+
         '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
         '<span class="pct-pill '+pctCls+'">'+m.pct+'%</span>'+
         '<span class="status-pill st-'+st+'">'+rot+'</span>'+

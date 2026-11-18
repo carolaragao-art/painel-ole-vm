@@ -144,6 +144,8 @@ TEMPLATE = """<!DOCTYPE html>
     border-radius:20px; padding:1px 8px; white-space:nowrap; }
   @media print { .dm-fundo { display:none !important; } }
   .mes-head .chips { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+  .repac-pill{background:#eef2f7;color:#475569;border:1px solid #cbd5e1;border-radius:20px;
+    padding:1px 8px;font-size:10px;font-weight:700;white-space:nowrap}
   /* Metas já atingidas: recolhidas por padrão */
   .feitas-head { display:flex; align-items:center; gap:10px; padding:10px 20px; border-top:1px solid var(--border);
     background:#f0fdf4; cursor:pointer; user-select:none; font-size:13px; color:#166534; }
@@ -440,6 +442,7 @@ function abrirMes(ym){
     const[st,rot]=estado(m); const dv=m.desvio_dias;
     return'<div class="dm-item"><span class="dm-dia">'+brc(m.meta)+'</span>'+
       '<span class="dm-txt"><b>'+esc(m.marco)+'</b><span class="dm-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
+      (m.repactuado_em?'<span class="repac-pill" title="meta original '+brc(m.meta_original)+' · repactuada em '+brc(m.repactuado_em)+'">↻ repactuada</span>':'')+
       '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
       '<span class="pct-pill '+(m.pct>=100?"pct-high":m.pct>=50?"pct-mid":m.pct>0?"pct-low":"pct-none")+'">'+m.pct+'%</span>'+
       '<span class="status-pill st-'+st+'">'+rot+'</span>'+
@@ -505,6 +508,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")fecharMes();});
       return'<div class="marco-row'+(ehPrior?" prior":"")+'"><span class="marco-dia">'+brc(m.meta)+'</span>'+
         '<span class="marco-info"><span class="marco-nome">'+(ehPrior?'<span class="prior-star" title="Projeto prioritário">★</span> ':'')+esc(m.marco)+'</span><br>'+
         '<span class="marco-proj">'+esc(m.projeto)+' · '+esc(m.ugb)+(dep(m)?' <span class="dep-pill">⛓ '+dep(m)+'</span>':'')+'</span></span>'+
+        (m.repactuado_em?'<span class="repac-pill" title="meta original '+brc(m.meta_original)+' · repactuada em '+brc(m.repactuado_em)+'">↻ repactuada</span>':'')+
         '<span class="badge-area badge-'+setKey(m.setor)+'">'+esc(m.setor||"Geral")+'</span>'+
         '<span class="pct-pill '+pctCls+'">'+m.pct+'%</span>'+
         '<span class="status-pill st-'+st+'">'+rot+'</span>'+

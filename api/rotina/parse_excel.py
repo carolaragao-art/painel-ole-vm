@@ -259,6 +259,9 @@ def main():
         b = baseline.get(m["id"])
         m["meta"] = b["meta"] if b else m["termino_atual"]
         m["meta_registrada_em"] = b["registrado_em"] if b else hoje.isoformat()
+        # meta repactuada: guarda a original para a tela poder mostrar as duas
+        m["meta_original"] = (b or {}).get("meta_original", "")
+        m["repactuado_em"] = (b or {}).get("repactuado_em", "")
         if m["meta"] and m["termino_atual"]:
             d1 = datetime.strptime(m["meta"], "%Y-%m-%d").date()
             d2 = datetime.strptime(m["termino_atual"], "%Y-%m-%d").date()
