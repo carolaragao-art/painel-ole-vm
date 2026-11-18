@@ -18,6 +18,19 @@ const MAPA = {
   projetos: { chave: 'pagina_projetos', arquivo: 'projetos.html' },
 };
 
+// A data tem que sair de DENTRO da página: na Vercel o mtime dos arquivos é o
+// do build, não o da geração, e isso fazia a cópia velha do banco ganhar.
+function dataDaPagina(html) {
+  if (!html) return null;
+  let m = html.match(/<!--gerado_em:([^>]+?)-->/);              // projetos
+  if (m) { const d = new Date(m[1]); if (!isNaN(d)) return d; }
+  m = html.match(/"gerado_em":\s*"([^"]+)"/);                    // marcos
+  if (m) { const d = new Date(m[1]); if (!isNaN(d)) return d; }
+  m = html.match(/Smartsheet de <b>(\d{2})\/(\d{2})\/(\d{4})/);  // último recurso
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+  return null;
+}
+
 export default async function handler(req, res) {
   const alvo = MAPA[String(req.query.nome || '')];
   if (!alvo) {
@@ -32,7 +45,8 @@ export default async function handler(req, res) {
     const r = await pool.query(
       'SELECT v, updated_at FROM rotina_painel WHERE k = $1', [alvo.chave]);
     if (r.rows.length && r.rows[0].v) {
-      doBanco = { html: r.rows[0].v, em: new Date(r.rows[0].updated_at || 0) };
+      doBanco = { html: r.rows[0].v,
+                  em: dataDaPagina(r.rows[0].v) || new Date(r.rows[0].updated_at || 0) };
     }
   } catch (e) {
     console.error('pagina: falha ao ler do banco —', e.message);
@@ -42,7 +56,8 @@ export default async function handler(req, res) {
   let doArquivo = null;
   try {
     const caminho = path.join(process.cwd(), 'public', alvo.arquivo);
-    doArquivo = { html: fs.readFileSync(caminho, 'utf8'), em: fs.statSync(caminho).mtime };
+    const conteudo = fs.readFileSync(caminho, 'utf8');
+    doArquivo = { html: conteudo, em: dataDaPagina(conteudo) || fs.statSync(caminho).mtime };
   } catch (e) {
     console.error('pagina: falha ao ler o arquivo —', e.message);
   }

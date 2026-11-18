@@ -65,6 +65,9 @@ def main():
             .replace("__ROLLUP__", json.dumps(rollup, ensure_ascii=False))
             .replace("__FONTE__", arq)
             .replace("__QUANDO__", quando))
+    # carimbo de geração: é o que permite ao painel escolher a cópia mais nova
+    carimbo = "<!--gerado_em:" + datetime.now().isoformat(timespec="seconds") + "-->"
+    html = html.replace("<!DOCTYPE html>", "<!DOCTYPE html>" + carimbo, 1)
     dest = os.path.join(HERE, "projetos.html")
     io.open(dest, "w", encoding="utf-8", newline="").write(html)
     print("Projetos:", len(projs), "| sem de-para:", len(orfaos), "| export:", arq)
