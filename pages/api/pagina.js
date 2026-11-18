@@ -1,9 +1,14 @@
-// Serve marcos.html e projetos.html a partir do banco.
+// Serve marcos.html e projetos.html — sempre a cópia MAIS NOVA.
 //
-// Quem grava é /api/importar (função Python), logo depois que o Smartsheet manda
-// o Excel por e-mail. Se o banco ainda não tiver a página — primeira vez, ou algum
-// problema na importação — cai para o arquivo estático em public/, que continua
-// sendo publicado pela rotina antiga. Assim a tela nunca fica em branco.
+// Existem duas rotinas que geram essas páginas:
+//   1. o notebook da Carol (tarefa horária) -> commit no repo -> arquivo em public/
+//   2. o servidor (/api/importar, chamado pelo Apps Script) -> tabela rotina_painel
+//
+// A versão anterior desta rota preferia sempre o banco. Como a etapa 2 ficou
+// pela metade (falta uma autorização do Google), o banco congelou em 29/10 e a
+// aba Marcos & Metas passou 20 dias mostrando dado velho, mesmo com a rotina 1
+// publicando todo dia. Agora a rota compara as duas datas e entrega a mais
+// recente — funciona com qualquer uma das rotinas viva, ou com as duas.
 const fs = require('fs');
 const path = require('path');
 const { pool, ensureSchema } = require('../../lib/db');
@@ -20,30 +25,46 @@ export default async function handler(req, res) {
     return;
   }
 
-  let html = null;
-  let origem = 'banco';
+  // ── candidata 1: banco
+  let doBanco = null;
   try {
     await ensureSchema();
-    // tabela própria: estas páginas NÃO podem viver no kv_state, que a rota "/"
-    // injeta inteiro dentro de uma tag <script> (um </script> no HTML quebra tudo).
-    const r = await pool.query('SELECT v FROM rotina_painel WHERE k = $1', [alvo.chave]);
-    if (r.rows.length && r.rows[0].v) html = r.rows[0].v;
+    const r = await pool.query(
+      'SELECT v, updated_at FROM rotina_painel WHERE k = $1', [alvo.chave]);
+    if (r.rows.length && r.rows[0].v) {
+      doBanco = { html: r.rows[0].v, em: new Date(r.rows[0].updated_at || 0) };
+    }
   } catch (e) {
-    console.error('pagina: falha ao ler do banco', e.message);
+    console.error('pagina: falha ao ler do banco —', e.message);
   }
 
-  if (!html) {
-    try {
-      html = fs.readFileSync(path.join(process.cwd(), 'public', alvo.arquivo), 'utf8');
-      origem = 'arquivo';
-    } catch (e) {
-      res.status(500).send('pagina indisponivel');
-      return;
-    }
+  // ── candidata 2: arquivo publicado pelo repositório
+  let doArquivo = null;
+  try {
+    const caminho = path.join(process.cwd(), 'public', alvo.arquivo);
+    doArquivo = { html: fs.readFileSync(caminho, 'utf8'), em: fs.statSync(caminho).mtime };
+  } catch (e) {
+    console.error('pagina: falha ao ler o arquivo —', e.message);
+  }
+
+  if (!doBanco && !doArquivo) {
+    res.status(500).send('pagina indisponivel');
+    return;
+  }
+
+  let escolhida, origem;
+  if (doBanco && doArquivo) {
+    const bancoMaisNovo = doBanco.em >= doArquivo.em;
+    escolhida = bancoMaisNovo ? doBanco : doArquivo;
+    origem = bancoMaisNovo ? 'banco' : 'arquivo';
+  } else {
+    escolhida = doBanco || doArquivo;
+    origem = doBanco ? 'banco' : 'arquivo';
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store, must-revalidate');
   res.setHeader('X-Ole-Origem', origem);
-  res.status(200).send(html);
+  res.setHeader('X-Ole-Gerado', escolhida.em.toISOString());
+  res.status(200).send(escolhida.html);
 }
