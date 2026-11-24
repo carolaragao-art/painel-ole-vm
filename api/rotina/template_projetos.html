@@ -30,6 +30,7 @@
     box-shadow:0 1px 4px rgba(26,58,92,.06)}
   .kpi.alerta{border-left-color:var(--gold)} .kpi.vermelho{border-left-color:#dc2626}
   .kpi.laranja{border-left-color:var(--orange)} .kpi.verde{border-left-color:var(--verde-cl)}
+  .kpi.azul{border-left-color:var(--azul,#3D82C4)}
   .kpi b{display:block;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
   .kpi span{display:block;font-size:22px;font-weight:800;color:var(--navy);font-family:'DM Mono',monospace;line-height:1.35}
   .kpi span small{font-size:12.5px;color:var(--muted);font-weight:600}
@@ -372,7 +373,8 @@ function render(){
     kpi('Sem promessa',semProm,'','etapas sem data de terceiro','laranja')+
     kpi('Infra (prioridade 1)',infra.filter(p=>p.etapa<4).length,'<small> em andamento</small>',
         infra.filter(p=>sitPlano(p)==='venc').length+' com prazo vencido de '+infra.length,'')+
-    kpi('Prontos',prontos,'<small> de '+L.length+'</small>','todas as etapas do Smartsheet concluídas','verde');
+    kpi('Prontos',prontos,'<small> de '+L.length+'</small>','todas as etapas do Smartsheet concluídas','verde')+
+    kpiConclusao(L);
   const n=document.getElementById('nota');
   const partes=[];
   if(AVISOS.orfaos.length) partes.push('<b>'+AVISOS.orfaos.length+'</b> projeto(s) do Smartsheet ainda sem empresa/projetista no de-para: '+AVISOS.orfaos.map(esc).join(', '));
@@ -402,6 +404,19 @@ function gpct(g,itens){
     : '<span class="pctnum">'+v+'%</span><span class="pctbar"><i style="width:'+Math.max(2,v)+'%"></i></span>';
   return '<span class="gpct" title="% calculado pelo Smartsheet para o grupo">'+barra+
     '<span style="opacity:.8">· '+apont+' de '+itens.length+' com apontamento</span></span>';
+}
+// % de conclusão do empreendimento: o número do Smartsheet quando existe, e ao
+// lado a leitura honesta do painel (quantos projetos já passaram da finalização).
+function kpiConclusao(L){
+  const ss=(ROLLUP[emp]||{}).geral;
+  const feitos=L.filter(p=>p.etapa>=4).length;
+  const prop=L.length?Math.round(100*feitos/L.length):0;
+  const valor = (ss!==null&&ss!==undefined)? ss : prop;
+  const sub = (ss!==null&&ss!==undefined)
+      ? 'calculado pelo Smartsheet · '+prop+'% dos projetos finalizados'
+      : 'sem % no Smartsheet · '+feitos+' de '+L.length+' projetos finalizados';
+  return '<div class="kpi azul"><b>'+esc(emp)+'</b><span>'+valor+'%<small> concluído</small></span>'+
+         '<i>'+sub+'</i></div>';
 }
 function kpi(l,v,ex,sub,c){ return '<div class="kpi '+c+'"><b>'+l+'</b><span>'+v+(ex||'')+'</span><i>'+sub+'</i></div>'; }
 function cabecalho(){
