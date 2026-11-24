@@ -46,7 +46,9 @@ export async function getServerSideProps(ctx) {
   const inject =
     '\n<script>window.__OLE_STATE__=' + seguro(state) +
     ';window.__OLE_USER__=' + seguro(session.user || '') + ';</script>' +
-    '\n<script src="/ole-bridge.js"></script>\n';
+    // a query força o navegador a buscar a ponte nova; sem isso o arquivo antigo
+    // fica no cache e o painel continua com o comportamento velho
+    '\n<script src="/ole-bridge.js?v=2026-11-24"></script>\n';
 
   const out = /<head[^>]*>/i.test(html)
     ? html.replace(/<head[^>]*>/i, (m) => m + inject)
