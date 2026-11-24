@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projetos · Condomínio Morada dos Sabiás</title>
+<title>Projetos · Condomínios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -117,6 +117,13 @@
   .dlg-top p{font-size:11px;opacity:.85;margin-top:2px}
   .dlg-corpo{padding:13px 17px 2px}
   .campo{margin-bottom:10px}
+  .pg-passo{border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:9px}
+  .pg-passo label{display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer}
+  .pg-passo input[type=checkbox]{width:15px;height:15px;accent-color:var(--verde)}
+  .pg-linha{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+  .pg-linha input{padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--ink)}
+  .pg-resumo{font-size:11px;line-height:1.3}
+  .pg-resumo i{font-style:normal;color:var(--muted)}
   .campo label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
     letter-spacing:.5px;margin-bottom:4px}
   .campo input{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;
@@ -193,6 +200,8 @@
 
   <div class="kpis" id="kpis"></div>
 
+  <div class="barra" id="barra-emp" style="margin-bottom:6px"></div>
+
   <div class="barra">
     <button class="chip on" data-g="">Todos</button>
     <button class="chip" data-g="PROJETOS INFRA">Infra</button>
@@ -227,6 +236,27 @@
   <div class="lista" id="lista"></div>
 </div>
 
+<div class="dlg-fundo" id="dlg-pg" onclick="if(event.target===this)fecharPg()">
+  <div class="dlg">
+    <div class="dlg-top"><h3 id="pg-proj"></h3><p>O pagamento anda em três passos. Marque o que já aconteceu.</p></div>
+    <div class="dlg-corpo">
+      <div class="pg-passo"><label><input type="checkbox" id="pg-adi-ok"> <b>Adiantamento pago</b></label>
+        <div class="pg-linha"><input type="date" id="pg-adi-data"><input type="text" id="pg-adi-valor" placeholder="valor (opcional)"></div></div>
+      <div class="pg-passo"><label><input type="checkbox" id="pg-nf-ok"> <b>Nota fiscal emitida</b></label>
+        <div class="pg-linha"><input type="date" id="pg-nf-data"><input type="text" id="pg-nf-num" placeholder="nº da NF (opcional)"></div></div>
+      <div class="pg-passo"><label><input type="checkbox" id="pg-fim-ok"> <b>Pagamento final</b></label>
+        <div class="pg-linha"><input type="date" id="pg-fim-data"><input type="text" id="pg-fim-valor" placeholder="valor (opcional)"></div></div>
+      <div class="campo"><label for="pg-obs">Pendência ou recado</label>
+        <input type="text" id="pg-obs" placeholder="ex.: verificar com VM e Jonas"></div>
+    </div>
+    <div class="dlg-pe">
+      <button class="lixo" id="pg-limpar">🗑</button>
+      <button onclick="fecharPg()">Cancelar</button>
+      <button class="ok" id="pg-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="dlg-fundo" id="dlg" onclick="if(event.target===this)fecharPrazo()">
   <div class="dlg">
     <div class="dlg-top"><h3 id="dlg-proj"></h3><p>Data que o projetista ou o órgão <b>prometeu</b> — não é o planejado do Smartsheet.</p></div>
@@ -246,10 +276,13 @@
 
 <script>
 const ETAPAS=__ETAPAS__;
-const CURTAS=["Contrat.","Projeto","Análise","Final.","Pagto","Órgão","Aprov."];
+const CURTAS=["Contrat.","Projeto","Análise","Final.","Pagto","Órgão","Aprov.","Aval."];
 const P=__DADOS__;
 const AVISOS=__AVISOS__;
 const ROLLUP=__ROLLUP__;
+const EMPS=__EMPREENDIMENTOS__;
+// empreendimento escolhido fica guardado: ela volta na tela onde parou
+let emp = (function(){ try{ const v=localStorage.getItem('ole_proj_emp'); return EMPS.indexOf(v)>=0?v:EMPS[0]; }catch(e){ return EMPS[0]; } })();
 const AVISO_DIAS=__AVISO_DIAS__;
 const CHAVE='ole_proj_cond';          // chave no banco do painel (kv_state)
 const LOCAL='proj_cond_overlay';      // reserva, se abrir fora do painel
@@ -259,6 +292,30 @@ const PAGAMENTOS=["Pago","Pago Adiantamento","Pago os dois condomínios","Analis
 const CORES={"PROJETOS INFRA":"#1D3461","PROJETOS HABITAÇÃO":"#0f7b6c","PROJETOS NÃO-INCIDENTES":"#8B2020"};
 const ORDEM=["PROJETOS INFRA","PROJETOS HABITAÇÃO","PROJETOS NÃO-INCIDENTES"];
 let filtroG='', soPrazo=false, busca='', fechados={}, OV={}, modo='api', editando=null, editandoPrazo=null;
+let FORN={}, editandoPg=null;
+
+// ── Avaliação do fornecedor (etapa 8) ────────────────────────────────────
+// A nota NÃO vive aqui: ela é da aba Fornecedores · SIAC, por fornecedor e por
+// semestre. Esta coluna só LÊ de lá — um projeto não é avaliado, o projetista é.
+function semestreAtual(){ const d=new Date(); return d.getFullYear()+'.'+(d.getMonth()<6?1:2); }
+function norm(t){ return (t||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim(); }
+function fornDoProjeto(p){
+  const base=(FORN.estado&&FORN.base)?FORN.base:null;   // formato antigo, se houver
+  const lista=(FORN.fornecedores||base||[]);
+  const emp=norm(val(p,'empresa')), pes=norm(val(p,'projetista'));
+  if(!emp && !pes) return null;
+  return lista.find(f=> (emp && (norm(f.razao)===emp || norm(f.razao).indexOf(emp)>=0 || emp.indexOf(norm(f.razao))>=0))
+                     || (pes && norm(f.nome)===pes)) || null;
+}
+function avaliacaoDe(p){
+  const f=fornDoProjeto(p);
+  if(!f) return {cls:'', txt:'sem fornecedor ligado'};
+  const est=(FORN.estado||{})[f.id]||{};
+  const sem=semestreAtual();
+  const a=(est.avaliacoes||[]).filter(x=>x.semestre===sem).pop();
+  if(a) return {cls:'feita', txt:'avaliado em '+sem+' · nota '+String(a.nota).replace('.',',').slice(0,4)};
+  return {cls:'', txt:f.razao+' ainda sem avaliação de '+sem};
+}
 
 function hojeIso(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function diasAte(iso){ if(!iso) return null; const a=iso.split('-').map(Number), h=hojeIso().split('-').map(Number);
@@ -270,6 +327,7 @@ async function carregar(){
   try{
     const st=await fetch('/api/state',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
     OV=JSON.parse(st[CHAVE]||'{}'); modo='api';
+    try{ FORN=JSON.parse(st['ole_fornecedores']||'{}'); }catch(_){ FORN={}; }
   }catch(e){
     modo='local';
     try{ OV=JSON.parse(localStorage.getItem(LOCAL)||'{}'); }catch(_){ OV={}; }
@@ -298,7 +356,7 @@ function sitProm(p){ const z=prazoDe(p); if(!z||!z.data) return '';
 function pgCls(p){ const t=(val(p,'pagamento')||'').toLowerCase();
   return /pago/.test(t)?'pg-ok':/não contratado|nao contratado|contratar/.test(t)?'pg-nao':'pg-ver'; }
 function visivel(p){ const t=busca.trim().toLowerCase(); const s=sitPlano(p), sp=sitProm(p);
-  return (!filtroG||p.grupo===filtroG) && (!soPrazo||s==='venc'||s==='perto'||sp==='venc'||sp==='perto') &&
+  return (p.emp===emp) && (!filtroG||p.grupo===filtroG) && (!soPrazo||s==='venc'||s==='perto'||sp==='venc'||sp==='perto') &&
     (!t||(p.apelido+' '+p.nome+' '+val(p,'empresa')+' '+val(p,'projetista')+' '+p.passo+' '+((OV[p.id]||{}).coment||'')).toLowerCase().includes(t)); }
 
 function render(){
@@ -339,7 +397,7 @@ function render(){
   document.getElementById('lista').innerHTML=html||'<div class="vazio">Nenhum projeto neste filtro.</div>';
 }
 function gpct(g,itens){
-  const v=ROLLUP.grupos[g], apont=itens.filter(p=>p.pct!==null&&p.pct!==undefined).length;
+  const v=(ROLLUP[emp]||{grupos:{}}).grupos[g], apont=itens.filter(p=>p.pct!==null&&p.pct!==undefined).length;
   const barra = (v===null||v===undefined) ? '<span class="pctnum sem">— sem % no grupo</span>'
     : '<span class="pctnum">'+v+'%</span><span class="pctbar"><i style="width:'+Math.max(2,v)+'%"></i></span>';
   return '<span class="gpct" title="% calculado pelo Smartsheet para o grupo">'+barra+
@@ -350,7 +408,7 @@ function cabecalho(){
   return '<div class="cab"><span>Projeto</span><span>Empresa · projetista<span class="selo">✎</span></span>'+
     '<span class="trilha-cab"><span></span>'+CURTAS.map((c,i)=>'<span>'+(i+1)+'<br>'+c+'</span>').join('')+'<span></span></span>'+
     '<span>Etapa no Smartsheet · % concluído<span class="selo">🔒</span>'+
-      (ROLLUP.geral!==null&&ROLLUP.geral!==undefined?'<span class="selo" title="Engenharia de Produto, calculado pelo Smartsheet">geral '+ROLLUP.geral+'%</span>':'')+'</span>'+
+      (((ROLLUP[emp]||{}).geral)!==null&&((ROLLUP[emp]||{}).geral)!==undefined?'<span class="selo" title="Engenharia de Produto, calculado pelo Smartsheet">geral '+ROLLUP[emp].geral+'%</span>':'')+'</span>'+
     '<span>Prometido<span class="selo">✎</span></span>'+
     '<span>Pagamento<span class="selo">✎</span></span>'+
     '<span>Última conversa<span class="selo">✎</span></span></div>';
@@ -362,6 +420,9 @@ function linha(p){
     const cls=i<p.etapa?'feita':i===p.etapa?('atual'+(i===6?' fim':'')):'';
     et.push('<span class="et '+cls+'"><span class="pt">'+(i===p.etapa?(i===6?'✓':i+1):'')+'</span></span>');
   }
+  // 8ª etapa: avaliação do fornecedor — lida da aba Fornecedores · SIAC
+  const av=avaliacaoDe(p);
+  et.push('<span class="et '+av.cls+'" title="'+esc(av.txt)+'" style="cursor:help"><span class="pt">'+(av.cls?'★':'8')+'</span></span>');
   const seg=[]; for(let i=0;i<7;i++) seg.push('<i class="'+(i<=p.etapa?'on':'')+'"></i>');
   const quando = p.etapa>=4?'<span style="color:var(--verde);font-weight:700">concluído</span>' : d===null?'' : d<0?('<span class="atraso">atrasado '+Math.abs(d)+'d</span>')
     : d<=AVISO_DIAS?('<span class="perto">em '+d+'d</span>') : ('em '+d+'d');
@@ -378,12 +439,51 @@ function linha(p){
     '<span class="passo" title="'+esc(p.passo)+'"><b>'+esc(p.passo)+'</b>'+
       '<small>'+br(p.prazo_plano)+'</small> '+quando+pctCel(p)+'</span>'+
     chipPrazo(p)+
-    '<span class="cel" data-id="'+p.id+'" data-campo="pagamento">'+
-      (val(p,'pagamento')?'<span class="pg '+pgCls(p)+' ed" onclick="editar(this)">'+esc(val(p,'pagamento'))+'</span>'
-                         :'<span class="ed vazio" onclick="editar(this)">+ pagamento</span>')+'</span>'+
+    celPagamento(p)+
     comentCel(p)+
     '<span class="barra-m">'+seg.join('')+'</span>'+
   '</div>';
+}
+// Pagamento em três estados (adiantamento, NF, final). O texto livre que havia
+// antes virou "pendência": estado é estado, recado é recado.
+function pgDe(p){ const o=(OV[p.id]||{}).pg; if(o) return o;
+  // primeira vez: aproveita o texto antigo como pendência, sem inventar estado
+  const velho=(val(p,'pagamento')||'').trim();
+  return velho?{obs:velho}:{};
+}
+function celPagamento(p){
+  const g=pgDe(p);
+  const feito=[g.adi&&'Adiant.', g.nf&&'NF', g.fim&&'Final'].filter(Boolean);
+  const cls=g.fim?'pg-ok':(g.adi||g.nf)?'pg-ver':'pg-nao';
+  const txt = feito.length? feito.join(' · ')
+            : (g.obs? esc(g.obs) : '+ pagamento');
+  return '<span class="cel"><span class="pg '+(feito.length?cls:'')+' ed'+(feito.length||g.obs?'':' vazio')+
+    '" data-pg="'+p.id+'">'+txt+'</span>'+
+    (feito.length&&g.obs?'<span class="pg-resumo"><i>'+esc(g.obs)+'</i></span>':'')+'</span>';
+}
+function abrirPg(id){
+  const p=P.find(x=>x.id===id); if(!p) return; editandoPg=id;
+  const g=pgDe(p);
+  document.getElementById('pg-proj').textContent=p.apelido;
+  const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v||''; };
+  const chk=(i,v)=>{ const e=document.getElementById(i); if(e) e.checked=!!v; };
+  chk('pg-adi-ok', g.adi); set('pg-adi-data', g.adiData); set('pg-adi-valor', g.adiValor);
+  chk('pg-nf-ok', g.nf);   set('pg-nf-data', g.nfData);   set('pg-nf-num', g.nfNum);
+  chk('pg-fim-ok', g.fim); set('pg-fim-data', g.fimData); set('pg-fim-valor', g.fimValor);
+  set('pg-obs', g.obs);
+  document.getElementById('dlg-pg').classList.add('on');
+}
+function fecharPg(){ document.getElementById('dlg-pg').classList.remove('on'); editandoPg=null; }
+async function salvarPg(){
+  const p=P.find(x=>x.id===editandoPg); if(!p) return;
+  const v=i=>{ const e=document.getElementById(i); return e?e.value.trim():''; };
+  const c=i=>{ const e=document.getElementById(i); return e?e.checked:false; };
+  const g={adi:c('pg-adi-ok'), adiData:v('pg-adi-data'), adiValor:v('pg-adi-valor'),
+           nf:c('pg-nf-ok'),   nfData:v('pg-nf-data'),   nfNum:v('pg-nf-num'),
+           fim:c('pg-fim-ok'), fimData:v('pg-fim-data'), fimValor:v('pg-fim-valor'),
+           obs:v('pg-obs')};
+  OV[p.id]=OV[p.id]||{}; OV[p.id].pg=g;
+  await salvar(); fecharPg(); render();
 }
 function chipPrazo(p){
   const z=prazoDe(p), n=(z.historico||[]).length;
@@ -505,9 +605,33 @@ async function limparPrazo(){ if(!confirm('Apagar a data prometida?'))return;
   if(OV[editandoPrazo]) delete OV[editandoPrazo].prazo;
   fecharPrazo(); await salvar(); render(); }
 
+function renderEmps(){
+  const cx=document.getElementById('barra-emp');
+  cx.innerHTML = EMPS.map(e=>{
+    const n=P.filter(p=>p.emp===e).length;
+    return '<button class="chip'+(e===emp?' on':'')+'" data-emp="'+e+'">'+e+
+           ' <span style="opacity:.7;font-weight:500">'+n+'</span></button>';
+  }).join('');
+  cx.querySelectorAll('[data-emp]').forEach(b=>b.onclick=()=>{
+    emp=b.dataset.emp;
+    try{ localStorage.setItem('ole_proj_emp', emp); }catch(e){}
+    renderEmps(); render();
+  });
+}
 document.querySelectorAll('.chip[data-g]').forEach(c=>c.onclick=()=>{
   document.querySelectorAll('.chip[data-g]').forEach(x=>x.classList.remove('on'));
   c.classList.add('on'); filtroG=c.dataset.g; render();});
+document.addEventListener('click', ev=>{
+  const el=ev.target.closest('[data-pg]');
+  if(el) abrirPg(el.dataset.pg);
+});
+document.getElementById('pg-salvar').onclick=salvarPg;
+document.getElementById('pg-limpar').onclick=async()=>{
+  const p=P.find(x=>x.id===editandoPg); if(!p) return;
+  if(!confirm('Limpar o pagamento deste projeto?')) return;
+  if(OV[p.id]) delete OV[p.id].pg;
+  await salvar(); fecharPg(); render();
+};
 document.getElementById('chip-prazo').onclick=function(){ soPrazo=!soPrazo; this.classList.toggle('on',soPrazo); render(); };
 document.getElementById('busca').oninput=e=>{busca=e.target.value;render();};
 // Aviso de dado velho (mesma regra do Marcos & Metas)
@@ -535,6 +659,6 @@ document.getElementById('link-nota').onclick=function(ev){
 document.getElementById('f-salvar').onclick=salvarPrazo;
 document.getElementById('f-limpar').onclick=limparPrazo;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharPrazo();});
-carregar().then(render);
+carregar().then(()=>{ renderEmps(); render(); });
 </script>
 </body></html>

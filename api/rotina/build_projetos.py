@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from projetos_cond import extrair, chave, ETAPAS  # noqa: E402
+from projetos_cond import extrair, chave, ETAPAS, EMPREENDIMENTOS  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PASTA_XLSX = os.path.normpath(os.path.join(HERE, "..", "..", "06 Smartsheet"))
@@ -24,7 +24,16 @@ AVISO_DIAS = 5          # regra combinada com a Carol
 
 def dados():
     xlsx = max(glob.glob(os.path.join(PASTA_XLSX, "*DEV IMOB*.xlsx")), key=os.path.getmtime)
-    projs, avisos, rollup = extrair(xlsx)
+    # um conjunto por empreendimento, tudo na mesma lista (a tela separa por chips).
+    # Nunca gerar dois HTMLs: viraria duas verdades.
+    projs, avisos, rollup = [], [], {}
+    for apelido, raiz in EMPREENDIMENTOS:
+        pr, av, ro = extrair(xlsx, raiz)
+        for x in pr:
+            x["emp"] = apelido
+        projs += pr
+        avisos += av
+        rollup[apelido] = ro
     try:
         dp = json.load(io.open(os.path.join(HERE, "depara_projetos.json"), encoding="utf-8"))
     except Exception:
@@ -34,7 +43,10 @@ def dados():
         c = chave(" > ".join(p["caminho"]))
         g = chave(p["grupo"])
         k = c[len(g) + 3:] if c.startswith(g) else c
-        m = dp.get(k)
+        # o de-para veio da planilha manual do Morada dos Sabiás: só vale para ele.
+        # Os nomes de projeto se repetem entre condomínios, e aplicar aqui faria o
+        # Condomínio Teste herdar projetista que não é dele.
+        m = dp.get(k) if p.get("emp") == EMPREENDIMENTOS[0][0] else None
         if m:
             p.update({"apelido": m["apelido"], "empresa": m["empresa"],
                       "projetista": m["projetista"], "pagamento": m["pagamento"],
@@ -63,6 +75,7 @@ def main():
             .replace("__AVISOS__", json.dumps({"atipicos": avisos, "orfaos": orfaos}, ensure_ascii=False))
             .replace("__AVISO_DIAS__", str(AVISO_DIAS))
             .replace("__ROLLUP__", json.dumps(rollup, ensure_ascii=False))
+            .replace("__EMPREENDIMENTOS__", json.dumps([e[0] for e in EMPREENDIMENTOS], ensure_ascii=False))
             .replace("__FONTE__", arq)
             .replace("__QUANDO__", quando))
     # carimbo de geração: é o que permite ao painel escolher a cópia mais nova

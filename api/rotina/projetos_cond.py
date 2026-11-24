@@ -15,7 +15,13 @@ import unicodedata
 import openpyxl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RAIZ = "CONDOMÍNIO MORADA DOS SABIÁS"
+# Empreendimentos acompanhados nesta aba. Para incluir outro, basta acrescentar
+# aqui: (apelido curto, trecho do nome no Smartsheet).
+EMPREENDIMENTOS = [
+    ("Morada dos Sabiás", "CONDOMÍNIO MORADA DOS SABIÁS"),
+    ("Condomínio Teste",  "PS3 - CONDOMÍNIO TESTE"),
+]
+RAIZ = EMPREENDIMENTOS[0][1]          # compatibilidade com chamadas antigas
 GALHO = "ENGENHARIA DE PRODUTO"
 
 # Ordem canônica do fluxo. As 4 primeiras vêm do Smartsheet; Pagamento,
@@ -62,8 +68,9 @@ def pct(v):
         return None
 
 
-def ler_linhas(xlsx):
+def ler_linhas(xlsx, raiz=None):
     """Devolve as linhas do galho do condomínio, com caminho e indentação."""
+    raiz = raiz or RAIZ
     wb = openpyxl.load_workbook(xlsx, data_only=True)
     ws = wb.active
     primeira = ws.cell(row=1, column=5).value
@@ -77,7 +84,7 @@ def ler_linhas(xlsx):
         pilha[ind] = nome.strip()
         for k in [k for k in list(pilha) if k > ind]:
             del pilha[k]
-        if chave(RAIZ) not in chave(pilha.get(1, "")) or chave(GALHO) not in chave(pilha.get(2, "")):
+        if chave(raiz) not in chave(pilha.get(1, "")) or chave(GALHO) not in chave(pilha.get(2, "")):
             continue
         fora.append({
             "ind": ind, "nome": nome.strip(),
@@ -88,9 +95,9 @@ def ler_linhas(xlsx):
     return fora
 
 
-def extrair(xlsx):
+def extrair(xlsx, raiz=None):
     """Projeto = nó cujos filhos diretos são etapas do fluxo."""
-    linhas = ler_linhas(xlsx)
+    linhas = ler_linhas(xlsx, raiz)
     projetos, avisos = [], []
     # % que o próprio Smartsheet calcula para o galho e para cada grupo
     rollup = {"geral": None, "grupos": {}}
