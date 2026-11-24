@@ -109,7 +109,14 @@
     },
     setItem: function (k, v) {
       if (LOCAL_ONLY[k]) { realLSset(k, String(v)); return; }
-      cache[k] = String(v); queueSave(k, cache[k]);
+      var novo = String(v);
+      // Gravação sem mudança não vai ao banco. Sem isso, qualquer rotina que
+      // "salva tudo" ao abrir a página (spSaveLocal roda na carga) carimbava
+      // updated_at e mudava a versão; as outras abas viam "novidade" e
+      // recarregavam, o que disparava a mesma gravação de novo — a tela ficava
+      // recarregando sozinha a cada poucos segundos. (24/11/2026)
+      if (Object.prototype.hasOwnProperty.call(cache, k) && cache[k] === novo) return;
+      cache[k] = novo; queueSave(k, cache[k]);
     },
     removeItem: function (k) {
       if (LOCAL_ONLY[k]) { realLSdel(k); return; }
